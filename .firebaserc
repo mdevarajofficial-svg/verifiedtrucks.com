@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "verifiedtrucks-20"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

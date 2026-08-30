@@ -13,5 +13,15 @@
       "README.md",
       "package.json"
     ]
+  },
+  "auth": {
+    "providers": {
+      "anonymous": false,
+      "emailPassword": false,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Verified Trucks",
+        "supportEmail": "mdevarajofficial@gmail.com"
+      }
+    }
   }
 }
