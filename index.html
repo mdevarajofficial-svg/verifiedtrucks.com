@@ -212,15 +212,9 @@
             <input id="destination" name="destination" required type="text" placeholder="e.g. Delhi, DL" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
           </div>
           <div>
-            <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-900">Loading Location State <span class="text-blue-600">*</span></label>
+            <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-900">Loading State <span class="text-blue-600">*</span></label>
             <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
-              <option value="">Select loading location state</option>
-            </select>
-          </div>
-          <div>
-            <label for="destinationState" class="mb-1.5 block text-sm font-semibold text-slate-900">Unloading Location State <span class="text-blue-600">*</span></label>
-            <select id="destinationState" name="destinationState" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
-              <option value="">Select unloading location state</option>
+              <option value="">Select loading state</option>
             </select>
           </div>
           <div>
@@ -1328,7 +1322,6 @@
     function populateStateSelects() {
       const filterState = document.getElementById("filter-state");
       const originState = document.getElementById("originState");
-      const destinationState = document.getElementById("destinationState");
       INDIAN_STATES.forEach((state) => {
         if (filterState) {
           const o = document.createElement("option");
@@ -1341,12 +1334,6 @@
           o1.value = state;
           o1.textContent = state;
           originState.appendChild(o1);
-        }
-        if (destinationState) {
-          const o2 = document.createElement("option");
-          o2.value = state;
-          o2.textContent = state;
-          destinationState.appendChild(o2);
         }
       });
     }
@@ -1422,7 +1409,6 @@
         origin: String(data.get("origin")).trim(),
         destination: String(data.get("destination")).trim(),
         originState: String(data.get("originState")),
-        destinationState: String(data.get("destinationState")),
         loadType: String(data.get("loadType")),
         vehicleSize: String(data.get("vehicleSize")),
         weight: String(data.get("weight")).trim(),
@@ -1982,7 +1968,6 @@
           origin: "Pune, MH",
           destination: "Hyderabad, TS",
           originState: "Maharashtra",
-          destinationState: "Telangana",
           loadType: "FTL",
           vehicleSize: "22 ft",
           weight: "12 Tons",
@@ -2010,7 +1995,6 @@
           origin: "Ahmedabad, GJ",
           destination: "Jaipur, RJ",
           originState: "Gujarat",
-          destinationState: "Rajasthan",
           loadType: "PTL",
           vehicleSize: "14 ft",
           weight: "4 Tons",
