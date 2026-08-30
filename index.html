@@ -36,11 +36,9 @@
     .live-dot { animation: pulseSoft 1.6s ease-in-out infinite; }
     input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
     .tab-active { border-bottom-color: #2563eb !important; color: #1d4ed8 !important; }
-    .vip-locked-blur { filter: blur(4px); user-select: none; pointer-events: none; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen antialiased">
-  <!-- Header -->
   <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
       <div class="flex items-center gap-3">
@@ -54,8 +52,8 @@
           <p class="hidden text-xs text-slate-600 sm:block">Open freight marketplace · No login required</p>
         </div>
       </div>
-      <nav class="flex items-center gap-1 sm:gap-2" id="main-nav">
-        <button type="button" data-tab="board" class="tab-btn tab-active rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">Load Board</button>
+      <nav class="flex flex-wrap items-center justify-end gap-1 sm:gap-2" id="main-nav">
+        <button type="button" data-tab="board" class="tab-btn tab-active rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">Live Loads</button>
         <button type="button" data-tab="post" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">Post a Load</button>
         <button type="button" data-tab="vip" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">VIP Access</button>
       </nav>
@@ -63,17 +61,40 @@
   </header>
 
   <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <!-- Toast -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
       <p id="toast-msg" class="text-sm font-medium text-slate-900"></p>
     </div>
 
-    <!-- ========== LOAD BOARD ========== -->
+    <!-- VIP Mark Booked Modal -->
+    <div id="book-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+      <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+        <h3 class="font-display text-lg font-bold text-slate-900">Mark Load as Booked</h3>
+        <p class="mt-1 text-sm text-slate-600">Select the winning bidder and confirm the vehicle number. Public Live Loads will show only the first 5 characters and hide the last 4.</p>
+        <form id="book-form" class="mt-4 space-y-4">
+          <input type="hidden" id="book-load-id" />
+          <div>
+            <label for="book-bid" class="mb-1.5 block text-sm font-semibold text-slate-900">Winning bidder</label>
+            <select id="book-bid" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"></select>
+          </div>
+          <div>
+            <label for="book-vehicle-number" class="mb-1.5 block text-sm font-semibold text-slate-900">Vehicle number</label>
+            <input id="book-vehicle-number" required type="text" minlength="5" placeholder="e.g. MH12AB1234" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <p class="mt-1 text-xs text-slate-600">Public preview: <span id="book-mask-preview" class="font-semibold text-slate-900">—</span></p>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button type="button" id="book-cancel" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Confirm Booked</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========== LIVE LOADS ========== -->
     <section id="panel-board" class="tab-panel animate-fade-in">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 class="font-display text-2xl font-bold text-slate-900">Live Load Board</h2>
-          <p class="mt-1 text-sm text-slate-600">Browse active freight and place bids. Phone numbers stay private — VIP Access only.</p>
+          <h2 class="font-display text-2xl font-bold text-slate-900">Live Loads</h2>
+          <p class="mt-1 text-sm text-slate-600">Posted loads appear here instantly. Place bids with your name, phone, amount, and vehicle number. Bid amounts stay private.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -86,7 +107,6 @@
         </div>
       </div>
 
-      <!-- Filters -->
       <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div>
@@ -124,7 +144,7 @@
           <svg class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0H4" /></svg>
         </div>
         <p class="font-display text-lg font-semibold text-slate-900">No loads match your filters</p>
-        <p class="mt-1 text-sm text-slate-600">Post a new load or clear filters to see the full board.</p>
+        <p class="mt-1 text-sm text-slate-600">Post a new load or clear filters to see Live Loads.</p>
         <button type="button" onclick="switchTab('post')" class="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">Post a Load</button>
       </div>
     </section>
@@ -133,7 +153,7 @@
     <section id="panel-post" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
         <h2 class="font-display text-2xl font-bold text-slate-900">Post a Freight Load</h2>
-        <p class="mt-1 text-sm text-slate-600">Publish instantly to the live board. Transporters can bid immediately — no account needed.</p>
+        <p class="mt-1 text-sm text-slate-600">Publish instantly to Live Loads. Transporters can bid right away — no account needed.</p>
       </div>
 
       <form id="post-load-form" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
@@ -179,13 +199,13 @@
           <div class="sm:col-span-2">
             <label for="shipperPhone" class="mb-1.5 block text-sm font-semibold text-slate-900">Shipper Contact Phone <span class="text-blue-600">*</span></label>
             <input id="shipperPhone" name="shipperPhone" required type="tel" pattern="[0-9+\-\s]{8,15}" placeholder="e.g. +91 98765 43210" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            <p class="mt-1.5 text-xs text-slate-600">Never shown on the public board. Visible only in VIP Access.</p>
+            <p class="mt-1.5 text-xs text-slate-600">Never shown on Live Loads. Visible only in VIP Access.</p>
           </div>
         </div>
         <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p class="text-xs text-slate-600">Status starts as <span class="font-semibold text-blue-700">Live</span> · Stored in your browser via localStorage</p>
+          <p class="text-xs text-slate-600">Status starts as <span class="font-semibold text-blue-700">Live</span> · Appears on Live Loads immediately</p>
           <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-            Publish Load to Board
+            Publish to Live Loads
           </button>
         </div>
       </form>
@@ -195,10 +215,9 @@
     <section id="panel-vip" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
         <h2 class="font-display text-2xl font-bold text-slate-900">VIP Access</h2>
-        <p class="mt-1 text-sm text-slate-600">Admin oversight of all loads, shipper contacts, and transporter bids.</p>
+        <p class="mt-1 text-sm text-slate-600">View all contacts &amp; bid amounts, mark loads booked, or delete posts.</p>
       </div>
 
-      <!-- Password gate -->
       <div id="vip-gate" class="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
           <svg class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -215,7 +234,6 @@
         </form>
       </div>
 
-      <!-- VIP Dashboard -->
       <div id="vip-dashboard" class="hidden">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex flex-wrap items-center gap-2">
@@ -235,9 +253,10 @@
                 <tr>
                   <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Route / Status</th>
                   <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Loading Date</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Vehicle</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Size</th>
                   <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Shipper Contact</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Bidders &amp; Amounts</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Bidders (full details)</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Actions</th>
                 </tr>
               </thead>
               <tbody id="vip-table-body" class="divide-y divide-slate-100 bg-white"></tbody>
@@ -252,7 +271,7 @@
   <footer class="mt-10 border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
       <p><span class="font-display font-semibold text-slate-900">Verified Trucks</span> — public freight marketplace. Data stays in your browser.</p>
-      <p class="text-xs">No accounts · Instant posting · Contacts VIP-only</p>
+      <p class="text-xs">Bid amounts &amp; phones VIP-only · Share loads on WhatsApp</p>
     </div>
   </footer>
 
@@ -260,7 +279,8 @@
     (function () {
       'use strict';
 
-      const STORAGE_KEY = 'verified_trucks_loads_v1';
+      const STORAGE_KEY = 'verified_trucks_loads_v2';
+      const OLD_STORAGE_KEY = 'verified_trucks_loads_v1';
       const VIP_SESSION_KEY = 'verified_trucks_vip_session';
       const VIP_PASSWORD = 'Deva@2001';
 
@@ -273,12 +293,24 @@
       let vipUnlocked = false;
       let toastTimer = null;
 
-      // ---------- Storage ----------
       function loadFromStorage() {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          let raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            raw = localStorage.getItem(OLD_STORAGE_KEY);
+            if (raw) {
+              localStorage.setItem(STORAGE_KEY, raw);
+              localStorage.removeItem(OLD_STORAGE_KEY);
+            }
+          }
           loads = raw ? JSON.parse(raw) : [];
           if (!Array.isArray(loads)) loads = [];
+          loads.forEach((l) => {
+            (l.bids || []).forEach((b) => {
+              if (!b.name && b.company) b.name = b.company;
+              if (!b.vehicleNumber) b.vehicleNumber = '';
+            });
+          });
         } catch {
           loads = [];
         }
@@ -292,7 +324,6 @@
         return 'ld_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
       }
 
-      // ---------- Toast ----------
       function showToast(message) {
         const el = document.getElementById('toast');
         const msg = document.getElementById('toast-msg');
@@ -302,7 +333,6 @@
         toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
       }
 
-      // ---------- Relative time ----------
       function relativeTime(iso) {
         const then = new Date(iso).getTime();
         if (Number.isNaN(then)) return 'Unknown';
@@ -342,7 +372,34 @@
           .replace(/'/g, '&#39;');
       }
 
-      // ---------- Tabs ----------
+      /** Public mask: first 5 chars visible, last 4 hidden as **** */
+      function maskVehicleNumber(vn) {
+        const s = String(vn || '').replace(/\s+/g, '').toUpperCase();
+        if (!s) return '—';
+        if (s.length <= 4) return '****';
+        if (s.length <= 5) return s.slice(0, Math.max(0, s.length - 4)) + '****';
+        return s.slice(0, 5) + '****';
+      }
+
+      function buildWhatsAppMessage(load) {
+        return [
+          '*Verified Trucks — Load Available*',
+          '',
+          'Route: ' + load.origin + ' → ' + load.destination,
+          'Vehicle size: ' + load.vehicleSize,
+          'Weight: ' + load.weight,
+          'Material: ' + load.material,
+          'Loading date: ' + formatDate(load.loadingDate),
+          '',
+          'Book now if interested!',
+          'Reply here or bid on Verified Trucks Live Loads.'
+        ].join('\n');
+      }
+
+      function whatsAppShareUrl(load) {
+        return 'https://wa.me/?text=' + encodeURIComponent(buildWhatsAppMessage(load));
+      }
+
       window.switchTab = function (tab) {
         document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('tab-active'));
@@ -365,7 +422,6 @@
         switchTab(btn.dataset.tab);
       });
 
-      // ---------- Populate vehicle selects ----------
       function populateVehicleSelects() {
         const postSelect = document.getElementById('vehicleSize');
         const filterSelect = document.getElementById('filter-vehicle');
@@ -381,7 +437,6 @@
         });
       }
 
-      // ---------- Post load ----------
       document.getElementById('post-load-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const form = e.target;
@@ -400,6 +455,7 @@
           shipperPhone: String(data.get('shipperPhone')).trim(),
           status: 'Live',
           bids: [],
+          bookedVehicleNumber: '',
           createdAt: new Date().toISOString(),
         };
 
@@ -407,7 +463,7 @@
         saveToStorage();
         form.reset();
         setMinLoadingDate();
-        showToast('Load published — now Live on the board');
+        showToast('Load published — now on Live Loads');
         updateCounts();
         switchTab('board');
         renderBoard();
@@ -422,7 +478,6 @@
         input.min = yyyy + '-' + mm + '-' + dd;
       }
 
-      // ---------- Filters ----------
       ['filter-status', 'filter-type', 'filter-vehicle', 'filter-search'].forEach((id) => {
         document.getElementById(id).addEventListener('input', renderBoard);
         document.getElementById(id).addEventListener('change', renderBoard);
@@ -447,13 +502,10 @@
       }
 
       function updateCounts() {
-        const live = loads.filter((l) => l.status === 'Live').length;
-        const booked = loads.filter((l) => l.status === 'Booked').length;
-        document.getElementById('live-count').textContent = live;
-        document.getElementById('booked-count').textContent = booked;
+        document.getElementById('live-count').textContent = loads.filter((l) => l.status === 'Live').length;
+        document.getElementById('booked-count').textContent = loads.filter((l) => l.status === 'Booked').length;
       }
 
-      // ---------- Render board ----------
       function renderBoard() {
         const board = document.getElementById('load-board');
         const empty = document.getElementById('empty-board');
@@ -466,8 +518,11 @@
           return;
         }
         empty.classList.add('hidden');
-
         board.innerHTML = filtered.map((load) => renderLoadCard(load)).join('');
+      }
+
+      function bidDisplayName(bid) {
+        return bid.name || bid.company || 'Bidder';
       }
 
       function renderLoadCard(load) {
@@ -478,45 +533,42 @@
 
         const bidsHtml = (load.bids || []).length
           ? (load.bids || []).map((bid) => {
-              const acceptBtn = load.status === 'Live' && !bid.accepted
-                ? `<button type="button" data-action="accept-bid" data-load="${escapeHtml(load.id)}" data-bid="${escapeHtml(bid.id)}" class="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">Accept</button>`
-                : bid.accepted
-                  ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
-                  : '<span class="text-xs text-slate-500">—</span>';
+              const tag = bid.accepted
+                ? '<span class="text-xs font-semibold text-emerald-700">Selected</span>'
+                : '<span class="text-xs text-slate-500">Pending</span>';
               return `
                 <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bid.company)}</p>
-                    <p class="text-xs text-slate-600">${formatCurrency(bid.amount)} · <span class="text-slate-500">Phone hidden</span></p>
+                    <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bidDisplayName(bid))}</p>
+                    <p class="text-xs text-slate-500">Amount hidden · Contact VIP-only</p>
                   </div>
-                  ${acceptBtn}
+                  ${tag}
                 </div>`;
             }).join('')
           : '<p class="text-xs text-slate-500 italic">No bids yet — be the first to bid.</p>';
 
-        const bookingNote = load.status === 'Booked' && acceptedBid
+        const bookingNote = load.status === 'Booked'
           ? `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
               <p class="text-xs font-semibold uppercase tracking-wide text-emerald-800">Booked</p>
-              <p class="mt-0.5 text-sm font-semibold text-slate-900">Accepted: ${escapeHtml(acceptedBid.company)}</p>
-              <p class="text-xs text-slate-600">Contact details are private — view in VIP Access only.</p>
+              <p class="mt-0.5 text-sm font-semibold text-slate-900">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ''))}</p>
+              <p class="text-xs text-slate-600">${acceptedBid ? 'Transporter: ' + escapeHtml(bidDisplayName(acceptedBid)) + ' · ' : ''}Full contacts &amp; amounts in VIP Access only.</p>
             </div>`
           : `<div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Private Contacts</p>
-              <p class="mt-0.5 text-sm text-slate-500">Shipper &amp; bidder phone numbers are visible only in VIP Access.</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Privacy</p>
+              <p class="mt-0.5 text-sm text-slate-500">Bid amounts, phones &amp; full vehicle numbers are VIP-only. Booking is done by VIP admin.</p>
             </div>`;
 
         const bidForm = load.status === 'Live'
           ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-100 pt-3" data-load-id="${escapeHtml(load.id)}">
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Place a Bid</p>
-              <p class="text-xs text-slate-500">Your phone is stored privately and shown only in VIP Access.</p>
-              <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <input name="company" required type="text" placeholder="Company name" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                <input name="phone" required type="tel" placeholder="Phone number" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                <div class="flex gap-2">
-                  <input name="amount" required type="number" min="1" step="1" placeholder="Bid ₹" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                  <button type="submit" class="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">Bid</button>
-                </div>
+              <p class="text-xs text-slate-500">Your amount &amp; phone stay hidden on Live Loads — VIP admin reviews them.</p>
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input name="name" required type="text" placeholder="Your name / company" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input name="phone" required type="tel" placeholder="Contact number" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
               </div>
+              <button type="submit" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors sm:w-auto">Submit Bid</button>
             </form>`
           : '';
 
@@ -530,12 +582,18 @@
                   · ${escapeHtml(load.loadType)} · ${escapeHtml(load.distance)} km
                 </p>
               </div>
-              ${statusBadge}
+              <div class="flex flex-wrap items-center gap-2">
+                ${statusBadge}
+                <a href="${whatsAppShareUrl(load)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors" title="Share on WhatsApp">
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  WhatsApp
+                </a>
+              </div>
             </div>
 
             <div class="mb-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
-                <p class="text-xs text-slate-600">Vehicle</p>
+                <p class="text-xs text-slate-600">Vehicle size</p>
                 <p class="font-semibold text-slate-900">${escapeHtml(load.vehicleSize)}</p>
               </div>
               <div>
@@ -563,7 +621,6 @@
           </article>`;
       }
 
-      // ---------- Board interactions (event delegation) ----------
       document.getElementById('load-board').addEventListener('submit', (e) => {
         const form = e.target.closest('.bid-form');
         if (!form) return;
@@ -575,44 +632,97 @@
         const fd = new FormData(form);
         const bid = {
           id: 'bd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
-          company: String(fd.get('company')).trim(),
+          name: String(fd.get('name')).trim(),
           phone: String(fd.get('phone')).trim(),
           amount: Number(fd.get('amount')),
+          vehicleNumber: String(fd.get('vehicleNumber')).trim().toUpperCase().replace(/\s+/g, ''),
           accepted: false,
           createdAt: new Date().toISOString(),
         };
         if (!load.bids) load.bids = [];
         load.bids.push(bid);
         saveToStorage();
-        showToast('Bid submitted by ' + bid.company);
+        showToast('Bid submitted by ' + bid.name);
         renderBoard();
       });
 
-      document.getElementById('load-board').addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-action="accept-bid"]');
-        if (!btn) return;
-        const loadId = btn.dataset.load;
-        const bidId = btn.dataset.bid;
-        const load = loads.find((l) => l.id === loadId);
-        if (!load || load.status !== 'Live') return;
-        const bid = (load.bids || []).find((b) => b.id === bidId);
-        if (!bid) return;
-
-        (load.bids || []).forEach((b) => { b.accepted = b.id === bidId; });
-        load.status = 'Booked';
-        saveToStorage();
-        showToast('Bid accepted — load marked Booked (contacts remain VIP-only)');
-        renderBoard();
-        if (vipUnlocked) renderVipDashboard();
-      });
-
-      // ---------- Timer tick ----------
       function tickRelativeTimes() {
         document.querySelectorAll('.relative-time').forEach((el) => {
           const created = el.dataset.created;
           if (created) el.textContent = relativeTime(created);
         });
       }
+
+      // ---------- Book modal ----------
+      const bookModal = document.getElementById('book-modal');
+      const bookBidSelect = document.getElementById('book-bid');
+      const bookVehicleInput = document.getElementById('book-vehicle-number');
+      const bookMaskPreview = document.getElementById('book-mask-preview');
+
+      function openBookModal(loadId) {
+        const load = loads.find((l) => l.id === loadId);
+        if (!load || load.status !== 'Live') {
+          showToast('Only Live loads can be marked booked');
+          return;
+        }
+        if (!(load.bids || []).length) {
+          showToast('No bids yet — cannot mark booked without a bidder');
+          return;
+        }
+        document.getElementById('book-load-id').value = loadId;
+        bookBidSelect.innerHTML = (load.bids || []).map((b) =>
+          `<option value="${escapeHtml(b.id)}">${escapeHtml(bidDisplayName(b))} · ${formatCurrency(b.amount)} · ${escapeHtml(b.vehicleNumber || 'no vehicle')}</option>`
+        ).join('');
+        const first = load.bids[0];
+        bookVehicleInput.value = first.vehicleNumber || '';
+        bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
+        bookModal.classList.remove('hidden');
+        bookModal.classList.add('flex');
+      }
+
+      function closeBookModal() {
+        bookModal.classList.add('hidden');
+        bookModal.classList.remove('flex');
+      }
+
+      bookBidSelect.addEventListener('change', () => {
+        const load = loads.find((l) => l.id === document.getElementById('book-load-id').value);
+        const bid = (load && load.bids || []).find((b) => b.id === bookBidSelect.value);
+        if (bid && bid.vehicleNumber) {
+          bookVehicleInput.value = bid.vehicleNumber;
+          bookMaskPreview.textContent = maskVehicleNumber(bid.vehicleNumber);
+        }
+      });
+
+      bookVehicleInput.addEventListener('input', () => {
+        bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
+      });
+
+      document.getElementById('book-cancel').addEventListener('click', closeBookModal);
+      bookModal.addEventListener('click', (e) => {
+        if (e.target === bookModal) closeBookModal();
+      });
+
+      document.getElementById('book-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const loadId = document.getElementById('book-load-id').value;
+        const bidId = bookBidSelect.value;
+        const vehicleNumber = bookVehicleInput.value.trim().toUpperCase().replace(/\s+/g, '');
+        const load = loads.find((l) => l.id === loadId);
+        if (!load) return;
+        if (vehicleNumber.length < 5) {
+          showToast('Vehicle number must be at least 5 characters');
+          return;
+        }
+        (load.bids || []).forEach((b) => { b.accepted = b.id === bidId; });
+        load.status = 'Booked';
+        load.bookedVehicleNumber = vehicleNumber;
+        saveToStorage();
+        closeBookModal();
+        showToast('Load marked Booked — public sees ' + maskVehicleNumber(vehicleNumber));
+        renderVipDashboard();
+        renderBoard();
+      });
 
       // ---------- VIP ----------
       function checkVipSession() {
@@ -672,6 +782,27 @@
         showToast('All marketplace data cleared');
       });
 
+      document.getElementById('vip-table-body').addEventListener('click', (e) => {
+        const bookBtn = e.target.closest('[data-action="vip-book"]');
+        const delBtn = e.target.closest('[data-action="vip-delete"]');
+        if (bookBtn) {
+          openBookModal(bookBtn.dataset.load);
+          return;
+        }
+        if (delBtn) {
+          const loadId = delBtn.dataset.load;
+          const load = loads.find((l) => l.id === loadId);
+          if (!load) return;
+          if (!confirm('Delete post ' + load.origin + ' → ' + load.destination + '?')) return;
+          loads = loads.filter((l) => l.id !== loadId);
+          saveToStorage();
+          showToast('Post deleted');
+          renderVipDashboard();
+          updateCounts();
+          renderBoard();
+        }
+      });
+
       function renderVipDashboard() {
         const tbody = document.getElementById('vip-table-body');
         const empty = document.getElementById('vip-empty');
@@ -694,9 +825,18 @@
           const bidsDetail = (load.bids || []).length
             ? (load.bids || []).map((b) => {
                 const tag = b.accepted ? ' <span class="font-semibold text-emerald-700">(Accepted)</span>' : '';
-                return `<div class="mb-1.5 last:mb-0"><span class="font-semibold text-slate-900">${escapeHtml(b.company)}</span><br/><span class="text-slate-600">${escapeHtml(b.phone)}</span> · <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span>${tag}</div>`;
+                return `<div class="mb-1.5 last:mb-0 border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+                  <span class="font-semibold text-slate-900">${escapeHtml(bidDisplayName(b))}</span>${tag}<br/>
+                  <span class="text-slate-600">${escapeHtml(b.phone)}</span><br/>
+                  <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span>
+                  · Veh: <span class="font-medium text-slate-900">${escapeHtml(b.vehicleNumber || '—')}</span>
+                </div>`;
               }).join('')
             : '<span class="text-slate-500 italic">No bids</span>';
+
+          const bookBtn = load.status === 'Live'
+            ? `<button type="button" data-action="vip-book" data-load="${escapeHtml(load.id)}" class="rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Mark Booked</button>`
+            : `<span class="text-xs text-emerald-700 font-semibold">Booked<br/><span class="font-normal text-slate-600">${escapeHtml(load.bookedVehicleNumber || '—')}</span></span>`;
 
           return `
             <tr class="align-top hover:bg-slate-50/80">
@@ -713,11 +853,16 @@
                 <p class="text-xs text-slate-500">Shipper</p>
               </td>
               <td class="px-4 py-3 text-sm min-w-[220px]">${bidsDetail}</td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="flex flex-col gap-2">
+                  ${bookBtn}
+                  <button type="button" data-action="vip-delete" data-load="${escapeHtml(load.id)}" class="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100">Delete Post</button>
+                </div>
+              </td>
             </tr>`;
         }).join('');
       }
 
-      // ---------- Seed demo data (first visit only) ----------
       function seedIfEmpty() {
         if (loads.length) return;
         const now = Date.now();
@@ -734,8 +879,17 @@
             distance: 560,
             shipperPhone: '+91 98111 22001',
             status: 'Live',
+            bookedVehicleNumber: '',
             bids: [
-              { id: 'bd_seed1', company: 'Deccan Logistics', phone: '+91 99001 11223', amount: 42000, accepted: false, createdAt: new Date(now - 120000).toISOString() },
+              {
+                id: 'bd_seed1',
+                name: 'Deccan Logistics',
+                phone: '+91 99001 11223',
+                amount: 42000,
+                vehicleNumber: 'MH12AB1234',
+                accepted: false,
+                createdAt: new Date(now - 120000).toISOString(),
+              },
             ],
             createdAt: new Date(now - 300000).toISOString(),
           },
@@ -751,6 +905,7 @@
             distance: 670,
             shipperPhone: '+91 98222 33445',
             status: 'Live',
+            bookedVehicleNumber: '',
             bids: [],
             createdAt: new Date(now - 7200000).toISOString(),
           },
@@ -758,7 +913,6 @@
         saveToStorage();
       }
 
-      // ---------- Init ----------
       function init() {
         populateVehicleSelects();
         setMinLoadingDate();
