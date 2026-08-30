@@ -46,11 +46,11 @@
       50% { opacity: 0.55; }
     }
     .live-dot { animation: pulseSoft 1.6s ease-in-out infinite; }
-    input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
     .tab-active { border-bottom-color: #3b82f6 !important; color: #60a5fa !important; }
     .glass-panel { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.85); opacity: 0.7; }
-    input[type="date"] { color-scheme: dark; }
+    select, input[type="date"], input[type="time"] { color-scheme: dark; }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.85); opacity: 0.7; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
@@ -216,13 +216,13 @@
           </div>
           <div>
             <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-100">Loading State <span class="text-blue-400">*</span></label>
-            <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
+            <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select loading state</option>
             </select>
           </div>
           <div>
             <label for="loadType" class="mb-1.5 block text-sm font-semibold text-slate-100">Load Type <span class="text-blue-400">*</span></label>
-            <select id="loadType" name="loadType" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
+            <select id="loadType" name="loadType" required class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select load type</option>
               <option value="FTL">FTL — Full Truck Load</option>
               <option value="PTL">PTL — Part Truck Load</option>
@@ -230,7 +230,7 @@
           </div>
           <div>
             <label for="vehicleSize" class="mb-1.5 block text-sm font-semibold text-slate-100">Vehicle Size <span class="text-blue-400">*</span></label>
-            <select id="vehicleSize" name="vehicleSize" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
+            <select id="vehicleSize" name="vehicleSize" required class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select vehicle size</option>
             </select>
           </div>
@@ -244,7 +244,11 @@
           </div>
           <div>
             <label for="loadingDate" class="mb-1.5 block text-sm font-semibold text-slate-100">Date of Loading <span class="text-blue-400">*</span></label>
-            <input id="loadingDate" name="loadingDate" required type="date" class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+            <input id="loadingDate" name="loadingDate" required type="date" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+          </div>
+          <div>
+            <label for="loadingTime" class="mb-1.5 block text-sm font-semibold text-slate-100">Loading Time <span class="text-blue-400">*</span></label>
+            <input id="loadingTime" name="loadingTime" required type="time" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
             <label for="distance" class="mb-1.5 block text-sm font-semibold text-slate-100">Distance (Km) <span class="text-blue-400">*</span></label>
@@ -347,10 +351,7 @@
 
         <div id="profile-matching-loads-wrap" class="hidden rounded-xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-md p-5 shadow-xl shadow-black/25 sm:p-6">
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 class="font-display text-lg font-bold text-slate-100">Matching loads for your vehicle</h3>
-              <p id="profile-matching-sub" class="text-xs text-slate-400">Live loads that fit your registered vehicle size — any route in India</p>
-            </div>
+            <h3 class="font-display text-lg font-bold text-slate-100">Matching Loads</h3>
             <span id="profile-matching-count" class="rounded-full border border-blue-500/30 bg-slate-900/70 backdrop-blur-md px-3 py-1 text-xs font-semibold text-blue-400">0 matches</span>
           </div>
           <div id="profile-matching-loads" class="space-y-3"></div>
@@ -358,13 +359,11 @@
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25">
-            <h3 class="font-display text-lg font-bold text-slate-100">Loads I posted</h3>
-            <p class="mb-3 text-xs text-slate-400">Freight you published · accept lowest bids from your profile or Live Loads</p>
+            <h3 class="font-display text-lg font-bold text-slate-100 mb-3">My Loads</h3>
             <div id="profile-my-loads" class="space-y-3"></div>
           </div>
           <div class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25">
-            <h3 class="font-display text-lg font-bold text-slate-100">Bids I placed</h3>
-            <p class="mb-3 text-xs text-slate-400">When a poster accepts your bid, shipper contact appears here</p>
+            <h3 class="font-display text-lg font-bold text-slate-100 mb-3">My Bids</h3>
             <div id="profile-my-bids" class="space-y-3"></div>
           </div>
         </div>
@@ -707,6 +706,24 @@
       }
     }
 
+    function formatTime(hhmm) {
+      if (!hhmm) return "";
+      try {
+        const [h, m] = String(hhmm).split(":");
+        const d = new Date();
+        d.setHours(Number(h) || 0, Number(m) || 0, 0, 0);
+        return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+      } catch {
+        return hhmm;
+      }
+    }
+
+    function formatLoadingSlot(load) {
+      const date = formatDate(load.loadingDate);
+      const time = formatTime(load.loadingTime);
+      return time ? date + " · " + time : date;
+    }
+
     function escapeHtml(str) {
       return String(str ?? "")
         .replace(/&/g, "&amp;")
@@ -732,7 +749,7 @@
         "Vehicle size: " + load.vehicleSize,
         "Weight: " + load.weight,
         "Material: " + load.material,
-        "Loading date: " + formatDate(load.loadingDate),
+        "Loading date: " + formatLoadingSlot(load),
         "",
         "Book now if interested!",
         "Reply here or bid on Verified Trucks Live Loads.",
@@ -924,7 +941,6 @@
       const wrap = document.getElementById("profile-matching-loads-wrap");
       const list = document.getElementById("profile-matching-loads");
       const countEl = document.getElementById("profile-matching-count");
-      const sub = document.getElementById("profile-matching-sub");
       if (!wrap || !list) return;
 
       const isFleet = userProfile?.role === "fleet_owner";
@@ -936,18 +952,10 @@
       }
 
       if (!userProfile.vehicleSize) {
-        sub.textContent = "Save your vehicle size in the profile form above to see matching loads.";
         countEl.textContent = "0 matches";
         list.innerHTML = '<p class="text-sm text-slate-400 italic">Add vehicle size and save profile.</p>';
         return;
       }
-
-      const city = userProfile.currentCity ? userProfile.currentCity.trim() : "";
-      sub.textContent =
-        "Vehicle: " +
-        userProfile.vehicleSize +
-        (city ? " · Current city: " + city + " (all routes shown)" : "") +
-        " · Smaller/equal ft loads included";
 
       const matching = getMatchingLoadsForFleetOwner();
       countEl.textContent = matching.length + " match" + (matching.length === 1 ? "" : "es");
@@ -960,9 +968,9 @@
       list.innerHTML = matching
         .slice(0, 12)
         .map(
-          (l) => `<div class="rounded-lg border border-white bg-slate-900/70 backdrop-blur-md px-3 py-2 shadow-lg shadow-black/20">
+          (l) => `<div class="rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-3 py-2 shadow-lg shadow-black/20">
           <p class="text-sm font-semibold text-slate-100">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
-          <p class="text-xs text-slate-400">${escapeHtml(l.vehicleSize)} · ${escapeHtml(l.weight)} · ${formatDate(l.loadingDate)}</p>
+          <p class="text-xs text-slate-400 tabular-nums">${escapeHtml(l.vehicleSize)} · ${escapeHtml(l.weight)} · ${formatLoadingSlot(l)}</p>
           <button type="button" data-action="goto-load" data-load-id="${escapeHtml(l.id)}" class="mt-2 rounded-md bg-blue-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-400">View &amp; bid</button>
         </div>`
         )
@@ -994,6 +1002,7 @@
       if (!load.bookedVehicleNumber) load.bookedVehicleNumber = "";
       if (!load.originState) load.originState = "";
       if (!load.destinationState) load.destinationState = "";
+      if (!load.loadingTime) load.loadingTime = "";
       return load;
     }
 
@@ -1417,6 +1426,7 @@
         weight: String(data.get("weight")).trim(),
         material: String(data.get("material")).trim(),
         loadingDate: String(data.get("loadingDate")),
+        loadingTime: String(data.get("loadingTime") || ""),
         distance: Number(data.get("distance")),
         shipperPhone,
         status: "Live",
@@ -1552,18 +1562,17 @@
         load.status === "Booked"
           ? `<div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
               <p class="text-xs font-semibold uppercase tracking-wide text-emerald-300">Booked / Accepted</p>
-              <p class="mt-0.5 text-sm font-semibold text-slate-100">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ""))}</p>
+              <p class="mt-0.5 text-sm font-semibold text-slate-100 tabular-nums">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ""))}</p>
             </div>`
-          : `<div class="rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Marketplace notice</p>
-              <p class="mt-0.5 text-sm text-slate-500">Loads and bids are from individuals — verify independently before loading or handing consignment.</p>
-            </div>`;
+          : "";
 
       const profileContact = (userProfile && userProfile.contactNumber) || "";
       const bidPhoneCheck = profileContact.trim()
         ? validateProfilePhoneMatch(profileContact)
         : { ok: false, message: "Save your contact number in My Profile before continuing" };
       const profilePhoneOk = bidPhoneCheck.ok;
+      const bidInputClass =
+        "w-full rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25";
       const bidForm =
         load.status === "Live" && !acceptedBid
           ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-800/60 pt-3" data-load-id="${escapeHtml(load.id)}">
@@ -1571,14 +1580,14 @@
               <p class="text-xs text-slate-500">${currentUser ? "Bid contact uses your profile number only — shared with the poster only if they accept your bid." : "Sign in with Google to place a bid."}</p>
               ${currentUser && !profilePhoneOk ? '<p class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs font-semibold text-amber-200">' + escapeHtml(bidPhoneCheck.message) + "</p>" : ""}
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <input name="name" required type="text" placeholder="Your name / company" value="${escapeHtml((userProfile && userProfile.fullName) || (currentUser && currentUser.displayName) || "")}" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="name" required type="text" placeholder="Your name / company" value="${escapeHtml((userProfile && userProfile.fullName) || (currentUser && currentUser.displayName) || "")}" class="${bidInputClass}" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
                 <input type="hidden" name="phone" value="${escapeHtml(profileContact)}" />
-                <div class="rounded-lg border border-slate-700 bg-slate-950/40 px-2.5 py-2 text-sm text-slate-300">
+                <div class="rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2 text-sm text-slate-300">
                   <span class="text-xs text-slate-500 block">Your contact (hidden until bid accepted)</span>
                   <span class="font-semibold">${escapeHtml(profileContact.trim() ? "Saved in profile" : "Save contact in My Profile")}</span>
                 </div>
-                <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
-                <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="${bidInputClass} tabular-nums" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="${bidInputClass} uppercase tabular-nums tracking-wide" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
               </div>
               <label class="flex items-start gap-2 text-xs text-slate-400">
                 <input name="bidTerms" type="checkbox" required class="mt-0.5 rounded border-slate-700 text-blue-400" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
@@ -1597,7 +1606,6 @@
                   <span class="relative-time" data-created="${escapeHtml(load.createdAt)}">${relativeTime(load.createdAt)}</span>
                   · ${escapeHtml(load.loadType)} · <span class="tabular-nums">${escapeHtml(load.distance)}</span> km
                 </p>
-                ${termsLinkHtml("transporter")}
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 ${statusBadge}
@@ -1611,11 +1619,11 @@
             <div class="mb-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
                 <p class="text-xs text-slate-400">Vehicle size</p>
-                <p class="font-semibold text-slate-100">${escapeHtml(load.vehicleSize)}</p>
+                <p class="font-semibold text-slate-100 tabular-nums">${escapeHtml(load.vehicleSize)}</p>
               </div>
               <div>
                 <p class="text-xs text-slate-400">Weight</p>
-                <p class="font-semibold text-slate-100">${escapeHtml(load.weight)}</p>
+                <p class="font-semibold text-slate-100 tabular-nums">${escapeHtml(load.weight)}</p>
               </div>
               <div>
                 <p class="text-xs text-slate-400">Material</p>
@@ -1623,7 +1631,7 @@
               </div>
               <div>
                 <p class="text-xs text-slate-400">Loading</p>
-                <p class="font-semibold text-slate-100">${formatDate(load.loadingDate)}</p>
+                <p class="font-semibold text-slate-100 tabular-nums">${formatLoadingSlot(load)}</p>
               </div>
             </div>
 
@@ -1943,7 +1951,7 @@
                 <span class="ml-1 text-xs text-slate-400">${escapeHtml(load.loadType)} · ${escapeHtml(load.material)}</span></p>
                 <p class="mt-1 text-xs text-slate-500">${escapeHtml(load.weight)} · <span class="tabular-nums">${escapeHtml(load.distance)}</span> km</p>
               </td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-100">${formatDate(load.loadingDate)}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-100 tabular-nums">${formatLoadingSlot(load)}</td>
               <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-100">${escapeHtml(load.vehicleSize)}</td>
               <td class="whitespace-nowrap px-4 py-3">
                 <p class="font-semibold text-slate-100">${escapeHtml(load.shipperPhone)}</p>
@@ -1976,6 +1984,7 @@
           weight: "12 Tons",
           material: "Auto parts",
           loadingDate: new Date(now + 86400000 * 2).toISOString().slice(0, 10),
+          loadingTime: "09:00",
           distance: 560,
           shipperPhone: "+91 98111 22001",
           status: "Live",
@@ -2003,6 +2012,7 @@
           weight: "4 Tons",
           material: "Textile rolls",
           loadingDate: new Date(now + 86400000).toISOString().slice(0, 10),
+          loadingTime: "14:30",
           distance: 670,
           shipperPhone: "+91 98222 33445",
           status: "Live",
