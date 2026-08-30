@@ -114,24 +114,6 @@
       </div>
     </div>
 
-    <div id="subscribe-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
-      <div class="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
-        <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50">
-          <img src="/assets/logo-64.png" alt="" class="h-8 w-8 object-contain" width="32" height="32" />
-        </div>
-        <h3 id="subscribe-modal-title" class="font-display text-lg font-bold text-slate-900">Choose your plan</h3>
-        <p id="subscribe-modal-body" class="mt-2 text-sm text-slate-600">Unlock unlimited access as per plan validity.</p>
-        <ul id="subscribe-modal-bullets" class="mt-3 space-y-1.5 text-sm text-slate-700"></ul>
-        <div id="subscribe-plan-options" class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3"></div>
-        <div class="mt-5 flex flex-wrap gap-2 justify-end">
-          <button type="button" id="subscribe-cancel" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Not now</button>
-          <button type="button" id="subscribe-upi-btn" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">Pay with UPI</button>
-          <button type="button" id="subscribe-pay-btn" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Pay with Razorpay</button>
-        </div>
-        <p id="subscribe-modal-hint" class="mt-3 text-xs text-slate-500">UPI (GPay, PhonePe, Paytm), cards, net banking &amp; wallets via Razorpay. Save your mobile number in My Profile for UPI.</p>
-      </div>
-    </div>
-
     <div id="terms-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
       <div class="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
         <div class="flex items-start justify-between gap-3">
@@ -269,7 +251,7 @@
             <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="transporter" class="font-semibold text-blue-600 underline hover:text-blue-800">Terms &amp; Conditions</button> for posting loads on this online platform.</span>
           </label>
           <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-xs text-slate-600">Status starts as <span class="font-semibold text-blue-700">Live</span> · 2 free posts, then subscription</p>
+            <p class="text-xs text-slate-600">Status starts as <span class="font-semibold text-blue-700">Live</span> · Free to post</p>
             <button type="submit" id="post-submit-btn" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
               Publish to Live Loads
             </button>
@@ -351,34 +333,6 @@
           </div>
         </form>
 
-        <div id="profile-subscription-card" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 id="profile-sub-heading" class="font-display text-lg font-bold text-slate-900">Subscription plan</h3>
-              <p id="profile-sub-tagline" class="mt-1 text-sm text-slate-600">Choose a plan for unlimited access</p>
-            </div>
-            <div id="profile-sub-badge" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">Inactive</div>
-          </div>
-          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Days remaining</p>
-              <p id="profile-sub-days" class="font-display text-lg font-bold text-slate-900">—</p>
-            </div>
-            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Free quota</p>
-              <p id="profile-sub-quota" class="text-sm font-semibold text-slate-900">—</p>
-            </div>
-            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Plan expires</p>
-              <p id="profile-sub-expires" class="text-sm font-semibold text-slate-900">—</p>
-            </div>
-          </div>
-          <p id="profile-sub-detail" class="mt-3 text-sm text-slate-600"></p>
-          <div id="profile-plan-options" class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3"></div>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button type="button" id="btn-subscribe" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">View plans &amp; subscribe</button>
-          </div>
-        </div>
 
         <div id="profile-matching-loads-wrap" class="hidden rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm sm:p-6">
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -394,12 +348,12 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 class="font-display text-lg font-bold text-slate-900">Loads I posted</h3>
-            <p class="mb-3 text-xs text-slate-600">Freight you published · bidder contacts unlock with plan / free quota</p>
+            <p class="mb-3 text-xs text-slate-600">Freight you published · accept lowest bids from your profile or Live Loads</p>
             <div id="profile-my-loads" class="space-y-3"></div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 class="font-display text-lg font-bold text-slate-900">Bids I placed</h3>
-            <p class="mb-3 text-xs text-slate-600">Accepted-bid shipper contacts unlock with plan (1st bid free)</p>
+            <p class="mb-3 text-xs text-slate-600">When a poster accepts your bid, shipper contact appears here</p>
             <div id="profile-my-bids" class="space-y-3"></div>
           </div>
         </div>
@@ -465,11 +419,10 @@
   <footer class="mt-10 border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
       <p><span class="font-display font-semibold text-slate-900">Verified Trucks</span> — data synced with Cloud Firestore.</p>
-      <p class="text-xs">₹99 / week · ₹250 / month · ₹359 / 6 months · Accept bids on your posts · Terms on every load</p>
+      <p class="text-xs">Free marketplace · Accept bids on your posts · Terms on every load</p>
     </div>
   </footer>
 
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
@@ -494,18 +447,8 @@
 
     const LOADS_COLLECTION = "loads";
     const USERS_COLLECTION = "users";
-    const PAYMENTS_COLLECTION = "payments";
     const VIP_SESSION_KEY = "verified_trucks_vip_session";
     const VIP_PASSWORD = "Deva@2001";
-    const FREE_POSTS_TRANSPORTER = 2;
-    const FREE_ACCEPTS_TRANSPORTER = 2;
-    const FREE_ACCEPTED_CONTACTS_FLEET = 1;
-
-    const SUBSCRIPTION_PLANS = [
-      { id: "week_99", label: "1 Week", amountInr: 99, days: 7 },
-      { id: "month_250", label: "1 Month", amountInr: 250, days: 30 },
-      { id: "half_year_359", label: "6 Months", amountInr: 359, days: 180 },
-    ];
 
     const TERMS_TRANSPORTER = [
       "Verified Trucks is an online freight marketplace platform connecting independent transporters, load providers, and vehicle owners.",
@@ -541,15 +484,6 @@
     let firebaseReady = false;
     let seededOnce = false;
     let unsubscribeLoads = null;
-    let razorpayConfig = {
-      keyId: "",
-      currency: "INR",
-      companyName: "Verified Trucks",
-      themeColor: "#2563eb",
-      plans: SUBSCRIPTION_PLANS,
-    };
-    let subscribeModalReason = "general";
-    let selectedPlanId = "month_250";
     let knownMatchingLoadIds = new Set();
     let fleetNotifyReady = false;
     let loadsInitialized = false;
@@ -559,118 +493,7 @@
       get ready() { return firebaseReady; },
       get user() { return currentUser; },
       get profile() { return userProfile; },
-      get subscribed() { return hasActiveSubscription(userProfile); },
     };
-
-    async function loadRazorpayConfig() {
-      try {
-        const res = await fetch("/razorpay-config.json", { cache: "no-store" });
-        if (!res.ok) return;
-        const cfg = await res.json();
-        razorpayConfig = Object.assign({}, razorpayConfig, cfg || {});
-        if (Array.isArray(cfg.plans) && cfg.plans.length) {
-          SUBSCRIPTION_PLANS.splice(0, SUBSCRIPTION_PLANS.length, ...cfg.plans);
-        }
-      } catch (err) {
-        console.warn("razorpay config", err);
-      }
-    }
-
-    function getPlanById(planId) {
-      return SUBSCRIPTION_PLANS.find((p) => p.id === planId) || SUBSCRIPTION_PLANS[1];
-    }
-
-    function hasActiveSubscription(profile) {
-      if (!profile || !profile.subscriptionExpiresAt) return false;
-      const exp = new Date(profile.subscriptionExpiresAt).getTime();
-      return Number.isFinite(exp) && exp > Date.now();
-    }
-
-    function subscriptionDaysRemaining(profile) {
-      if (!hasActiveSubscription(profile)) return 0;
-      const exp = new Date(profile.subscriptionExpiresAt).getTime();
-      return Math.max(0, Math.ceil((exp - Date.now()) / (24 * 60 * 60 * 1000)));
-    }
-
-    function countMyPosts() {
-      if (!currentUser) return 0;
-      return loads.filter((l) => l.posterUid === currentUser.uid).length;
-    }
-
-    function countMyBids() {
-      if (!currentUser) return 0;
-      let n = 0;
-      loads.forEach((l) => {
-        (l.bids || []).forEach((b) => {
-          if (b.bidderUid === currentUser.uid) n += 1;
-        });
-      });
-      return n;
-    }
-
-    function getMyAcceptedBidsAsPoster() {
-      if (!currentUser) return [];
-      const items = [];
-      loads
-        .filter((l) => l.posterUid === currentUser.uid)
-        .forEach((l) => {
-          (l.bids || [])
-            .filter((b) => b.accepted)
-            .forEach((b) => items.push({ load: l, bid: b, at: b.acceptedAt || b.createdAt || "" }));
-        });
-      return items.sort((a, b) => String(a.at).localeCompare(String(b.at)));
-    }
-
-    function getMyAcceptedBidsAsBidder() {
-      if (!currentUser) return [];
-      const items = [];
-      loads.forEach((l) => {
-        (l.bids || []).forEach((b) => {
-          if (b.bidderUid === currentUser.uid && b.accepted) {
-            items.push({ load: l, bid: b, at: b.acceptedAt || b.createdAt || "" });
-          }
-        });
-      });
-      return items.sort((a, b) => String(a.at).localeCompare(String(b.at)));
-    }
-
-    function countMyAcceptsAsPoster() {
-      return getMyAcceptedBidsAsPoster().length;
-    }
-
-    function countMyAcceptedContactsAsBidder() {
-      return getMyAcceptedBidsAsBidder().length;
-    }
-
-    function canPostLoad() {
-      if (hasActiveSubscription(userProfile)) return { ok: true };
-      if (countMyPosts() < FREE_POSTS_TRANSPORTER) return { ok: true };
-      return { ok: false, reason: "transporter" };
-    }
-
-    function canAcceptBidOnLoad() {
-      if (hasActiveSubscription(userProfile)) return { ok: true };
-      if (countMyAcceptsAsPoster() < FREE_ACCEPTS_TRANSPORTER) return { ok: true };
-      return { ok: false, reason: "transporter_accept" };
-    }
-
-    function canViewBidderContact(load, bid) {
-      if (!bid || !bid.accepted) return false;
-      if (vipUnlocked) return true;
-      if (!currentUser || load.posterUid !== currentUser.uid) return false;
-      if (hasActiveSubscription(userProfile)) return true;
-      const idx = getMyAcceptedBidsAsPoster().findIndex((x) => x.bid.id === bid.id);
-      return idx >= 0 && idx < FREE_ACCEPTS_TRANSPORTER;
-    }
-
-    function canViewShipperContact(load, bid) {
-      if (!bid || !bid.accepted) return false;
-      if (vipUnlocked) return true;
-      if (!currentUser || bid.bidderUid !== currentUser.uid) return false;
-      if (hasActiveSubscription(userProfile)) return true;
-      const idx = getMyAcceptedBidsAsBidder().findIndex((x) => x.bid.id === bid.id);
-      return idx >= 0 && idx < FREE_ACCEPTED_CONTACTS_FLEET;
-    }
 
     function termsLinkHtml(role) {
       const r = role === "fleet_owner" ? "fleet_owner" : "transporter";
@@ -702,311 +525,6 @@
       if (e.target.id === "terms-modal") closeTermsModal();
     });
 
-    function renderPlanPicker(containerId, selectedId) {
-      const el = document.getElementById(containerId);
-      if (!el) return;
-      el.innerHTML = SUBSCRIPTION_PLANS.map((plan) => {
-        const active = plan.id === selectedId;
-        return `<button type="button" data-plan-id="${escapeHtml(plan.id)}" class="plan-option rounded-xl border px-3 py-3 text-left transition-colors ${active ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-200 bg-white hover:border-blue-300"}">
-          <p class="font-display text-base font-bold text-slate-900">₹${plan.amountInr}</p>
-          <p class="text-xs font-semibold text-slate-700">${escapeHtml(plan.label)}</p>
-          <p class="mt-1 text-xs text-slate-500">${plan.days} days access</p>
-        </button>`;
-      }).join("");
-      el.querySelectorAll(".plan-option").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          selectedPlanId = btn.dataset.planId;
-          renderPlanPicker(containerId, selectedPlanId);
-          updateSubscribePayButton();
-        });
-      });
-    }
-
-    function updateSubscribePayButton() {
-      const plan = getPlanById(selectedPlanId);
-      document.getElementById("subscribe-pay-btn").textContent = "Pay ₹" + plan.amountInr + " — all methods";
-      const upiBtn = document.getElementById("subscribe-upi-btn");
-      if (upiBtn) upiBtn.textContent = "Pay ₹" + plan.amountInr + " with UPI";
-    }
-
-    function getRazorpayContactPrefill() {
-      const digits = normalizePhoneDigits(userProfile?.contactNumber || "");
-      return digits.length === 10 ? digits : "";
-    }
-
-    function buildRazorpayDisplayConfig(mode) {
-      const upiBlock = {
-        name: "Pay via UPI",
-        instruments: [{ method: "upi" }],
-      };
-      const standardBlock = {
-        name: "Cards, Net Banking & Wallets",
-        instruments: [{ method: "card" }, { method: "netbanking" }, { method: "wallet" }],
-      };
-      if (mode === "upi") {
-        return {
-          blocks: { upi: upiBlock },
-          sequence: ["block.upi"],
-          preferences: { show_default_blocks: false },
-        };
-      }
-      return {
-        blocks: { upi: upiBlock, standard: standardBlock },
-        sequence: ["block.upi", "block.standard"],
-        preferences: { show_default_blocks: false },
-      };
-    }
-
-    function buildRazorpayCheckoutOptions(plan, copy, paymentMode) {
-      const key = String(razorpayConfig.keyId || "").trim();
-      const contact = getRazorpayContactPrefill();
-      const options = {
-        key,
-        amount: Math.round(plan.amountInr * 100),
-        currency: razorpayConfig.currency || "INR",
-        name: razorpayConfig.companyName || "Verified Trucks",
-        description: copy.title + " · " + plan.label,
-        image: "/assets/logo-128.png",
-        prefill: {
-          name: userProfile.fullName || currentUser.displayName || "",
-          email: currentUser.email || "",
-          contact,
-        },
-        notes: {
-          uid: currentUser.uid,
-          role: userProfile.role || "",
-          plan: plan.id,
-          reason: subscribeModalReason,
-          paymentMode: paymentMode || "all",
-        },
-        theme: { color: razorpayConfig.themeColor || "#2563eb" },
-        config: {
-          display: buildRazorpayDisplayConfig(paymentMode === "upi" ? "upi" : "all"),
-        },
-        handler: async function (response) {
-          try {
-            await activateSubscription(response.razorpay_payment_id, plan.id);
-          } catch (err) {
-            console.error(err);
-            showToast("Payment received but activation failed: " + (err.message || "error"));
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            showToast("Payment cancelled");
-          },
-        },
-      };
-      const configId = String(razorpayConfig.checkoutConfigId || "").trim();
-      if (configId) options.checkout_config_id = configId;
-      return options;
-    }
-
-    function subscribeCopy(reason) {
-      const role = userProfile?.role || "";
-      const planLine = "Plans: ₹99 / 1 week · ₹250 / 1 month · ₹359 / 6 months";
-      if (reason === "transporter" || reason === "transporter_accept" || role === "transporter") {
-        return {
-          title: "Unlimited Loads Post and Unlimited Contact",
-          body: "Subscribe for unlimited load posts and bidder contact unlocks as per plan validity.",
-          bullets: [
-            "2 free load posts and 2 free bid accepts included",
-            "From the 3rd post or 3rd accept, subscription is required",
-            planLine,
-          ],
-        };
-      }
-      if (reason === "fleet" || role === "fleet_owner") {
-        return {
-          title: "Unlimited Accepted Bid Contacts",
-          body: "Your 1st accepted bid contact is free. From the 2nd accepted bid, subscribe for unlimited shipper contacts.",
-          bullets: [
-            "See accepted loads and shipper phone on your profile",
-            "Unlimited accepted contacts with an active plan",
-            planLine,
-          ],
-        };
-      }
-      return {
-        title: "Verified Trucks subscription",
-        body: "Choose a plan for unlimited access based on your profile role.",
-        bullets: [
-          "Transporters: unlimited posts & accepts per plan",
-          "Fleet owners: unlimited accepted-bid contacts per plan",
-          planLine,
-        ],
-      };
-    }
-
-    function openSubscribeModal(reason) {
-      subscribeModalReason = reason || "general";
-      const copy = subscribeCopy(subscribeModalReason);
-      document.getElementById("subscribe-modal-title").textContent = copy.title;
-      document.getElementById("subscribe-modal-body").textContent = copy.body;
-      document.getElementById("subscribe-modal-bullets").innerHTML = copy.bullets
-        .map((b) => `<li class="flex gap-2"><span class="text-blue-600 font-bold">·</span><span>${escapeHtml(b)}</span></li>`)
-        .join("");
-      renderPlanPicker("subscribe-plan-options", selectedPlanId);
-      updateSubscribePayButton();
-      const modal = document.getElementById("subscribe-modal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    }
-
-    function closeSubscribeModal() {
-      const modal = document.getElementById("subscribe-modal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    }
-
-    document.getElementById("subscribe-cancel").addEventListener("click", closeSubscribeModal);
-    document.getElementById("subscribe-modal").addEventListener("click", (e) => {
-      if (e.target.id === "subscribe-modal") closeSubscribeModal();
-    });
-
-    async function activateSubscription(paymentId, planId) {
-      if (!currentUser) throw new Error("Sign in required");
-      const plan = getPlanById(planId || selectedPlanId);
-      const now = new Date();
-      let base = now;
-      if (hasActiveSubscription(userProfile)) {
-        base = new Date(userProfile.subscriptionExpiresAt);
-      }
-      const expires = new Date(base.getTime() + plan.days * 24 * 60 * 60 * 1000);
-      const patch = {
-        subscriptionPlan: plan.id,
-        subscriptionAmountInr: plan.amountInr,
-        subscriptionStartedAt: userProfile?.subscriptionStartedAt || now.toISOString(),
-        subscriptionExpiresAt: expires.toISOString(),
-        lastRazorpayPaymentId: paymentId || "",
-        updatedAt: now.toISOString(),
-      };
-      await saveUserProfile(currentUser.uid, patch);
-      if (paymentId) {
-        await setDoc(doc(db, PAYMENTS_COLLECTION, paymentId), {
-          uid: currentUser.uid,
-          email: currentUser.email || "",
-          amountInr: plan.amountInr,
-          plan: plan.id,
-          days: plan.days,
-          reason: subscribeModalReason,
-          createdAt: now.toISOString(),
-          razorpayPaymentId: paymentId,
-        }, { merge: true });
-      }
-      userProfile = Object.assign({}, userProfile || {}, patch);
-      closeSubscribeModal();
-      renderSubscriptionCard();
-      renderProfilePage();
-      renderBoard();
-      showToast("Plan active · " + subscriptionDaysRemaining(userProfile) + " days remaining");
-    }
-
-    async function startRazorpayCheckout(paymentMode) {
-      if (!currentUser) {
-        showToast("Sign in with Google first");
-        await googleSignIn();
-        return;
-      }
-      if (!userProfile || !userProfile.role) {
-        showToast("Complete your profile role before subscribing");
-        switchTab("profile");
-        closeSubscribeModal();
-        return;
-      }
-      const key = String(razorpayConfig.keyId || "").trim();
-      if (!key) {
-        showToast("Add your Razorpay Key ID in razorpay-config.json");
-        return;
-      }
-      if (typeof window.Razorpay !== "function") {
-        showToast("Razorpay script failed to load — check network");
-        return;
-      }
-      if (paymentMode === "upi" && !getRazorpayContactPrefill()) {
-        showToast("Save your 10-digit mobile in My Profile — required for UPI");
-        closeSubscribeModal();
-        switchTab("profile");
-        return;
-      }
-      const plan = getPlanById(selectedPlanId);
-      const copy = subscribeCopy(subscribeModalReason);
-      const options = buildRazorpayCheckoutOptions(plan, copy, paymentMode);
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", function (resp) {
-        showToast(resp?.error?.description || "Payment failed");
-      });
-      rzp.open();
-    }
-
-    document.getElementById("subscribe-pay-btn").addEventListener("click", () => {
-      startRazorpayCheckout("all");
-    });
-    document.getElementById("subscribe-upi-btn").addEventListener("click", () => {
-      startRazorpayCheckout("upi");
-    });
-    document.getElementById("btn-subscribe").addEventListener("click", () => {
-      openSubscribeModal(
-        userProfile?.role === "transporter" ? "transporter" : userProfile?.role === "fleet_owner" ? "fleet" : "general"
-      );
-    });
-
-    function renderSubscriptionCard() {
-      if (!currentUser) return;
-      const active = hasActiveSubscription(userProfile);
-      const badge = document.getElementById("profile-sub-badge");
-      const daysEl = document.getElementById("profile-sub-days");
-      const expiresEl = document.getElementById("profile-sub-expires");
-      const quotaEl = document.getElementById("profile-sub-quota");
-      const detailEl = document.getElementById("profile-sub-detail");
-      const tagline = document.getElementById("profile-sub-tagline");
-      const heading = document.getElementById("profile-sub-heading");
-      const role = userProfile?.role || "";
-
-      if (active) {
-        badge.textContent = "Active · " + (getPlanById(userProfile.subscriptionPlan).label || "Plan");
-        badge.className = "rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800";
-        daysEl.textContent = String(subscriptionDaysRemaining(userProfile));
-        expiresEl.textContent = new Date(userProfile.subscriptionExpiresAt).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        });
-      } else {
-        badge.textContent = "Inactive";
-        badge.className = "rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700";
-        daysEl.textContent = "0";
-        expiresEl.textContent = "Not subscribed";
-      }
-
-      if (role === "transporter") {
-        heading.textContent = "Unlimited Loads Post and Unlimited Contact";
-        tagline.textContent = "As per plan validity · 2 free posts · 2 free accepts";
-        quotaEl.textContent = active
-          ? "Unlimited posts & accepts"
-          : countMyPosts() + "/" + FREE_POSTS_TRANSPORTER + " posts · " + countMyAcceptsAsPoster() + "/" + FREE_ACCEPTS_TRANSPORTER + " accepts";
-        detailEl.textContent = active
-          ? "Unlimited load posts and bidder contacts until your plan expires."
-          : "Free: 2 posts and 2 accepts. From the 3rd post or accept, choose a plan below.";
-      } else if (role === "fleet_owner") {
-        heading.textContent = "Unlimited Accepted Bid Contacts";
-        tagline.textContent = "As per plan validity · 1st accepted contact free";
-        quotaEl.textContent = active
-          ? "Unlimited accepted contacts"
-          : countMyAcceptedContactsAsBidder() + "/" + FREE_ACCEPTED_CONTACTS_FLEET + " free accepted contact";
-        detailEl.textContent = active
-          ? "View shipper contacts for all accepted bids until plan expiry."
-          : "1st accepted bid shows shipper contact free. From the 2nd, subscribe below.";
-      } else {
-        heading.textContent = "Subscription plan";
-        tagline.textContent = "Save your profile role to see plan details";
-        quotaEl.textContent = "—";
-        detailEl.textContent = "Transporters and fleet owners have different free quotas.";
-      }
-
-      renderPlanPicker("profile-plan-options", selectedPlanId);
-    }
-
     async function handleAcceptBid(loadId, bidId) {
       if (!firebaseReady || !currentUser) {
         showToast("Sign in to accept bids");
@@ -1027,11 +545,6 @@
         showToast("A bid is already accepted on this load");
         return;
       }
-      if (!canAcceptBidOnLoad().ok) {
-        openSubscribeModal("transporter_accept");
-        showToast("Free accepts used — subscribe for unlimited accepts");
-        return;
-      }
       const acceptedAt = new Date().toISOString();
       const bids = (load.bids || []).map((b) =>
         Object.assign({}, b, {
@@ -1048,7 +561,7 @@
             bookedVehicleNumber: acceptedBid.vehicleNumber || "",
           })
         );
-        showToast("Bid accepted — contacts unlock on your profile");
+        showToast("Bid accepted — contacts are on your profile");
         renderBoard();
         renderMyLoadsAndBids();
       } catch (err) {
@@ -1061,15 +574,10 @@
       if (!currentUser || load.posterUid !== currentUser.uid) return "";
       const accepted = (load.bids || []).find((b) => b.accepted);
       if (accepted) {
-        const show = canViewBidderContact(load, accepted);
         return `<div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
           <p class="text-xs font-semibold uppercase text-emerald-800">Accepted bid</p>
           <p class="text-sm font-bold text-slate-900">${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
-          ${
-            show
-              ? `<p class="mt-1 text-xs text-emerald-800">Bidder contact: <span class="font-semibold">${escapeHtml(accepted.phone || "—")}</span> · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>`
-              : `<p class="mt-1 text-xs text-slate-600">Contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Subscribe</button></p>`
-          }
+          <p class="mt-1 text-xs text-emerald-800">Bidder contact: <span class="font-semibold">${escapeHtml(accepted.phone || "—")}</span> · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
         </div>`;
       }
       if (load.status !== "Live" || !(load.bids || []).length) return "";
@@ -1533,7 +1041,6 @@
 
     document.getElementById("profile-role").addEventListener("change", () => {
       syncRoleFields();
-      renderSubscriptionCard();
     });
 
     async function googleSignIn() {
@@ -1592,7 +1099,6 @@
       syncRoleFields();
       renderMyLoadsAndBids();
       renderMatchingLoadsPanel();
-      renderSubscriptionCard();
       syncPostPhoneFromProfile();
     }
 
@@ -1622,14 +1128,9 @@
               const top3 = getTopLowestBids(l.bids, 3);
               let actionBlock = "";
               if (accepted) {
-                const show = canViewBidderContact(l, accepted);
                 actionBlock = `<div class="mt-2 rounded border border-emerald-100 bg-white px-2 py-1.5">
                   <p class="text-xs font-semibold text-emerald-800">Accepted · ${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
-                  ${
-                    show
-                      ? `<p class="text-xs text-emerald-700">Bidder: ${escapeHtml(accepted.phone || "—")} · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>`
-                      : `<p class="text-xs text-slate-500">Contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Subscribe</button></p>`
-                  }
+                  <p class="text-xs text-emerald-700">Bidder: ${escapeHtml(accepted.phone || "—")} · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
                 </div>`;
               } else if (l.status === "Live" && top3.length) {
                 actionBlock = `<div class="mt-2 space-y-1.5">
@@ -1653,12 +1154,8 @@
               const accepted = !!b.accepted;
               let contactLine = "";
               if (accepted) {
-                if (canViewShipperContact(l, b)) {
-                  contactLine = `<p class="text-xs text-emerald-700 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
+                contactLine = `<p class="text-xs text-emerald-700 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
                     <p class="text-xs text-slate-600">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>`;
-                } else {
-                  contactLine = `<p class="text-xs text-slate-500 mt-1">Accepted — contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Subscribe for unlimited contacts</button></p>`;
-                }
               } else {
                 contactLine = `<p class="text-xs text-slate-500 mt-1">Awaiting acceptance by load poster</p>`;
               }
@@ -1674,11 +1171,6 @@
     }
 
     document.getElementById("profile-signed-in").addEventListener("click", (e) => {
-      const subBtn = e.target.closest('[data-action="unlock-sub"]');
-      if (subBtn) {
-        openSubscribeModal(userProfile?.role === "transporter" ? "transporter" : "fleet");
-        return;
-      }
       const acceptBtn = e.target.closest('[data-action="accept-bid"]');
       if (acceptBtn) {
         handleAcceptBid(acceptBtn.dataset.loadId, acceptBtn.dataset.bidId);
@@ -1744,7 +1236,6 @@
           requestFleetNotifyPermission();
         }
         renderProfilePage();
-        renderSubscriptionCard();
       } catch (err) {
         console.error(err);
         showToast("Failed to save profile: " + (err.message || "error"));
@@ -1804,15 +1295,6 @@
       if (!userProfile || !userProfile.role) {
         showToast("Complete your profile (role) before posting");
         switchTab("profile");
-        return;
-      }
-      if (userProfile.role === "transporter" || userProfile.role === "fleet_owner") {
-        // Transporters are load posters; fleet owners may also post rarely — apply transporter free-post rule for anyone posting beyond free quota without sub
-      }
-      const postGate = canPostLoad();
-      if (!postGate.ok) {
-        openSubscribeModal("transporter");
-        showToast("Free posts used — choose a subscription plan");
         return;
       }
       const termsCheck = document.getElementById("post-terms-agree");
@@ -2074,12 +1556,6 @@
       if (acceptBtn) {
         e.preventDefault();
         await handleAcceptBid(acceptBtn.dataset.loadId, acceptBtn.dataset.bidId);
-        return;
-      }
-      const subBtn = e.target.closest('[data-action="unlock-sub"]');
-      if (subBtn) {
-        e.preventDefault();
-        openSubscribeModal(userProfile?.role === "transporter" ? "transporter" : "fleet");
         return;
       }
       const gotoProfile = e.target.closest('[data-action="goto-profile-matches"]');
@@ -2456,7 +1932,6 @@
       if (vipUnlocked) renderVipDashboard();
       if (currentUser) {
         renderMyLoadsAndBids();
-        renderSubscriptionCard();
         renderMatchingLoadsPanel();
       }
       return loads;
@@ -2506,7 +1981,6 @@
           if (vipUnlocked) renderVipDashboard();
           if (currentUser) {
             renderMyLoadsAndBids();
-            renderSubscriptionCard();
             renderMatchingLoadsPanel();
           }
         },
@@ -2625,7 +2099,6 @@
       populateVehicleSelects();
       setMinLoadingDate();
       checkVipSession();
-      loadRazorpayConfig();
       renderBoard();
       setInterval(tickRelativeTimes, 15000);
       initFirebase();

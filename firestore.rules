@@ -13,15 +13,6 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Razorpay payment receipts (client-recorded after Checkout success)
-    match /payments/{paymentId} {
-      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.razorpayPaymentId == paymentId;
-      allow update, delete: if false;
-    }
-
     // Outbound email queue (Firebase Trigger Email extension reads /mail)
     match /mail/{mailId} {
       allow create: if request.auth != null

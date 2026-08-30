@@ -7,27 +7,14 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 ## Features
 
-- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence)
-- **₹99 / month Razorpay subscription** (My Profile)
-  - **Transporter:** first **2 load posts free**; from the **3rd post** pay ₹99 for 1 month unlimited posts (+ bidder contact unlocks beyond 2 free)
-  - **Vehicle / Fleet owner:** **1st bid free**; from the **2nd bid** subscribe for ₹99 / month for **unlimited contacts of Accepted Bids**
+- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
+- **Free to use** — Unlimited load posts, bids, and contact sharing after bid acceptance
+- **Accept bids** — Transporters see the **top 3 lowest bids** and can accept the best rate
+- **Phone match rule** — Post/bid contact must match My Profile number
+- **Fleet matching** — Vehicle owners get matching loads by size (any route) plus browser/email alerts
 - **Live Loads** — Real-time Firestore sync
 - **VIP Access** (`Deva@2001`) — Full contacts & amounts, Mark Booked, Delete Post
-- **WhatsApp share**
-
-## Razorpay setup
-
-1. Open [Razorpay Dashboard → API Keys](https://dashboard.razorpay.com/app/keys)
-2. Copy your **Key ID** into `razorpay-config.json` (see file for three plan tiers).
-3. **Enable UPI (required for GPay / PhonePe / Paytm):**
-   - Dashboard → **Account & Settings → Payment Methods → UPI**
-   - Complete KYC if the Payment Methods tab is missing
-   - Ensure UPI status is **Activated** (live mode can take a few days after request)
-4. Redeploy hosting. Checkout shows **Pay with UPI** first, plus cards, net banking, and wallets.
-
-Users must save a **10-digit mobile** in My Profile — Razorpay uses it for UPI intent on phones.
-
-> Optional: create a checkout layout in the Razorpay Dashboard and paste its Configuration ID into `checkoutConfigId` in `razorpay-config.json`.
+- **WhatsApp share** · **Terms & Conditions** on every load
 
 ## Firebase
 
@@ -44,7 +31,7 @@ Config: `firebase-config.json` · Rules: `firestore.rules`
 npm start
 ```
 
-Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
+Open http://127.0.0.1:43123
 
 ## Deploy
 
@@ -52,7 +39,9 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 npm run deploy
 ```
 
+Or push to `main` — GitHub Actions deploys hosting + Firestore rules automatically.
+
 ## Stack
 
-- `index.html` + Tailwind CDN + Firebase JS SDK + Razorpay Checkout
-- Firestore: `loads`, `users`, `payments`
+- `index.html` + Tailwind CDN + Firebase JS SDK
+- Firestore: `loads`, `users`, `mail` (optional email queue for fleet alerts)
