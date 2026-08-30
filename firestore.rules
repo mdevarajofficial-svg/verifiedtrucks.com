@@ -21,5 +21,14 @@ service cloud.firestore {
         && request.resource.data.razorpayPaymentId == paymentId;
       allow update, delete: if false;
     }
+
+    // Outbound email queue (Firebase Trigger Email extension reads /mail)
+    match /mail/{mailId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.to.size() == 1
+        && request.resource.data.to[0] == request.auth.token.email;
+      allow read, update, delete: if false;
+    }
   }
 }
