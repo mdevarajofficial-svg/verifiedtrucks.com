@@ -1073,14 +1073,7 @@
         </div>`;
       }
       if (load.status !== "Live" || !(load.bids || []).length) return "";
-      const top = (load.bids || []).slice().sort((a, b) => Number(b.amount) - Number(a.amount))[0];
-      return `<div class="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-        <p class="text-xs font-semibold uppercase text-blue-800">Highest bid on your load</p>
-        <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
-          <p class="text-sm font-bold text-slate-900">${formatCurrency(top.amount)} · ${escapeHtml(bidDisplayName(top))}</p>
-          <button type="button" data-action="accept-bid" data-load-id="${escapeHtml(load.id)}" data-bid-id="${escapeHtml(top.id)}" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">Accept</button>
-        </div>
-      </div>`;
+      return "";
     }
 
     function showBanner(message, isError) {
@@ -1180,6 +1173,38 @@
 
     function bidDisplayName(bid) {
       return bid.name || bid.company || "Bidder";
+    }
+
+    function sortBidsLowestFirst(bids) {
+      return (bids || []).slice().sort((a, b) => {
+        const diff = Number(a.amount) - Number(b.amount);
+        if (diff !== 0) return diff;
+        return String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+      });
+    }
+
+    function getTopLowestBids(bids, limit) {
+      return sortBidsLowestFirst(bids).slice(0, limit || 3);
+    }
+
+    function renderTransporterBidRow(load, bid, rank, showAccept) {
+      const hasAccepted = (load.bids || []).some((b) => b.accepted);
+      const best = rank === 1;
+      const tag = bid.accepted
+        ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
+        : '<span class="text-xs text-slate-500">Pending</span>';
+      const acceptBtn =
+        showAccept && load.status === "Live" && !hasAccepted && !bid.accepted
+          ? `<button type="button" data-action="accept-bid" data-load-id="${escapeHtml(load.id)}" data-bid-id="${escapeHtml(bid.id)}" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">${best ? "Accept best rate" : "Accept"}</button>`
+          : "";
+      return `<div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border ${best ? "border-emerald-200 bg-emerald-50/60" : "border-slate-100 bg-slate-50"} px-3 py-2">
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold uppercase tracking-wide ${best ? "text-emerald-800" : "text-slate-500"}">#${rank}${best ? " · Best rate" : ""}</p>
+          <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bidDisplayName(bid))}</p>
+          <p class="text-xs font-semibold text-blue-700">${formatCurrency(bid.amount)} · Veh ${escapeHtml(bid.vehicleNumber || "—")}</p>
+        </div>
+        <div class="flex flex-col items-end gap-1">${tag}${acceptBtn}</div>
+      </div>`;
     }
 
     function normalizePhoneDigits(phone) {
@@ -1593,7 +1618,8 @@
         ? myLoads
             .map((l) => {
               const accepted = (l.bids || []).find((b) => b.accepted);
-              const top = (l.bids || []).slice().sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+              const totalBids = (l.bids || []).length;
+              const top3 = getTopLowestBids(l.bids, 3);
               let actionBlock = "";
               if (accepted) {
                 const show = canViewBidderContact(l, accepted);
@@ -1605,10 +1631,10 @@
                       : `<p class="text-xs text-slate-500">Contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Subscribe</button></p>`
                   }
                 </div>`;
-              } else if (l.status === "Live" && top) {
-                actionBlock = `<div class="mt-2 rounded border border-blue-100 bg-white px-2 py-1.5">
-                  <p class="text-xs text-slate-600">Highest bid: <span class="font-semibold text-blue-700">${formatCurrency(top.amount)}</span> · ${escapeHtml(bidDisplayName(top))}</p>
-                  <button type="button" data-action="accept-bid" data-load-id="${escapeHtml(l.id)}" data-bid-id="${escapeHtml(top.id)}" class="mt-1 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700">Accept bid</button>
+              } else if (l.status === "Live" && top3.length) {
+                actionBlock = `<div class="mt-2 space-y-1.5">
+                  <p class="text-xs font-semibold text-blue-800">Lowest bids (top 3${totalBids > 3 ? " of " + totalBids : ""})</p>
+                  ${top3.map((bid, idx) => renderTransporterBidRow(l, bid, idx + 1, true)).join("")}
                 </div>`;
               }
               return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
@@ -1920,26 +1946,31 @@
           ? '<span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700"><span class="live-dot h-1.5 w-1.5 rounded-full bg-blue-600"></span>Live</span>'
           : '<span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Booked</span>';
 
-      const bidsHtml = (load.bids || []).length
-        ? (load.bids || [])
-            .map((bid) => {
-              const tag = bid.accepted
-                ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
-                : '<span class="text-xs text-slate-500">Pending</span>';
-              const amountLine = isOwner
-                ? `<p class="text-xs font-semibold text-blue-700">${formatCurrency(bid.amount)}</p>`
-                : `<p class="text-xs text-slate-500">Amount hidden publicly</p>`;
-              return `
+      const bidCount = (load.bids || []).length;
+      const bidsHtml = !bidCount
+        ? '<p class="text-xs text-slate-500 italic">No bids yet — be the first to bid.</p>'
+        : isOwner
+          ? getTopLowestBids(load.bids, 3)
+              .map((bid, idx) => renderTransporterBidRow(load, bid, idx + 1, true))
+              .join("")
+          : (load.bids || [])
+              .map((bid) => {
+                const tag = bid.accepted
+                  ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
+                  : '<span class="text-xs text-slate-500">Pending</span>';
+                return `
                 <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                   <div class="min-w-0">
                     <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bidDisplayName(bid))}</p>
-                    ${amountLine}
+                    <p class="text-xs text-slate-500">Amount hidden publicly</p>
                   </div>
                   ${tag}
                 </div>`;
-            })
-            .join("")
-        : '<p class="text-xs text-slate-500 italic">No bids yet — be the first to bid.</p>';
+              })
+              .join("");
+      const bidsHeading = isOwner && bidCount
+        ? `Top 3 lowest bids${bidCount > 3 ? " (" + bidCount + " total)" : ""}`
+        : "Bids (" + bidCount + ")";
 
       const bookingNote =
         load.status === "Booked"
@@ -2024,7 +2055,7 @@
             ${renderPosterBidPanel(load)}
 
             <div class="mt-3">
-              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Bids (${(load.bids || []).length})</p>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">${bidsHeading}</p>
               <div class="space-y-2">${bidsHtml}</div>
             </div>
 
@@ -2143,13 +2174,14 @@
         return;
       }
       document.getElementById("book-load-id").value = loadId;
-      bookBidSelect.innerHTML = (load.bids || [])
+      const sortedBids = sortBidsLowestFirst(load.bids);
+      bookBidSelect.innerHTML = sortedBids
         .map(
           (b) =>
             `<option value="${escapeHtml(b.id)}">${escapeHtml(bidDisplayName(b))} · ${formatCurrency(b.amount)} · ${escapeHtml(b.vehicleNumber || "no vehicle")}</option>`
         )
         .join("");
-      const first = load.bids[0];
+      const first = sortedBids[0];
       bookVehicleInput.value = first.vehicleNumber || "";
       bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
       bookModal.classList.remove("hidden");
@@ -2314,7 +2346,7 @@
               ? "text-blue-700 bg-blue-50 border-blue-200"
               : "text-emerald-700 bg-emerald-50 border-emerald-200";
           const bidsDetail = (load.bids || []).length
-            ? (load.bids || [])
+            ? sortBidsLowestFirst(load.bids)
                 .map((b) => {
                   const tag = b.accepted ? ' <span class="font-semibold text-emerald-700">(Accepted)</span>' : "";
                   return `<div class="mb-1.5 last:mb-0 border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
