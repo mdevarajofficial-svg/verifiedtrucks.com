@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Verified Trucks — Freight Marketplace</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/assets/favicon.ico" sizes="any" />
@@ -33,8 +33,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    html { scroll-behavior: smooth; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      overflow-x: hidden;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
     .font-display { font-family: 'Outfit', system-ui, sans-serif; }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(10px); }
@@ -51,34 +56,47 @@
     select, input[type="date"], input[type="time"] { color-scheme: dark; }
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.85); opacity: 0.7; }
+    /* Prevent iOS zoom on focus — inputs must be ≥16px on small screens */
+    @media (max-width: 640px) {
+      input, select, textarea, button { font-size: 16px !important; }
+      .tab-btn { min-height: 44px; white-space: nowrap; }
+      .nav-scroll {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .nav-scroll::-webkit-scrollbar { display: none; }
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
-  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-      <a href="/" class="flex items-center gap-3 min-w-0" aria-label="Verified Trucks home">
-        <img src="/assets/logo-128.png" alt="Verified Trucks" class="h-10 w-10 sm:h-11 sm:w-11 object-contain shrink-0" width="44" height="44" decoding="async" />
-        <div class="min-w-0">
-          <h1 class="font-display text-lg font-bold tracking-tight text-slate-100 sm:text-xl">Verified Trucks</h1>
-          <p class="hidden text-xs text-slate-400 sm:block">Cloud marketplace · Firebase Firestore</p>
-        </div>
-      </a>
-      <nav class="flex flex-wrap items-center justify-end gap-1 sm:gap-2" id="main-nav">
-        <button type="button" data-tab="board" class="tab-btn tab-active rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">Live Loads</button>
-        <button type="button" data-tab="post" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">Post a Load</button>
-        <button type="button" data-tab="profile" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">My Profile</button>
-        <button type="button" data-tab="vip" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">VIP Access</button>
-        <div id="auth-slot" class="ml-1 flex items-center gap-2 border-l border-slate-800 pl-2 sm:pl-3">
-          <button type="button" id="btn-google-signin" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800/50">
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 6.9 2.8 2.8 6.9 2.8 12S6.9 21.2 12 21.2c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.5H12z"/><path fill="#34A853" d="M3.9 7.4l3 2.2C7.7 7.5 9.7 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 8.3 2.8 5.1 4.9 3.9 7.4z" opacity=".01"/><path fill="#4285F4" d="M12 21.2c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9 1-3.1 1-2.4 0-4.4-1.6-5.1-3.8l-3 2.3c1.4 2.8 4.3 4.9 8.1 4.9z"/><path fill="#FBBC05" d="M6.9 13.9c-.2-.5-.3-1.1-.3-1.7s.1-1.2.3-1.7L3.9 8.2C3.3 9.4 3 10.7 3 12s.3 2.6.9 3.8l3-2z"/></svg>
-            Google Sign-In
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md pt-[env(safe-area-inset-top)]">
+    <div class="mx-auto max-w-7xl px-3 py-2.5 sm:px-6 sm:py-3 lg:px-8">
+      <div class="flex items-center justify-between gap-2">
+        <a href="/" class="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Verified Trucks home">
+          <img src="/assets/logo-128.png" alt="Verified Trucks" class="h-9 w-9 sm:h-11 sm:w-11 object-contain shrink-0" width="44" height="44" decoding="async" />
+          <div class="min-w-0">
+            <h1 class="font-display text-base font-bold tracking-tight text-slate-100 sm:text-xl truncate">Verified Trucks</h1>
+            <p class="hidden text-xs text-slate-400 sm:block">Cloud marketplace · Firebase Firestore</p>
+          </div>
+        </a>
+        <div id="auth-slot" class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <button type="button" id="btn-google-signin" class="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/50 sm:px-3">
+            <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 6.9 2.8 2.8 6.9 2.8 12S6.9 21.2 12 21.2c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.5H12z"/><path fill="#34A853" d="M3.9 7.4l3 2.2C7.7 7.5 9.7 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 8.3 2.8 5.1 4.9 3.9 7.4z" opacity=".01"/><path fill="#4285F4" d="M12 21.2c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9 1-3.1 1-2.4 0-4.4-1.6-5.1-3.8l-3 2.3c1.4 2.8 4.3 4.9 8.1 4.9z"/><path fill="#FBBC05" d="M6.9 13.9c-.2-.5-.3-1.1-.3-1.7s.1-1.2.3-1.7L3.9 8.2C3.3 9.4 3 10.7 3 12s.3 2.6.9 3.8l3-2z"/></svg>
+            <span class="sm:hidden">Sign in</span>
+            <span class="hidden sm:inline">Google Sign-In</span>
           </button>
-          <div id="auth-user-chip" class="hidden items-center gap-2">
-            <img id="auth-avatar" alt="" class="h-7 w-7 rounded-full border border-slate-800 object-cover" />
-            <span id="auth-name" class="hidden max-w-[9rem] truncate text-xs font-semibold text-slate-200 sm:inline"></span>
-            <button type="button" id="btn-signout" class="rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800/50">Sign out</button>
+          <div id="auth-user-chip" class="hidden items-center gap-1.5 sm:gap-2">
+            <img id="auth-avatar" alt="" class="h-8 w-8 rounded-full border border-slate-800 object-cover" />
+            <span id="auth-name" class="hidden max-w-[7rem] truncate text-xs font-semibold text-slate-200 sm:inline"></span>
+            <button type="button" id="btn-signout" class="min-h-[40px] rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800/50">Sign out</button>
           </div>
         </div>
+      </div>
+      <nav class="nav-scroll mt-2 -mx-3 flex items-stretch gap-0.5 overflow-x-auto px-3 sm:mx-0 sm:mt-3 sm:flex-wrap sm:gap-1 sm:overflow-visible sm:px-0" id="main-nav">
+        <button type="button" data-tab="board" class="tab-btn tab-active shrink-0 rounded-md px-3 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">Live Loads</button>
+        <button type="button" data-tab="post" class="tab-btn shrink-0 rounded-md px-3 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors"><span class="sm:hidden">Post</span><span class="hidden sm:inline">Post a Load</span></button>
+        <button type="button" data-tab="profile" class="tab-btn shrink-0 rounded-md px-3 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors"><span class="sm:hidden">Profile</span><span class="hidden sm:inline">My Profile</span></button>
+        <button type="button" data-tab="vip" class="tab-btn shrink-0 rounded-md px-3 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">VIP</button>
       </nav>
     </div>
   </header>
@@ -89,13 +107,13 @@
     </div>
   </div>
 
-  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-lg border border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 py-3 shadow-xl shadow-black/40">
+  <main class="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <div id="toast" class="fixed bottom-4 left-3 right-3 z-50 hidden rounded-lg border border-slate-800 bg-slate-900/95 backdrop-blur-md px-4 py-3 shadow-xl shadow-black/40 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm">
       <p id="toast-msg" class="text-sm font-medium text-slate-100"></p>
     </div>
 
-    <div id="book-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-      <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/85 backdrop-blur-md p-6 shadow-xl shadow-black/30">
+    <div id="book-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-950/70 backdrop-blur-sm p-0 sm:items-center sm:p-4">
+      <div class="w-full max-w-md rounded-t-2xl border border-slate-800 bg-slate-900/95 backdrop-blur-md p-5 shadow-xl shadow-black/30 sm:rounded-xl sm:p-6 max-h-[92vh] overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <h3 class="font-display text-lg font-bold text-slate-100">Mark Load as Booked</h3>
         <p class="mt-1 text-sm text-slate-400">Select the winning bidder and confirm the vehicle number. Public Live Loads will show only the first 5 characters and hide the last 4.</p>
         <form id="book-form" class="mt-4 space-y-4">
@@ -109,16 +127,16 @@
             <input id="book-vehicle-number" required type="text" minlength="5" placeholder="e.g. MH12AB1234" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm uppercase tabular-nums tracking-wide text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
             <p class="mt-1 text-xs text-slate-400">Public preview: <span id="book-mask-preview" class="font-semibold text-slate-100">—</span></p>
           </div>
-          <div class="flex gap-2 justify-end">
-            <button type="button" id="book-cancel" class="rounded-lg border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800/50">Cancel</button>
-            <button type="submit" class="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400">Confirm Booked</button>
+          <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" id="book-cancel" class="min-h-[44px] rounded-lg border border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800/50">Cancel</button>
+            <button type="submit" class="min-h-[44px] rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">Confirm Booked</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div id="terms-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-      <div class="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900/85 backdrop-blur-md p-6 shadow-xl shadow-black/30 max-h-[90vh] overflow-y-auto">
+    <div id="terms-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-slate-950/70 backdrop-blur-sm p-0 sm:items-center sm:p-4">
+      <div class="w-full max-w-2xl rounded-t-2xl border border-slate-800 bg-slate-900/95 backdrop-blur-md p-5 shadow-xl shadow-black/30 sm:rounded-xl sm:p-6 max-h-[92vh] overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div class="flex items-start justify-between gap-3">
           <h3 id="terms-modal-title" class="font-display text-lg font-bold text-slate-100">Terms &amp; Conditions</h3>
           <button type="button" id="terms-close" class="rounded-lg border border-slate-800 px-3 py-1 text-sm font-semibold text-slate-300 hover:bg-slate-800/50">Close</button>
@@ -130,7 +148,7 @@
     <section id="panel-board" class="tab-panel animate-fade-in">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 class="font-display text-2xl font-bold text-slate-100">Live Loads</h2>
+          <h2 class="font-display text-xl font-bold text-slate-100 sm:text-2xl">Live Loads</h2>
           <p class="mt-1 text-sm text-slate-400">Synced live from Firebase. Place bids with name, phone, amount, and vehicle number. Bid amounts stay private.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -196,7 +214,7 @@
 
     <section id="panel-post" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-100">Post a Freight Load</h2>
+        <h2 class="font-display text-xl font-bold text-slate-100 sm:text-2xl">Post a Freight Load</h2>
         <p class="mt-1 text-sm text-slate-400">Sign in with Google to publish — the load is linked to your profile.</p>
       </div>
 
@@ -204,7 +222,7 @@
         Please <button type="button" class="font-semibold text-blue-400 underline" id="post-signin-link">sign in with Google</button> before posting a load.
       </div>
 
-      <form id="post-load-form" class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25 sm:p-8">
+      <form id="post-load-form" class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-4 shadow-xl shadow-black/25 sm:p-8">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label for="origin" class="mb-1.5 block text-sm font-semibold text-slate-100">Loading Location <span class="text-blue-400">*</span></label>
@@ -266,8 +284,8 @@
             <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="transporter" class="font-semibold text-blue-400 underline hover:text-blue-300">Terms &amp; Conditions</button> for posting loads on this online platform.</span>
           </label>
           <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-xs text-slate-400">Status starts as <span class="font-semibold text-blue-400">Live</span> · Free to post</p>
-            <button type="submit" id="post-submit-btn" class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-slate-950 transition-colors">
+            <p class="text-xs text-slate-400 text-center sm:text-left">Status starts as <span class="font-semibold text-blue-400">Live</span> · Free to post</p>
+            <button type="submit" id="post-submit-btn" class="inline-flex w-full min-h-[48px] items-center justify-center rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-slate-950 transition-colors sm:w-auto">
               Publish to Live Loads
             </button>
           </div>
@@ -277,7 +295,7 @@
 
     <section id="panel-profile" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-100">My Profile</h2>
+        <h2 class="font-display text-xl font-bold text-slate-100 sm:text-2xl">My Profile</h2>
         <p class="mt-1 text-sm text-slate-400">Sign in with Google to manage your details, posted loads, and bids.</p>
       </div>
 
@@ -344,7 +362,7 @@
             </div>
           </div>
           <div class="mt-5 flex justify-end">
-            <button type="submit" id="profile-save-btn" class="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">Save Profile</button>
+            <button type="submit" id="profile-save-btn" class="w-full min-h-[48px] rounded-lg bg-blue-500 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-400 sm:w-auto">Save Profile</button>
           </div>
         </form>
 
@@ -372,7 +390,7 @@
 
     <section id="panel-vip" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-100">VIP Access</h2>
+        <h2 class="font-display text-xl font-bold text-slate-100 sm:text-2xl">VIP Access</h2>
         <p class="mt-1 text-sm text-slate-400">View all contacts &amp; bid amounts, mark loads booked, or delete posts in Firebase.</p>
       </div>
 
@@ -426,8 +444,8 @@
     </section>
   </main>
 
-  <footer class="mt-10 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md">
-    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+  <footer class="mt-8 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-5 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-6 lg:px-8">
       <p><span class="font-display font-semibold text-slate-100">Verified Trucks</span> — data synced with Cloud Firestore.</p>
       <p class="text-xs">Free marketplace · Accept bids on your posts · Terms on every load</p>
     </div>
@@ -1593,15 +1611,15 @@
                 <input name="bidTerms" type="checkbox" required class="mt-0.5 rounded border-slate-700 text-blue-400" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
                 <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="fleet_owner" class="font-semibold text-blue-400 underline">Terms &amp; Conditions</button>.</span>
               </label>
-              <button type="submit" class="w-full rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400 transition-colors sm:w-auto disabled:cursor-not-allowed disabled:opacity-50" ${currentUser && !profilePhoneOk ? "disabled" : ""}>${currentUser ? (profilePhoneOk ? "Submit Bid" : "Cannot bid — profile number required") : "Sign in & Submit Bid"}</button>
+              <button type="submit" class="w-full min-h-[48px] rounded-lg bg-blue-500 px-3 py-3 text-sm font-semibold text-white hover:bg-blue-400 transition-colors sm:w-auto sm:min-h-0 sm:py-2 disabled:cursor-not-allowed disabled:opacity-50" ${currentUser && !profilePhoneOk ? "disabled" : ""}>${currentUser ? (profilePhoneOk ? "Submit Bid" : "Cannot bid — profile number required") : "Sign in & Submit Bid"}</button>
             </form>`
           : "";
 
       return `
-          <article class="animate-fade-in flex flex-col rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25" data-load-id="${escapeHtml(load.id)}">
+          <article class="animate-fade-in flex flex-col rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-4 shadow-xl shadow-black/25 sm:p-5" data-load-id="${escapeHtml(load.id)}">
             <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
-                <h3 class="font-display text-lg font-bold text-slate-100 truncate">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</h3>
+                <h3 class="font-display text-base font-bold text-slate-100 break-words sm:text-lg">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</h3>
                 <p class="mt-0.5 text-xs text-slate-400">
                   <span class="relative-time" data-created="${escapeHtml(load.createdAt)}">${relativeTime(load.createdAt)}</span>
                   · ${escapeHtml(load.loadType)} · <span class="tabular-nums">${escapeHtml(load.distance)}</span> km
