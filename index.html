@@ -114,6 +114,22 @@
       </div>
     </div>
 
+    <div id="subscribe-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+      <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+        <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50">
+          <img src="/assets/logo-64.png" alt="" class="h-8 w-8 object-contain" width="32" height="32" />
+        </div>
+        <h3 id="subscribe-modal-title" class="font-display text-lg font-bold text-slate-900">Subscribe for ₹99 / month</h3>
+        <p id="subscribe-modal-body" class="mt-2 text-sm text-slate-600">Unlock 1 month of Verified Trucks access.</p>
+        <ul id="subscribe-modal-bullets" class="mt-3 space-y-1.5 text-sm text-slate-700"></ul>
+        <div class="mt-5 flex flex-wrap gap-2 justify-end">
+          <button type="button" id="subscribe-cancel" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Not now</button>
+          <button type="button" id="subscribe-pay-btn" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Pay ₹99 with Razorpay</button>
+        </div>
+        <p id="subscribe-modal-hint" class="mt-3 text-xs text-slate-500">Secure payment via Razorpay. Access activates for 30 days after successful payment.</p>
+      </div>
+    </div>
+
     <section id="panel-board" class="tab-panel animate-fade-in">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -297,15 +313,43 @@
           </div>
         </form>
 
+        <div id="profile-subscription-card" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="font-display text-lg font-bold text-slate-900">Subscription plan</h3>
+              <p id="profile-sub-tagline" class="mt-1 text-sm text-slate-600">₹99 for 1 month — role-based access</p>
+            </div>
+            <div id="profile-sub-badge" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">Inactive</div>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Price</p>
+              <p class="font-display text-lg font-bold text-slate-900">₹99<span class="text-sm font-semibold text-slate-500"> / month</span></p>
+            </div>
+            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Free quota</p>
+              <p id="profile-sub-quota" class="text-sm font-semibold text-slate-900">—</p>
+            </div>
+            <div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Valid until</p>
+              <p id="profile-sub-expires" class="text-sm font-semibold text-slate-900">—</p>
+            </div>
+          </div>
+          <p id="profile-sub-detail" class="mt-3 text-sm text-slate-600"></p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button type="button" id="btn-subscribe" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Subscribe ₹99 / month</button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 class="font-display text-lg font-bold text-slate-900">Loads I posted</h3>
-            <p class="mb-3 text-xs text-slate-600">Freight you published to Live Loads</p>
+            <p class="mb-3 text-xs text-slate-600">Freight you published · bidder contacts unlock with plan / free quota</p>
             <div id="profile-my-loads" class="space-y-3"></div>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 class="font-display text-lg font-bold text-slate-900">Bids I placed</h3>
-            <p class="mb-3 text-xs text-slate-600">Your bid amounts are visible only to you &amp; VIP</p>
+            <p class="mb-3 text-xs text-slate-600">Accepted-bid shipper contacts unlock with plan (1st bid free)</p>
             <div id="profile-my-bids" class="space-y-3"></div>
           </div>
         </div>
@@ -371,10 +415,11 @@
   <footer class="mt-10 border-t border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
       <p><span class="font-display font-semibold text-slate-900">Verified Trucks</span> — data synced with Cloud Firestore.</p>
-      <p class="text-xs">Bid amounts &amp; phones VIP-only · Share loads on WhatsApp</p>
+      <p class="text-xs">₹99/mo plans · phones gated by subscription · VIP override · WhatsApp share</p>
     </div>
   </footer>
 
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
@@ -399,8 +444,14 @@
 
     const LOADS_COLLECTION = "loads";
     const USERS_COLLECTION = "users";
+    const PAYMENTS_COLLECTION = "payments";
     const VIP_SESSION_KEY = "verified_trucks_vip_session";
     const VIP_PASSWORD = "Deva@2001";
+    const FREE_POSTS_TRANSPORTER = 2;
+    const FREE_BIDS_FLEET = 1;
+    const FREE_CONTACT_UNLOCKS_TRANSPORTER = 2;
+    const SUB_AMOUNT_INR = 99;
+    const SUB_DURATION_DAYS = 30;
 
     const VEHICLE_SIZES = [
       "7 ft", "9 ft", "14 ft", "17 ft", "19 ft", "20 ft",
@@ -418,13 +469,334 @@
     let firebaseReady = false;
     let seededOnce = false;
     let unsubscribeLoads = null;
+    let razorpayConfig = {
+      keyId: "",
+      currency: "INR",
+      amountInr: SUB_AMOUNT_INR,
+      planName: "Verified Trucks Monthly",
+      durationDays: SUB_DURATION_DAYS,
+      companyName: "Verified Trucks",
+      themeColor: "#2563eb",
+    };
+    let subscribeModalReason = "general";
 
     window.__vt = {
       get loads() { return loads; },
       get ready() { return firebaseReady; },
       get user() { return currentUser; },
       get profile() { return userProfile; },
+      get subscribed() { return hasActiveSubscription(userProfile); },
     };
+
+    async function loadRazorpayConfig() {
+      try {
+        const res = await fetch("/razorpay-config.json", { cache: "no-store" });
+        if (!res.ok) return;
+        const cfg = await res.json();
+        razorpayConfig = Object.assign({}, razorpayConfig, cfg || {});
+        if (!razorpayConfig.amountInr) razorpayConfig.amountInr = SUB_AMOUNT_INR;
+        if (!razorpayConfig.durationDays) razorpayConfig.durationDays = SUB_DURATION_DAYS;
+      } catch (err) {
+        console.warn("razorpay config", err);
+      }
+    }
+
+    function hasActiveSubscription(profile) {
+      if (!profile || !profile.subscriptionExpiresAt) return false;
+      const exp = new Date(profile.subscriptionExpiresAt).getTime();
+      return Number.isFinite(exp) && exp > Date.now();
+    }
+
+    function countMyPosts() {
+      if (!currentUser) return 0;
+      return loads.filter((l) => l.posterUid === currentUser.uid).length;
+    }
+
+    function countMyBids() {
+      if (!currentUser) return 0;
+      let n = 0;
+      loads.forEach((l) => {
+        (l.bids || []).forEach((b) => {
+          if (b.bidderUid === currentUser.uid) n += 1;
+        });
+      });
+      return n;
+    }
+
+    function getUnlockedContactIds(profile) {
+      const ids = profile && Array.isArray(profile.unlockedContactBidIds) ? profile.unlockedContactBidIds : [];
+      return ids.slice();
+    }
+
+    function canPostLoad() {
+      if (hasActiveSubscription(userProfile)) return { ok: true };
+      if (countMyPosts() < FREE_POSTS_TRANSPORTER) return { ok: true };
+      return { ok: false, reason: "transporter" };
+    }
+
+    function canPlaceBid() {
+      if (hasActiveSubscription(userProfile)) return { ok: true };
+      if (countMyBids() < FREE_BIDS_FLEET) return { ok: true };
+      return { ok: false, reason: "fleet" };
+    }
+
+    function canViewShipperContact(load, bid) {
+      if (vipUnlocked) return true;
+      if (!currentUser || !bid || bid.bidderUid !== currentUser.uid) return false;
+      if (!bid.accepted && load.status !== "Booked") return false;
+      if (hasActiveSubscription(userProfile)) return true;
+      // First free bid: unlock contact for the earliest bid by this user (accepted or booked)
+      const myAccepted = [];
+      loads.forEach((l) => {
+        (l.bids || []).forEach((b) => {
+          if (b.bidderUid === currentUser.uid && (b.accepted || l.status === "Booked")) {
+            myAccepted.push({ load: l, bid: b, at: b.createdAt || l.createdAt || "" });
+          }
+        });
+      });
+      myAccepted.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+      if (myAccepted.length && myAccepted[0].bid.id === bid.id) return true;
+      const unlocked = getUnlockedContactIds(userProfile);
+      return unlocked.includes(bid.id);
+    }
+
+    function canViewBidderContact(load, bid) {
+      if (vipUnlocked) return true;
+      if (!currentUser || load.posterUid !== currentUser.uid) return false;
+      if (hasActiveSubscription(userProfile)) return true;
+      const unlocked = getUnlockedContactIds(userProfile);
+      if (unlocked.includes(bid.id)) return true;
+      // Allow first N free unlocks automatically in display order for own loads
+      const ownBids = [];
+      loads
+        .filter((l) => l.posterUid === currentUser.uid)
+        .forEach((l) => {
+          (l.bids || []).forEach((b) => {
+            ownBids.push({ bid: b, at: b.createdAt || "" });
+          });
+        });
+      ownBids.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+      const freeIds = ownBids.slice(0, FREE_CONTACT_UNLOCKS_TRANSPORTER).map((x) => x.bid.id);
+      return freeIds.includes(bid.id);
+    }
+
+    function subscribeCopy(reason) {
+      const role = userProfile?.role || "";
+      if (reason === "transporter" || role === "transporter") {
+        return {
+          title: "Unlimited Load Posts — ₹99 / month",
+          body: "You used your 2 free load posts. Subscribe for 1 month of unlimited Load Posts.",
+          bullets: [
+            "Unlimited load posts for 30 days",
+            "Unlock bidder contacts beyond your 2 free unlocks",
+            "One-time Razorpay payment of ₹99",
+          ],
+        };
+      }
+      if (reason === "fleet" || role === "fleet_owner") {
+        return {
+          title: "Unlimited Accepted Bid Contacts — ₹99 / month",
+          body: "Your 1st bid is free. From the 2nd bid, subscribe to get unlimited contacts of Accepted Bids for ₹99 only for 1 month.",
+          bullets: [
+            "Unlimited contacts for Accepted Bids",
+            "Place unlimited bids for 30 days",
+            "One-time Razorpay payment of ₹99",
+          ],
+        };
+      }
+      return {
+        title: "Verified Trucks plan — ₹99 / month",
+        body: "Subscribe for 1 month of loads access based on your profile role.",
+        bullets: [
+          "Transporters: unlimited Load Posts after 2 free posts",
+          "Fleet owners: unlimited Accepted Bid contacts after 1 free bid",
+          "Pay securely with Razorpay — ₹99 for 30 days",
+        ],
+      };
+    }
+
+    function openSubscribeModal(reason) {
+      subscribeModalReason = reason || "general";
+      const copy = subscribeCopy(subscribeModalReason);
+      document.getElementById("subscribe-modal-title").textContent = copy.title;
+      document.getElementById("subscribe-modal-body").textContent = copy.body;
+      document.getElementById("subscribe-modal-bullets").innerHTML = copy.bullets
+        .map((b) => `<li class="flex gap-2"><span class="text-blue-600 font-bold">·</span><span>${escapeHtml(b)}</span></li>`)
+        .join("");
+      const modal = document.getElementById("subscribe-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeSubscribeModal() {
+      const modal = document.getElementById("subscribe-modal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    document.getElementById("subscribe-cancel").addEventListener("click", closeSubscribeModal);
+    document.getElementById("subscribe-modal").addEventListener("click", (e) => {
+      if (e.target.id === "subscribe-modal") closeSubscribeModal();
+    });
+
+    async function activateSubscription(paymentId) {
+      if (!currentUser) throw new Error("Sign in required");
+      const days = Number(razorpayConfig.durationDays) || SUB_DURATION_DAYS;
+      const amount = Number(razorpayConfig.amountInr) || SUB_AMOUNT_INR;
+      const now = new Date();
+      const expires = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+      const patch = {
+        subscriptionPlan: "monthly_99",
+        subscriptionAmountInr: amount,
+        subscriptionStartedAt: now.toISOString(),
+        subscriptionExpiresAt: expires.toISOString(),
+        lastRazorpayPaymentId: paymentId || "",
+        updatedAt: now.toISOString(),
+      };
+      await saveUserProfile(currentUser.uid, patch);
+      if (paymentId) {
+        await setDoc(doc(db, PAYMENTS_COLLECTION, paymentId), {
+          uid: currentUser.uid,
+          email: currentUser.email || "",
+          amountInr: amount,
+          plan: "monthly_99",
+          days,
+          reason: subscribeModalReason,
+          createdAt: now.toISOString(),
+          razorpayPaymentId: paymentId,
+        }, { merge: true });
+      }
+      userProfile = Object.assign({}, userProfile || {}, patch);
+      closeSubscribeModal();
+      renderSubscriptionCard();
+      renderProfilePage();
+      renderBoard();
+      showToast("Subscription active until " + expires.toLocaleDateString("en-IN"));
+    }
+
+    async function startRazorpayCheckout() {
+      if (!currentUser) {
+        showToast("Sign in with Google first");
+        await googleSignIn();
+        return;
+      }
+      if (!userProfile || !userProfile.role) {
+        showToast("Complete your profile role before subscribing");
+        switchTab("profile");
+        closeSubscribeModal();
+        return;
+      }
+      const key = String(razorpayConfig.keyId || "").trim();
+      if (!key) {
+        showToast("Add your Razorpay Key ID in razorpay-config.json");
+        return;
+      }
+      if (typeof window.Razorpay !== "function") {
+        showToast("Razorpay script failed to load — check network");
+        return;
+      }
+      const amountInr = Number(razorpayConfig.amountInr) || SUB_AMOUNT_INR;
+      const amountPaise = Math.round(amountInr * 100);
+      const copy = subscribeCopy(subscribeModalReason);
+      const options = {
+        key,
+        amount: amountPaise,
+        currency: razorpayConfig.currency || "INR",
+        name: razorpayConfig.companyName || "Verified Trucks",
+        description: copy.title,
+        image: "/assets/logo-128.png",
+        prefill: {
+          name: userProfile.fullName || currentUser.displayName || "",
+          email: currentUser.email || "",
+          contact: userProfile.contactNumber || "",
+        },
+        notes: {
+          uid: currentUser.uid,
+          role: userProfile.role || "",
+          plan: "monthly_99",
+          reason: subscribeModalReason,
+        },
+        theme: { color: razorpayConfig.themeColor || "#2563eb" },
+        handler: async function (response) {
+          try {
+            await activateSubscription(response.razorpay_payment_id);
+          } catch (err) {
+            console.error(err);
+            showToast("Payment received but activation failed: " + (err.message || "error"));
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            showToast("Payment cancelled");
+          },
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (resp) {
+        const desc = resp?.error?.description || "Payment failed";
+        showToast(desc);
+      });
+      rzp.open();
+    }
+
+    document.getElementById("subscribe-pay-btn").addEventListener("click", () => {
+      startRazorpayCheckout();
+    });
+    document.getElementById("btn-subscribe").addEventListener("click", () => {
+      openSubscribeModal(userProfile?.role === "transporter" ? "transporter" : userProfile?.role === "fleet_owner" ? "fleet" : "general");
+    });
+
+    function renderSubscriptionCard() {
+      if (!currentUser) return;
+      const active = hasActiveSubscription(userProfile);
+      const badge = document.getElementById("profile-sub-badge");
+      const expiresEl = document.getElementById("profile-sub-expires");
+      const quotaEl = document.getElementById("profile-sub-quota");
+      const detailEl = document.getElementById("profile-sub-detail");
+      const tagline = document.getElementById("profile-sub-tagline");
+      const btn = document.getElementById("btn-subscribe");
+      const role = userProfile?.role || "";
+
+      if (active) {
+        badge.textContent = "Active";
+        badge.className = "rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800";
+        expiresEl.textContent = new Date(userProfile.subscriptionExpiresAt).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+        btn.textContent = "Renew / Extend ₹99";
+      } else {
+        badge.textContent = "Inactive";
+        badge.className = "rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700";
+        expiresEl.textContent = "Not subscribed";
+        btn.textContent = "Subscribe ₹99 / month";
+      }
+
+      if (role === "transporter") {
+        tagline.textContent = "Transporter plan — unlimited Load Posts for ₹99 / month";
+        const used = countMyPosts();
+        quotaEl.textContent = active
+          ? "Unlimited posts"
+          : used + " / " + FREE_POSTS_TRANSPORTER + " free posts used";
+        detailEl.textContent = active
+          ? "You can post unlimited loads and unlock bidder contacts on your posts."
+          : "First " + FREE_POSTS_TRANSPORTER + " posts are free. From the 3rd post, subscribe for unlimited Load Posts. First " + FREE_CONTACT_UNLOCKS_TRANSPORTER + " bidder contacts unlock free.";
+      } else if (role === "fleet_owner") {
+        tagline.textContent = "Fleet owner plan — unlimited Accepted Bid contacts for ₹99 / month";
+        const used = countMyBids();
+        quotaEl.textContent = active
+          ? "Unlimited bids & contacts"
+          : used + " / " + FREE_BIDS_FLEET + " free bid used";
+        detailEl.textContent = active
+          ? "You get unlimited contacts of Accepted Bids for this billing month."
+          : "1st bid is free (including its accepted contact). From the 2nd bid, subscribe for ₹99 / month for unlimited Accepted Bid contacts.";
+      } else {
+        tagline.textContent = "Choose a role in your profile to see plan details";
+        quotaEl.textContent = "Save profile role first";
+        detailEl.textContent = "Transporters get 2 free posts. Vehicle/Fleet owners get 1 free bid, then ₹99 unlocks contacts of Accepted Bids for 1 month.";
+      }
+    }
 
     function showBanner(message, isError) {
       const banner = document.getElementById("firebase-banner");
@@ -589,7 +961,7 @@
       if (btn) btn.classList.add("tab-active");
       if (tab === "vip") renderVip();
       if (tab === "board") renderBoard();
-      if (tab === "profile") renderProfilePanel();
+      if (tab === "profile") renderProfilePage();
       if (tab === "post") syncPostAuthGate();
     };
 
@@ -631,7 +1003,10 @@
       if (role !== "fleet_owner") dlInput.value = dlInput.value; // keep value but not required
     }
 
-    document.getElementById("profile-role").addEventListener("change", syncRoleFields);
+    document.getElementById("profile-role").addEventListener("change", () => {
+      syncRoleFields();
+      renderSubscriptionCard();
+    });
 
     async function googleSignIn() {
       if (!auth) {
@@ -653,7 +1028,7 @@
         await signOut(auth);
         userProfile = null;
         showToast("Signed out");
-        renderProfilePanel();
+        renderProfilePage();
         syncAuthChrome();
       } catch (err) {
         showToast("Sign-out failed");
@@ -684,6 +1059,7 @@
       document.getElementById("profile-dl").value = userProfile?.drivingLicence || "";
       syncRoleFields();
       renderMyLoadsAndBids();
+      renderSubscriptionCard();
     }
 
     function renderMyLoadsAndBids() {
@@ -706,28 +1082,62 @@
 
       loadsEl.innerHTML = myLoads.length
         ? myLoads
-            .map(
-              (l) => `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+            .map((l) => {
+              const bidsBlock = (l.bids || []).length
+                ? (l.bids || [])
+                    .map((b) => {
+                      const showPhone = canViewBidderContact(l, b);
+                      const phoneLine = showPhone
+                        ? `<p class="text-xs text-emerald-700">Bidder contact: <span class="font-semibold">${escapeHtml(b.phone || "—")}</span> · ${formatCurrency(b.amount)}</p>`
+                        : `<p class="text-xs text-slate-500">Contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Subscribe ₹99</button></p>`;
+                      return `<div class="mt-1.5 rounded border border-slate-100 bg-white px-2 py-1.5">
+                        <p class="text-xs font-semibold text-slate-800">${escapeHtml(bidDisplayName(b))}${b.accepted ? " · Accepted" : ""}</p>
+                        ${phoneLine}
+                      </div>`;
+                    })
+                    .join("")
+                : '<p class="text-xs text-slate-500 italic">No bids yet</p>';
+              return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
             <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
             <p class="text-xs text-slate-600">${escapeHtml(l.status)} · ${escapeHtml(l.vehicleSize)} · ${escapeHtml(l.weight)} · ${formatDate(l.loadingDate)}</p>
-            <p class="text-xs text-slate-500">${(l.bids || []).length} bid(s)</p>
-          </div>`
-            )
+            <p class="text-xs text-slate-500 mb-1">${(l.bids || []).length} bid(s)</p>
+            ${bidsBlock}
+          </div>`;
+            })
             .join("")
         : '<p class="text-sm text-slate-500 italic">No loads posted yet.</p>';
 
       bidsEl.innerHTML = myBids.length
         ? myBids
-            .map(
-              ({ load: l, bid: b }) => `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+            .map(({ load: l, bid: b }) => {
+              const accepted = !!b.accepted || l.status === "Booked";
+              let contactLine = "";
+              if (accepted) {
+                if (canViewShipperContact(l, b)) {
+                  contactLine = `<p class="text-xs text-emerald-700">Shipper contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>`;
+                } else {
+                  contactLine = `<p class="text-xs text-slate-500">Accepted — contact locked · <button type="button" data-action="unlock-sub" class="font-semibold text-blue-700 underline">Get unlimited contacts ₹99</button></p>`;
+                }
+              } else {
+                contactLine = `<p class="text-xs text-slate-500">Pending acceptance — shipper contact unlocks when accepted</p>`;
+              }
+              return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
             <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
             <p class="text-xs text-slate-600">Your bid: <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span> · Veh ${escapeHtml(b.vehicleNumber || "—")}</p>
-            <p class="text-xs text-slate-500">Load ${escapeHtml(l.status)}${b.accepted ? " · Accepted" : " · Pending"}</p>
-          </div>`
-            )
+            <p class="text-xs text-slate-500">Load ${escapeHtml(l.status)}${accepted ? " · Accepted" : " · Pending"}</p>
+            ${contactLine}
+          </div>`;
+            })
             .join("")
         : '<p class="text-sm text-slate-500 italic">No bids placed yet.</p>';
     }
+
+    document.getElementById("profile-signed-in").addEventListener("click", (e) => {
+      const btn = e.target.closest('[data-action="unlock-sub"]');
+      if (!btn) return;
+      const reason = userProfile?.role === "transporter" ? "transporter" : "fleet";
+      openSubscribeModal(reason);
+    });
 
     document.getElementById("profile-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -760,10 +1170,11 @@
           createdAt: userProfile?.createdAt || new Date().toISOString(),
         };
         await saveUserProfile(currentUser.uid, profile);
-        userProfile = profile;
+        userProfile = Object.assign({}, userProfile || {}, profile);
         syncAuthChrome();
         showToast("Profile saved");
         renderProfilePage();
+        renderSubscriptionCard();
       } catch (err) {
         console.error(err);
         showToast("Failed to save profile: " + (err.message || "error"));
@@ -807,6 +1218,20 @@
         showToast("Sign in with Google to post a load");
         syncPostAuthGate();
         await googleSignIn();
+        return;
+      }
+      if (!userProfile || !userProfile.role) {
+        showToast("Complete your profile (role) before posting");
+        switchTab("profile");
+        return;
+      }
+      if (userProfile.role === "transporter" || userProfile.role === "fleet_owner") {
+        // Transporters are load posters; fleet owners may also post rarely — apply transporter free-post rule for anyone posting beyond free quota without sub
+      }
+      const postGate = canPostLoad();
+      if (!postGate.ok) {
+        openSubscribeModal("transporter");
+        showToast("Free posts used — subscribe ₹99 / month for unlimited Load Posts");
         return;
       }
       const form = e.target;
@@ -1012,6 +1437,17 @@
       if (!currentUser) {
         showToast("Sign in with Google to place a bid");
         await googleSignIn();
+        return;
+      }
+      if (!userProfile || !userProfile.role) {
+        showToast("Complete your profile (role) before bidding");
+        switchTab("profile");
+        return;
+      }
+      const bidGate = canPlaceBid();
+      if (!bidGate.ok) {
+        openSubscribeModal("fleet");
+        showToast("Subscribe ₹99 / month for unlimited contacts of Accepted Bids");
         return;
       }
       const loadId = form.dataset.loadId;
@@ -1341,7 +1777,10 @@
       document.getElementById("loading-state").classList.add("hidden");
       renderBoard();
       if (vipUnlocked) renderVipDashboard();
-      if (currentUser) renderMyLoadsAndBids();
+      if (currentUser) {
+        renderMyLoadsAndBids();
+        renderSubscriptionCard();
+      }
       return loads;
     }
 
@@ -1380,7 +1819,10 @@
           hideBanner();
           renderBoard();
           if (vipUnlocked) renderVipDashboard();
-          if (currentUser) renderMyLoadsAndBids();
+          if (currentUser) {
+            renderMyLoadsAndBids();
+            renderSubscriptionCard();
+          }
         },
         (err) => {
           console.error(err);
@@ -1496,6 +1938,7 @@
       populateVehicleSelects();
       setMinLoadingDate();
       checkVipSession();
+      loadRazorpayConfig();
       renderBoard();
       setInterval(tickRelativeTimes, 15000);
       initFirebase();

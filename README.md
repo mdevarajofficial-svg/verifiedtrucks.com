@@ -3,34 +3,43 @@
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
 Live: https://verifiedtrucks-20.web.app  
 
-A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post loads to Live Loads, place bids, share on WhatsApp, and manage bookings from VIP Access. Data syncs in real time across browsers — no `localStorage`.
-
-> Note: Structured load/bid data uses **Cloud Firestore**. Firebase Storage is for files (images/PDFs); Firestore is the correct product for this marketplace.
+A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post loads to Live Loads, place bids, share on WhatsApp, and manage bookings from VIP Access. Data syncs in real time across browsers.
 
 ## Features
 
-- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence). View your posted loads and bids on **My Profile**
-- **Live Loads** — Real-time Firestore sync of posted freight
-- **Post a Load / Bid** — Requires Google Sign-In so activity links to your profile
+- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence)
+- **₹99 / month Razorpay subscription** (My Profile)
+  - **Transporter:** first **2 load posts free**; from the **3rd post** pay ₹99 for 1 month unlimited posts (+ bidder contact unlocks beyond 2 free)
+  - **Vehicle / Fleet owner:** **1st bid free**; from the **2nd bid** subscribe for ₹99 / month for **unlimited contacts of Accepted Bids**
+- **Live Loads** — Real-time Firestore sync
 - **VIP Access** (`Deva@2001`) — Full contacts & amounts, Mark Booked, Delete Post
-- **Booked vehicle privacy** — Public shows first 5 chars only (`TN09C****`)
-- **WhatsApp share** — Route, vehicle size, weight, material, loading date
+- **WhatsApp share**
 
-## Firebase setup
+## Razorpay setup
 
-Active project: **`verifiedtrucks-20`** (Cloud Firestore collection `loads`).
+1. Open [Razorpay Dashboard → API Keys](https://dashboard.razorpay.com/app/keys)
+2. Copy your **Key ID** into `razorpay-config.json`:
 
-## Firebase setup
+```json
+{
+  "keyId": "rzp_live_xxxxxxxx",
+  "amountInr": 99,
+  "durationDays": 30
+}
+```
 
-1. Sign in via Firebase MCP / CLI when prompted in Cursor.
-2. Config lives in `firebase-config.json` (web SDK keys).
-3. Rules: `firestore.rules` · deploy with `firebase deploy --only firestore`
+3. Redeploy hosting. Checkout runs in the browser (₹99 = 9900 paise).
+
+> This project is on the Firebase Spark plan (no Cloud Functions billing). Payment success activates the subscription on the user profile and writes a `payments/{paymentId}` receipt. For signature verification with Key Secret, upgrade to Blaze and add Cloud Functions later.
+
+## Firebase
+
+Active project: **`verifiedtrucks-20`**  
+Config: `firebase-config.json` · Rules: `firestore.rules`
 
 ## Live site
 
 **https://verifiedtrucks-20.web.app**
-
-(also https://verifiedtrucks-20.firebaseapp.com)
 
 ## Run locally
 
@@ -44,11 +53,9 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
 ```bash
 npm run deploy
-# or: firebase deploy --only hosting,firestore --project verifiedtrucks-20
 ```
 
 ## Stack
 
-- Single `index.html` + Tailwind CDN + Firebase JS SDK (compat)
-- Cloud Firestore collection: `loads`
-- VIP UI session only in `sessionStorage`
+- `index.html` + Tailwind CDN + Firebase JS SDK + Razorpay Checkout
+- Firestore: `loads`, `users`, `payments`
