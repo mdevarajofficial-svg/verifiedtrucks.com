@@ -257,7 +257,7 @@
           <div class="sm:col-span-2">
             <label for="shipperPhone" class="mb-1.5 block text-sm font-semibold text-slate-900">Shipper Contact Phone <span class="text-blue-600">*</span></label>
             <input id="shipperPhone" name="shipperPhone" required type="tel" pattern="[0-9+\-\s]{8,15}" placeholder="e.g. +91 98765 43210" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            <p class="mt-1.5 text-xs text-slate-600">Stored in Firebase. Never shown on Live Loads — VIP Access only.</p>
+            <p class="mt-1.5 text-xs text-slate-600">Must exactly match your <strong>My Profile</strong> contact number — verified to prevent fake bids/contacts.</p>
           </div>
         </div>
         <div class="mt-6 flex flex-col gap-4">
@@ -1095,6 +1095,43 @@
       return bid.name || bid.company || "Bidder";
     }
 
+    function normalizePhoneDigits(phone) {
+      const digits = String(phone || "").replace(/\D/g, "");
+      if (digits.length >= 10) return digits.slice(-10);
+      return digits;
+    }
+
+    function phoneMatchesProfile(inputPhone, profilePhone) {
+      const entered = normalizePhoneDigits(inputPhone);
+      const profile = normalizePhoneDigits(profilePhone);
+      if (!entered || !profile) return false;
+      return entered === profile;
+    }
+
+    function validateProfilePhoneMatch(inputPhone, fieldLabel) {
+      const profilePhone = (userProfile && userProfile.contactNumber) || "";
+      if (!profilePhone.trim()) {
+        return { ok: false, message: "Save your contact number in My Profile before continuing" };
+      }
+      if (!phoneMatchesProfile(inputPhone, profilePhone)) {
+        return {
+          ok: false,
+          message:
+            fieldLabel +
+            " must match your profile contact (" +
+            profilePhone +
+            "). Update My Profile if your number changed.",
+        };
+      }
+      return { ok: true };
+    }
+
+    function syncPostPhoneFromProfile() {
+      const shipperInput = document.getElementById("shipperPhone");
+      if (!shipperInput || !userProfile?.contactNumber) return;
+      shipperInput.value = userProfile.contactNumber;
+    }
+
     function normalizeLoad(id, data) {
       const load = Object.assign({ id }, data || {});
       if (!Array.isArray(load.bids)) load.bids = [];
@@ -1160,7 +1197,10 @@
       if (tab === "vip") renderVip();
       if (tab === "board") renderBoard();
       if (tab === "profile") renderProfilePage();
-      if (tab === "post") syncPostAuthGate();
+      if (tab === "post") {
+        syncPostAuthGate();
+        syncPostPhoneFromProfile();
+      }
     };
 
     document.getElementById("main-nav").addEventListener("click", (e) => {
@@ -1182,6 +1222,7 @@
         avatar.alt = currentUser.displayName || "User";
       }
       syncPostAuthGate();
+      syncPostPhoneFromProfile();
     }
 
     function syncPostAuthGate() {
@@ -1258,6 +1299,7 @@
       syncRoleFields();
       renderMyLoadsAndBids();
       renderSubscriptionCard();
+      syncPostPhoneFromProfile();
     }
 
     function renderMyLoadsAndBids() {
@@ -1451,6 +1493,13 @@
       const form = e.target;
       const btn = document.getElementById("post-submit-btn");
       const data = new FormData(form);
+      const shipperPhone = String(data.get("shipperPhone")).trim();
+      const phoneCheck = validateProfilePhoneMatch(shipperPhone, "Shipper contact phone");
+      if (!phoneCheck.ok) {
+        showToast(phoneCheck.message);
+        switchTab("profile");
+        return;
+      }
       const load = {
         id: uid(),
         origin: String(data.get("origin")).trim(),
@@ -1461,7 +1510,7 @@
         material: String(data.get("material")).trim(),
         loadingDate: String(data.get("loadingDate")),
         distance: Number(data.get("distance")),
-        shipperPhone: String(data.get("shipperPhone")).trim() || (userProfile?.contactNumber || ""),
+        shipperPhone,
         status: "Live",
         bids: [],
         bookedVehicleNumber: "",
@@ -1583,10 +1632,10 @@
         load.status === "Live" && !acceptedBid
           ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-100 pt-3" data-load-id="${escapeHtml(load.id)}">
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Place a Bid</p>
-              <p class="text-xs text-slate-500">${currentUser ? "Bid links to your profile. Shipper contact unlocks when your bid is accepted." : "Sign in with Google to place a bid."}</p>
+              <p class="text-xs text-slate-500">${currentUser ? "Bid contact uses your profile number only — must match My Profile." : "Sign in with Google to place a bid."}</p>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <input name="name" required type="text" placeholder="Your name / company" value="${escapeHtml((userProfile && userProfile.fullName) || (currentUser && currentUser.displayName) || "")}" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-                <input name="phone" required type="tel" placeholder="Contact number" value="${escapeHtml((userProfile && userProfile.contactNumber) || "")}" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input name="phone" required type="tel" placeholder="Contact number" readonly value="${escapeHtml((userProfile && userProfile.contactNumber) || "")}" class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" title="Must match your profile contact number" />
                 <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
                 <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
               </div>
@@ -1700,10 +1749,17 @@
       if (!load || load.status !== "Live") return;
 
       const fd = new FormData(form);
+      const bidPhone = String(fd.get("phone")).trim();
+      const phoneCheck = validateProfilePhoneMatch(bidPhone, "Bid contact number");
+      if (!phoneCheck.ok) {
+        showToast(phoneCheck.message);
+        switchTab("profile");
+        return;
+      }
       const bid = {
         id: "bd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6),
         name: String(fd.get("name")).trim(),
-        phone: String(fd.get("phone")).trim(),
+        phone: bidPhone,
         amount: Number(fd.get("amount")),
         vehicleNumber: String(fd.get("vehicleNumber")).trim().toUpperCase().replace(/\s+/g, ""),
         accepted: false,
