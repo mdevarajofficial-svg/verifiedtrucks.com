@@ -1,0 +1,8 @@
+firebase.json
+.firebaserc
+.git
+.firebase
+agent-tools
+**/node_modules/**
+README.md
+package.json

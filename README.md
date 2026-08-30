@@ -23,6 +23,12 @@ Active project: **`verifiedtrucks-20`** (Cloud Firestore collection `loads`).
 2. Config lives in `firebase-config.json` (web SDK keys).
 3. Rules: `firestore.rules` · deploy with `firebase deploy --only firestore`
 
+## Live site
+
+**https://verifiedtrucks-20.web.app**
+
+(also https://verifiedtrucks-20.firebaseapp.com)
+
 ## Run locally
 
 ```bash
@@ -30,6 +36,13 @@ npm start
 ```
 
 Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
+
+## Deploy
+
+```bash
+npm run deploy
+# or: firebase deploy --only hosting,firestore --project verifiedtrucks-20
+```
 
 ## Stack
 

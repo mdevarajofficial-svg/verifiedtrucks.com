@@ -2,9 +2,10 @@
   "name": "verified-trucks",
   "version": "1.0.0",
   "private": true,
-  "description": "Verified Trucks — single-file freight marketplace (HTML + Tailwind CDN + localStorage)",
+  "description": "Verified Trucks — freight marketplace with Cloud Firestore",
   "scripts": {
     "start": "python3 -m http.server 43123 --bind 127.0.0.1",
-    "dev": "python3 -m http.server 43123 --bind 127.0.0.1"
+    "dev": "python3 -m http.server 43123 --bind 127.0.0.1",
+    "deploy": "firebase deploy --only hosting,firestore --project verifiedtrucks-20"
   }
 }
