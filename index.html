@@ -172,8 +172,10 @@
             </select>
           </div>
           <div class="sm:col-span-2">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Search Route</label>
-            <input id="filter-search" type="search" placeholder="Origin or destination city…" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="filter-state" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">State</label>
+            <select id="filter-state" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <option value="all">All States</option>
+            </select>
           </div>
         </div>
       </div>
@@ -208,6 +210,18 @@
           <div>
             <label for="destination" class="mb-1.5 block text-sm font-semibold text-slate-900">Destination <span class="text-blue-600">*</span></label>
             <input id="destination" name="destination" required type="text" placeholder="e.g. Delhi, DL" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+          </div>
+          <div>
+            <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-900">Origin State <span class="text-blue-600">*</span></label>
+            <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <option value="">Select origin state</option>
+            </select>
+          </div>
+          <div>
+            <label for="destinationState" class="mb-1.5 block text-sm font-semibold text-slate-900">Destination State <span class="text-blue-600">*</span></label>
+            <select id="destinationState" name="destinationState" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <option value="">Select destination state</option>
+            </select>
           </div>
           <div>
             <label for="loadType" class="mb-1.5 block text-sm font-semibold text-slate-900">Load Type <span class="text-blue-600">*</span></label>
@@ -473,6 +487,34 @@
       "22 ft", "24 ft", "28 ft", "32 ft Single Axle", "32 ft Multi Axle",
     ];
 
+    // Ordered by typical freight load volume (highest demand first)
+    const INDIAN_STATES = [
+      "Karnataka",
+      "Telangana",
+      "Tamil Nadu",
+      "Maharashtra",
+      "Madhya Pradesh",
+      "Gujarat",
+      "Andhra Pradesh",
+      "Uttar Pradesh",
+      "Rajasthan",
+      "West Bengal",
+      "Delhi",
+      "Haryana",
+      "Punjab",
+      "Kerala",
+      "Odisha",
+      "Bihar",
+      "Jharkhand",
+      "Chhattisgarh",
+      "Goa",
+      "Assam",
+      "Uttarakhand",
+      "Himachal Pradesh",
+      "Jammu & Kashmir",
+      "Puducherry",
+    ];
+
     let db = null;
     let auth = null;
     let googleProvider = null;
@@ -575,7 +617,7 @@
             bookedVehicleNumber: acceptedBid.vehicleNumber || "",
           })
         );
-        showToast("Bid accepted — contacts are on your profile");
+        showToast("Bid accepted — bidder contact is now visible to you");
         renderBoard();
         renderMyLoadsAndBids();
       } catch (err) {
@@ -953,7 +995,19 @@
         if (!b.vehicleNumber) b.vehicleNumber = "";
       });
       if (!load.bookedVehicleNumber) load.bookedVehicleNumber = "";
+      if (!load.originState) load.originState = "";
+      if (!load.destinationState) load.destinationState = "";
       return load;
+    }
+
+    function loadMatchesStateFilter(load, state) {
+      if (!state || state === "all") return true;
+      const needle = state.toLowerCase();
+      const originState = String(load.originState || "").toLowerCase();
+      const destState = String(load.destinationState || "").toLowerCase();
+      if (originState === needle || destState === needle) return true;
+      const routeHay = (load.origin + " " + load.destination).toLowerCase();
+      return routeHay.includes(needle);
     }
 
     async function saveLoad(load) {
@@ -1160,6 +1214,7 @@
               } else if (l.status === "Live" && top3.length) {
                 actionBlock = `<div class="mt-2 space-y-1.5">
                   <p class="text-xs font-semibold text-blue-800">Lowest bids (top 3${totalBids > 3 ? " of " + totalBids : ""})</p>
+                  <p class="text-xs text-slate-500">Bidder phone numbers stay hidden until you accept a bid.</p>
                   ${top3.map((bid, idx) => renderTransporterBidRow(l, bid, idx + 1, true)).join("")}
                 </div>`;
               }
@@ -1181,10 +1236,8 @@
               if (accepted && canViewShipperContact(l, b)) {
                 contactLine = `<p class="text-xs text-emerald-700 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
                     <p class="text-xs text-slate-600">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>`;
-              } else if (accepted) {
-                contactLine = `<p class="text-xs text-slate-500 mt-1">Bid accepted — contact available after poster confirms</p>`;
               } else {
-                contactLine = `<p class="text-xs text-slate-500 mt-1">Awaiting acceptance by load poster</p>`;
+                contactLine = `<p class="text-xs text-slate-500 mt-1">Awaiting acceptance by load poster — contact hidden until then</p>`;
               }
               return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
             <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
@@ -1272,6 +1325,32 @@
       }
     });
 
+    function populateStateSelects() {
+      const filterState = document.getElementById("filter-state");
+      const originState = document.getElementById("originState");
+      const destinationState = document.getElementById("destinationState");
+      INDIAN_STATES.forEach((state) => {
+        if (filterState) {
+          const o = document.createElement("option");
+          o.value = state;
+          o.textContent = state;
+          filterState.appendChild(o);
+        }
+        if (originState) {
+          const o1 = document.createElement("option");
+          o1.value = state;
+          o1.textContent = state;
+          originState.appendChild(o1);
+        }
+        if (destinationState) {
+          const o2 = document.createElement("option");
+          o2.value = state;
+          o2.textContent = state;
+          destinationState.appendChild(o2);
+        }
+      });
+    }
+
     function populateVehicleSelects() {
       const postSelect = document.getElementById("vehicleSize");
       const filterSelect = document.getElementById("filter-vehicle");
@@ -1342,6 +1421,8 @@
         id: uid(),
         origin: String(data.get("origin")).trim(),
         destination: String(data.get("destination")).trim(),
+        originState: String(data.get("originState")),
+        destinationState: String(data.get("destinationState")),
         loadType: String(data.get("loadType")),
         vehicleSize: String(data.get("vehicleSize")),
         weight: String(data.get("weight")).trim(),
@@ -1375,7 +1456,7 @@
       }
     });
 
-    ["filter-status", "filter-type", "filter-vehicle", "filter-search"].forEach((id) => {
+    ["filter-status", "filter-type", "filter-vehicle", "filter-state"].forEach((id) => {
       document.getElementById(id).addEventListener("input", renderBoard);
       document.getElementById(id).addEventListener("change", renderBoard);
     });
@@ -1403,16 +1484,13 @@
       const status = document.getElementById("filter-status").value;
       const type = document.getElementById("filter-type").value;
       const vehicle = document.getElementById("filter-vehicle").value;
-      const search = document.getElementById("filter-search").value.trim().toLowerCase();
+      const state = document.getElementById("filter-state").value;
 
       return loads.filter((l) => {
         if (status !== "all" && l.status !== status) return false;
         if (type !== "all" && l.loadType !== type) return false;
         if (vehicle !== "all" && l.vehicleSize !== vehicle) return false;
-        if (search) {
-          const hay = (l.origin + " " + l.destination).toLowerCase();
-          if (!hay.includes(search)) return false;
-        }
+        if (!loadMatchesStateFilter(l, state)) return false;
         return true;
       });
     }
@@ -1478,7 +1556,7 @@
               })
               .join("");
       const bidsHeading = isOwner && bidCount
-        ? `Top 3 lowest bids${bidCount > 3 ? " (" + bidCount + " total)" : ""}`
+        ? `Top 3 lowest bids${bidCount > 3 ? " (" + bidCount + " total)" : ""} · phones unlock on accept`
         : "Bids (" + bidCount + ")";
 
       const bookingNote =
@@ -1903,6 +1981,8 @@
           id: uid(),
           origin: "Pune, MH",
           destination: "Hyderabad, TS",
+          originState: "Maharashtra",
+          destinationState: "Telangana",
           loadType: "FTL",
           vehicleSize: "22 ft",
           weight: "12 Tons",
@@ -1929,6 +2009,8 @@
           id: uid(),
           origin: "Ahmedabad, GJ",
           destination: "Jaipur, RJ",
+          originState: "Gujarat",
+          destinationState: "Rajasthan",
           loadType: "PTL",
           vehicleSize: "14 ft",
           weight: "4 Tons",
@@ -2125,6 +2207,7 @@
 
     function init() {
       populateVehicleSelects();
+      populateStateSelects();
       setMinLoadingDate();
       checkVipSession();
       renderBoard();
