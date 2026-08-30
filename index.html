@@ -1020,31 +1020,56 @@
       }
     }
 
+    async function refreshLoadsOnce() {
+      const snap = await getDocs(collection(db, LOADS_COLLECTION));
+      loads = snap.docs
+        .map((d) => normalizeLoad(d.id, d.data()))
+        .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+      document.getElementById("loading-state").classList.add("hidden");
+      renderBoard();
+      if (vipUnlocked) renderVipDashboard();
+      return loads;
+    }
+
     function subscribeLoads() {
       if (unsubscribeLoads) unsubscribeLoads();
+
+      // Immediate fetch so UI does not hang if Listen channel is slow
+      refreshLoadsOnce()
+        .then(async (current) => {
+          if (!current.length) {
+            try {
+              await seedIfEmpty();
+              await refreshLoadsOnce();
+            } catch (err) {
+              console.error(err);
+              showBanner(
+                "Firestore connected, but writes are blocked. In Firebase Console → Firestore → Rules, publish rules that allow read/write on /loads (see firestore.rules in this repo), or complete Firebase login in chat so we can deploy them.",
+                true
+              );
+            }
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          showBanner("Firestore error: " + (err.message || "permission or network failure"), true);
+          document.getElementById("loading-state").classList.add("hidden");
+        });
+
       unsubscribeLoads = onSnapshot(
         collection(db, LOADS_COLLECTION),
-        async (snap) => {
+        (snap) => {
           loads = snap.docs
             .map((d) => normalizeLoad(d.id, d.data()))
             .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
           document.getElementById("loading-state").classList.add("hidden");
+          hideBanner();
           renderBoard();
           if (vipUnlocked) renderVipDashboard();
-          if (!loads.length) {
-            seedIfEmpty().catch((err) => {
-              console.error(err);
-              showBanner(
-                "Firestore connected, but writes are blocked. Open Firebase Console → Firestore → Rules and allow read/write on /loads (or complete Firebase login in chat so we can deploy rules).",
-                true
-              );
-            });
-          }
         },
         (err) => {
           console.error(err);
-          showBanner("Firestore error: " + (err.message || "permission or network failure"), true);
-          document.getElementById("loading-state").classList.add("hidden");
+          showBanner("Firestore live sync error: " + (err.message || "permission or network failure"), true);
         }
       );
     }
