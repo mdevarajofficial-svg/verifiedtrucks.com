@@ -125,9 +125,10 @@
         <div id="subscribe-plan-options" class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3"></div>
         <div class="mt-5 flex flex-wrap gap-2 justify-end">
           <button type="button" id="subscribe-cancel" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Not now</button>
+          <button type="button" id="subscribe-upi-btn" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">Pay with UPI</button>
           <button type="button" id="subscribe-pay-btn" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Pay with Razorpay</button>
         </div>
-        <p id="subscribe-modal-hint" class="mt-3 text-xs text-slate-500">Secure payment via Razorpay. Days remaining show on your profile from the subscription date.</p>
+        <p id="subscribe-modal-hint" class="mt-3 text-xs text-slate-500">UPI (GPay, PhonePe, Paytm), cards, net banking &amp; wallets via Razorpay. Save your mobile number in My Profile for UPI.</p>
       </div>
     </div>
 
@@ -723,7 +724,82 @@
 
     function updateSubscribePayButton() {
       const plan = getPlanById(selectedPlanId);
-      document.getElementById("subscribe-pay-btn").textContent = "Pay ₹" + plan.amountInr + " with Razorpay";
+      document.getElementById("subscribe-pay-btn").textContent = "Pay ₹" + plan.amountInr + " — all methods";
+      const upiBtn = document.getElementById("subscribe-upi-btn");
+      if (upiBtn) upiBtn.textContent = "Pay ₹" + plan.amountInr + " with UPI";
+    }
+
+    function getRazorpayContactPrefill() {
+      const digits = normalizePhoneDigits(userProfile?.contactNumber || "");
+      return digits.length === 10 ? digits : "";
+    }
+
+    function buildRazorpayDisplayConfig(mode) {
+      const upiBlock = {
+        name: "Pay via UPI",
+        instruments: [{ method: "upi" }],
+      };
+      const standardBlock = {
+        name: "Cards, Net Banking & Wallets",
+        instruments: [{ method: "card" }, { method: "netbanking" }, { method: "wallet" }],
+      };
+      if (mode === "upi") {
+        return {
+          blocks: { upi: upiBlock },
+          sequence: ["block.upi"],
+          preferences: { show_default_blocks: false },
+        };
+      }
+      return {
+        blocks: { upi: upiBlock, standard: standardBlock },
+        sequence: ["block.upi", "block.standard"],
+        preferences: { show_default_blocks: false },
+      };
+    }
+
+    function buildRazorpayCheckoutOptions(plan, copy, paymentMode) {
+      const key = String(razorpayConfig.keyId || "").trim();
+      const contact = getRazorpayContactPrefill();
+      const options = {
+        key,
+        amount: Math.round(plan.amountInr * 100),
+        currency: razorpayConfig.currency || "INR",
+        name: razorpayConfig.companyName || "Verified Trucks",
+        description: copy.title + " · " + plan.label,
+        image: "/assets/logo-128.png",
+        prefill: {
+          name: userProfile.fullName || currentUser.displayName || "",
+          email: currentUser.email || "",
+          contact,
+        },
+        notes: {
+          uid: currentUser.uid,
+          role: userProfile.role || "",
+          plan: plan.id,
+          reason: subscribeModalReason,
+          paymentMode: paymentMode || "all",
+        },
+        theme: { color: razorpayConfig.themeColor || "#2563eb" },
+        config: {
+          display: buildRazorpayDisplayConfig(paymentMode === "upi" ? "upi" : "all"),
+        },
+        handler: async function (response) {
+          try {
+            await activateSubscription(response.razorpay_payment_id, plan.id);
+          } catch (err) {
+            console.error(err);
+            showToast("Payment received but activation failed: " + (err.message || "error"));
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            showToast("Payment cancelled");
+          },
+        },
+      };
+      const configId = String(razorpayConfig.checkoutConfigId || "").trim();
+      if (configId) options.checkout_config_id = configId;
+      return options;
     }
 
     function subscribeCopy(reason) {
@@ -826,7 +902,7 @@
       showToast("Plan active · " + subscriptionDaysRemaining(userProfile) + " days remaining");
     }
 
-    async function startRazorpayCheckout() {
+    async function startRazorpayCheckout(paymentMode) {
       if (!currentUser) {
         showToast("Sign in with Google first");
         await googleSignIn();
@@ -847,41 +923,15 @@
         showToast("Razorpay script failed to load — check network");
         return;
       }
+      if (paymentMode === "upi" && !getRazorpayContactPrefill()) {
+        showToast("Save your 10-digit mobile in My Profile — required for UPI");
+        closeSubscribeModal();
+        switchTab("profile");
+        return;
+      }
       const plan = getPlanById(selectedPlanId);
       const copy = subscribeCopy(subscribeModalReason);
-      const options = {
-        key,
-        amount: Math.round(plan.amountInr * 100),
-        currency: razorpayConfig.currency || "INR",
-        name: razorpayConfig.companyName || "Verified Trucks",
-        description: copy.title + " · " + plan.label,
-        image: "/assets/logo-128.png",
-        prefill: {
-          name: userProfile.fullName || currentUser.displayName || "",
-          email: currentUser.email || "",
-          contact: userProfile.contactNumber || "",
-        },
-        notes: {
-          uid: currentUser.uid,
-          role: userProfile.role || "",
-          plan: plan.id,
-          reason: subscribeModalReason,
-        },
-        theme: { color: razorpayConfig.themeColor || "#2563eb" },
-        handler: async function (response) {
-          try {
-            await activateSubscription(response.razorpay_payment_id, plan.id);
-          } catch (err) {
-            console.error(err);
-            showToast("Payment received but activation failed: " + (err.message || "error"));
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            showToast("Payment cancelled");
-          },
-        },
-      };
+      const options = buildRazorpayCheckoutOptions(plan, copy, paymentMode);
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (resp) {
         showToast(resp?.error?.description || "Payment failed");
@@ -890,7 +940,10 @@
     }
 
     document.getElementById("subscribe-pay-btn").addEventListener("click", () => {
-      startRazorpayCheckout();
+      startRazorpayCheckout("all");
+    });
+    document.getElementById("subscribe-upi-btn").addEventListener("click", () => {
+      startRazorpayCheckout("upi");
     });
     document.getElementById("btn-subscribe").addEventListener("click", () => {
       openSubscribeModal(
