@@ -905,7 +905,7 @@
               "\nWeight: " +
               load.weight +
               "\nLoading: " +
-              formatDate(load.loadingDate) +
+              formatLoadingSlot(load) +
               "\n\nOpen Verified Trucks to place a bid.",
           },
           uid: currentUser.uid,
@@ -1226,7 +1226,7 @@
               }
               return `<div class="rounded-lg border border-slate-800/60 bg-slate-800/40 px-3 py-2">
             <p class="text-sm font-semibold text-slate-100">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
-            <p class="text-xs text-slate-400">${escapeHtml(l.status)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>
+            <p class="text-xs text-slate-400 tabular-nums">${escapeHtml(l.status)} · ${escapeHtml(l.vehicleSize)} · ${formatLoadingSlot(l)}</p>
             <p class="text-xs text-slate-500">${(l.bids || []).length} bid(s)</p>
             ${actionBlock}
           </div>`;
@@ -1241,7 +1241,7 @@
               let contactLine = "";
               if (accepted && canViewShipperContact(l, b)) {
                 contactLine = `<p class="text-xs text-emerald-400 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
-                    <p class="text-xs text-slate-400">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>`;
+                    <p class="text-xs text-slate-400 tabular-nums">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatLoadingSlot(l)}</p>`;
               } else {
                 contactLine = `<p class="text-xs text-slate-500 mt-1">Awaiting acceptance by load poster — contact hidden until then</p>`;
               }
