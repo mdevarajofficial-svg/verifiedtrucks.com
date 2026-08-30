@@ -15,6 +15,10 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 ## Firebase setup
 
+Active project: **`verifiedtrucks-20`** (Cloud Firestore collection `loads`).
+
+## Firebase setup
+
 1. Sign in via Firebase MCP / CLI when prompted in Cursor.
 2. Config lives in `firebase-config.json` (web SDK keys).
 3. Rules: `firestore.rules` · deploy with `firebase deploy --only firestore`
