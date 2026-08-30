@@ -47,133 +47,136 @@
     }
     .live-dot { animation: pulseSoft 1.6s ease-in-out infinite; }
     input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
-    .tab-active { border-bottom-color: #2563eb !important; color: #1d4ed8 !important; }
+    .tab-active { border-bottom-color: #3b82f6 !important; color: #60a5fa !important; }
+    .glass-panel { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.85); opacity: 0.7; }
+    input[type="date"] { color-scheme: dark; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen antialiased">
-  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
       <a href="/" class="flex items-center gap-3 min-w-0" aria-label="Verified Trucks home">
         <img src="/assets/logo-128.png" alt="Verified Trucks" class="h-10 w-10 sm:h-11 sm:w-11 object-contain shrink-0" width="44" height="44" decoding="async" />
         <div class="min-w-0">
-          <h1 class="font-display text-lg font-bold tracking-tight text-slate-900 sm:text-xl">Verified Trucks</h1>
-          <p class="hidden text-xs text-slate-600 sm:block">Cloud marketplace · Firebase Firestore</p>
+          <h1 class="font-display text-lg font-bold tracking-tight text-slate-100 sm:text-xl">Verified Trucks</h1>
+          <p class="hidden text-xs text-slate-400 sm:block">Cloud marketplace · Firebase Firestore</p>
         </div>
       </a>
       <nav class="flex flex-wrap items-center justify-end gap-1 sm:gap-2" id="main-nav">
-        <button type="button" data-tab="board" class="tab-btn tab-active rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">Live Loads</button>
-        <button type="button" data-tab="post" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">Post a Load</button>
-        <button type="button" data-tab="profile" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">My Profile</button>
-        <button type="button" data-tab="vip" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-blue-700 transition-colors">VIP Access</button>
-        <div id="auth-slot" class="ml-1 flex items-center gap-2 border-l border-slate-200 pl-2 sm:pl-3">
-          <button type="button" id="btn-google-signin" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50">
+        <button type="button" data-tab="board" class="tab-btn tab-active rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">Live Loads</button>
+        <button type="button" data-tab="post" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">Post a Load</button>
+        <button type="button" data-tab="profile" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">My Profile</button>
+        <button type="button" data-tab="vip" class="tab-btn rounded-md px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-blue-400 transition-colors">VIP Access</button>
+        <div id="auth-slot" class="ml-1 flex items-center gap-2 border-l border-slate-800 pl-2 sm:pl-3">
+          <button type="button" id="btn-google-signin" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800/50">
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6S8.9 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 6.9 2.8 2.8 6.9 2.8 12S6.9 21.2 12 21.2c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.5H12z"/><path fill="#34A853" d="M3.9 7.4l3 2.2C7.7 7.5 9.7 6.2 12 6.2c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.8 14.5 2.8 12 2.8 8.3 2.8 5.1 4.9 3.9 7.4z" opacity=".01"/><path fill="#4285F4" d="M12 21.2c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9 1-3.1 1-2.4 0-4.4-1.6-5.1-3.8l-3 2.3c1.4 2.8 4.3 4.9 8.1 4.9z"/><path fill="#FBBC05" d="M6.9 13.9c-.2-.5-.3-1.1-.3-1.7s.1-1.2.3-1.7L3.9 8.2C3.3 9.4 3 10.7 3 12s.3 2.6.9 3.8l3-2z"/></svg>
             Google Sign-In
           </button>
           <div id="auth-user-chip" class="hidden items-center gap-2">
-            <img id="auth-avatar" alt="" class="h-7 w-7 rounded-full border border-slate-200 object-cover" />
-            <span id="auth-name" class="hidden max-w-[9rem] truncate text-xs font-semibold text-slate-800 sm:inline"></span>
-            <button type="button" id="btn-signout" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Sign out</button>
+            <img id="auth-avatar" alt="" class="h-7 w-7 rounded-full border border-slate-800 object-cover" />
+            <span id="auth-name" class="hidden max-w-[9rem] truncate text-xs font-semibold text-slate-200 sm:inline"></span>
+            <button type="button" id="btn-signout" class="rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800/50">Sign out</button>
           </div>
         </div>
       </nav>
     </div>
   </header>
 
-  <div id="firebase-banner" class="hidden border-b border-amber-200 bg-amber-50">
-    <div class="mx-auto max-w-7xl px-4 py-2.5 text-sm text-amber-900 sm:px-6 lg:px-8">
+  <div id="firebase-banner" class="hidden border-b border-amber-500/30 bg-amber-500/10 backdrop-blur-md">
+    <div class="mx-auto max-w-7xl px-4 py-2.5 text-sm text-amber-200 sm:px-6 lg:px-8">
       <span id="firebase-banner-msg">Connecting to Firebase…</span>
     </div>
   </div>
 
   <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
-      <p id="toast-msg" class="text-sm font-medium text-slate-900"></p>
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-lg border border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 py-3 shadow-xl shadow-black/40">
+      <p id="toast-msg" class="text-sm font-medium text-slate-100"></p>
     </div>
 
-    <div id="book-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
-      <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
-        <h3 class="font-display text-lg font-bold text-slate-900">Mark Load as Booked</h3>
-        <p class="mt-1 text-sm text-slate-600">Select the winning bidder and confirm the vehicle number. Public Live Loads will show only the first 5 characters and hide the last 4.</p>
+    <div id="book-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+      <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/85 backdrop-blur-md p-6 shadow-xl shadow-black/30">
+        <h3 class="font-display text-lg font-bold text-slate-100">Mark Load as Booked</h3>
+        <p class="mt-1 text-sm text-slate-400">Select the winning bidder and confirm the vehicle number. Public Live Loads will show only the first 5 characters and hide the last 4.</p>
         <form id="book-form" class="mt-4 space-y-4">
           <input type="hidden" id="book-load-id" />
           <div>
-            <label for="book-bid" class="mb-1.5 block text-sm font-semibold text-slate-900">Winning bidder</label>
-            <select id="book-bid" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"></select>
+            <label for="book-bid" class="mb-1.5 block text-sm font-semibold text-slate-100">Winning bidder</label>
+            <select id="book-bid" required class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25"></select>
           </div>
           <div>
-            <label for="book-vehicle-number" class="mb-1.5 block text-sm font-semibold text-slate-900">Vehicle number</label>
-            <input id="book-vehicle-number" required type="text" minlength="5" placeholder="e.g. MH12AB1234" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            <p class="mt-1 text-xs text-slate-600">Public preview: <span id="book-mask-preview" class="font-semibold text-slate-900">—</span></p>
+            <label for="book-vehicle-number" class="mb-1.5 block text-sm font-semibold text-slate-100">Vehicle number</label>
+            <input id="book-vehicle-number" required type="text" minlength="5" placeholder="e.g. MH12AB1234" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm uppercase tabular-nums tracking-wide text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+            <p class="mt-1 text-xs text-slate-400">Public preview: <span id="book-mask-preview" class="font-semibold text-slate-100">—</span></p>
           </div>
           <div class="flex gap-2 justify-end">
-            <button type="button" id="book-cancel" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
-            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Confirm Booked</button>
+            <button type="button" id="book-cancel" class="rounded-lg border border-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800/50">Cancel</button>
+            <button type="submit" class="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400">Confirm Booked</button>
           </div>
         </form>
       </div>
     </div>
 
-    <div id="terms-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
-      <div class="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
+    <div id="terms-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+      <div class="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900/85 backdrop-blur-md p-6 shadow-xl shadow-black/30 max-h-[90vh] overflow-y-auto">
         <div class="flex items-start justify-between gap-3">
-          <h3 id="terms-modal-title" class="font-display text-lg font-bold text-slate-900">Terms &amp; Conditions</h3>
-          <button type="button" id="terms-close" class="rounded-lg border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50">Close</button>
+          <h3 id="terms-modal-title" class="font-display text-lg font-bold text-slate-100">Terms &amp; Conditions</h3>
+          <button type="button" id="terms-close" class="rounded-lg border border-slate-800 px-3 py-1 text-sm font-semibold text-slate-300 hover:bg-slate-800/50">Close</button>
         </div>
-        <div id="terms-modal-body" class="mt-4 space-y-3 text-sm leading-relaxed text-slate-700"></div>
+        <div id="terms-modal-body" class="mt-4 space-y-3 text-sm leading-relaxed text-slate-300"></div>
       </div>
     </div>
 
     <section id="panel-board" class="tab-panel animate-fade-in">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 class="font-display text-2xl font-bold text-slate-900">Live Loads</h2>
-          <p class="mt-1 text-sm text-slate-600">Synced live from Firebase. Place bids with name, phone, amount, and vehicle number. Bid amounts stay private.</p>
+          <h2 class="font-display text-2xl font-bold text-slate-100">Live Loads</h2>
+          <p class="mt-1 text-sm text-slate-400">Synced live from Firebase. Place bids with name, phone, amount, and vehicle number. Bid amounts stay private.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-            <span class="live-dot h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400">
+            <span class="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
             <span id="live-count">0</span> Live
           </span>
-          <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+          <span class="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/60 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-slate-400">
             <span id="booked-count">0</span> Booked
           </span>
         </div>
       </div>
 
-      <div id="fleet-match-banner" class="hidden mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900"></div>
+      <div id="fleet-match-banner" class="hidden mb-4 rounded-xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-md px-4 py-3 text-sm text-blue-300"></div>
 
-      <div id="loading-state" class="mb-6 rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <p class="text-sm font-medium text-slate-700">Loading loads from Firebase…</p>
+      <div id="loading-state" class="mb-6 rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-8 text-center shadow-xl shadow-black/25">
+        <p class="text-sm font-medium text-slate-300">Loading loads from Firebase…</p>
       </div>
 
-      <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="mb-6 rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-4 shadow-xl shadow-black/25">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Status</label>
-            <select id="filter-status" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">Status</label>
+            <select id="filter-status" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="all">All Loads</option>
               <option value="Live" selected>Live</option>
               <option value="Booked">Booked</option>
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Load Type</label>
-            <select id="filter-type" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">Load Type</label>
+            <select id="filter-type" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="all">All Types</option>
               <option value="FTL">FTL</option>
               <option value="PTL">PTL</option>
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Vehicle Size</label>
-            <select id="filter-vehicle" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">Vehicle Size</label>
+            <select id="filter-vehicle" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="all">All Sizes</option>
             </select>
           </div>
           <div class="sm:col-span-2">
-            <label for="filter-state" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">State</label>
-            <select id="filter-state" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label for="filter-state" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">State</label>
+            <select id="filter-state" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="all">All States</option>
             </select>
           </div>
@@ -181,86 +184,86 @@
       </div>
 
       <div id="load-board" class="grid grid-cols-1 gap-4 lg:grid-cols-2"></div>
-      <div id="empty-board" class="hidden rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
-        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+      <div id="empty-board" class="hidden rounded-xl border border-dashed border-slate-700 bg-slate-900/60 backdrop-blur-md p-12 text-center shadow-xl shadow-black/25">
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-800/50">
           <svg class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0H4" /></svg>
         </div>
-        <p class="font-display text-lg font-semibold text-slate-900">No loads match your filters</p>
-        <p class="mt-1 text-sm text-slate-600">Post a new load or clear filters to see Live Loads.</p>
-        <button type="button" onclick="switchTab('post')" class="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">Post a Load</button>
+        <p class="font-display text-lg font-semibold text-slate-100">No loads match your filters</p>
+        <p class="mt-1 text-sm text-slate-400">Post a new load or clear filters to see Live Loads.</p>
+        <button type="button" onclick="switchTab('post')" class="mt-4 inline-flex items-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400 transition-colors">Post a Load</button>
       </div>
     </section>
 
     <section id="panel-post" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-900">Post a Freight Load</h2>
-        <p class="mt-1 text-sm text-slate-600">Sign in with Google to publish — the load is linked to your profile.</p>
+        <h2 class="font-display text-2xl font-bold text-slate-100">Post a Freight Load</h2>
+        <p class="mt-1 text-sm text-slate-400">Sign in with Google to publish — the load is linked to your profile.</p>
       </div>
 
-      <div id="post-auth-gate" class="mb-4 hidden rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        Please <button type="button" class="font-semibold text-blue-700 underline" id="post-signin-link">sign in with Google</button> before posting a load.
+      <div id="post-auth-gate" class="mb-4 hidden rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+        Please <button type="button" class="font-semibold text-blue-400 underline" id="post-signin-link">sign in with Google</button> before posting a load.
       </div>
 
-      <form id="post-load-form" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <form id="post-load-form" class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25 sm:p-8">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label for="origin" class="mb-1.5 block text-sm font-semibold text-slate-900">Loading Location <span class="text-blue-600">*</span></label>
-            <input id="origin" name="origin" required type="text" placeholder="e.g. Mumbai, MH" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="origin" class="mb-1.5 block text-sm font-semibold text-slate-100">Loading Location <span class="text-blue-400">*</span></label>
+            <input id="origin" name="origin" required type="text" placeholder="e.g. Mumbai, MH" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
-            <label for="destination" class="mb-1.5 block text-sm font-semibold text-slate-900">Unloading Location <span class="text-blue-600">*</span></label>
-            <input id="destination" name="destination" required type="text" placeholder="e.g. Delhi, DL" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="destination" class="mb-1.5 block text-sm font-semibold text-slate-100">Unloading Location <span class="text-blue-400">*</span></label>
+            <input id="destination" name="destination" required type="text" placeholder="e.g. Delhi, DL" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
-            <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-900">Loading State <span class="text-blue-600">*</span></label>
-            <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label for="originState" class="mb-1.5 block text-sm font-semibold text-slate-100">Loading State <span class="text-blue-400">*</span></label>
+            <select id="originState" name="originState" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select loading state</option>
             </select>
           </div>
           <div>
-            <label for="loadType" class="mb-1.5 block text-sm font-semibold text-slate-900">Load Type <span class="text-blue-600">*</span></label>
-            <select id="loadType" name="loadType" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label for="loadType" class="mb-1.5 block text-sm font-semibold text-slate-100">Load Type <span class="text-blue-400">*</span></label>
+            <select id="loadType" name="loadType" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select load type</option>
               <option value="FTL">FTL — Full Truck Load</option>
               <option value="PTL">PTL — Part Truck Load</option>
             </select>
           </div>
           <div>
-            <label for="vehicleSize" class="mb-1.5 block text-sm font-semibold text-slate-900">Vehicle Size <span class="text-blue-600">*</span></label>
-            <select id="vehicleSize" name="vehicleSize" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <label for="vehicleSize" class="mb-1.5 block text-sm font-semibold text-slate-100">Vehicle Size <span class="text-blue-400">*</span></label>
+            <select id="vehicleSize" name="vehicleSize" required class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
               <option value="">Select vehicle size</option>
             </select>
           </div>
           <div>
-            <label for="weight" class="mb-1.5 block text-sm font-semibold text-slate-900">Weight <span class="text-blue-600">*</span></label>
-            <input id="weight" name="weight" required type="text" placeholder="e.g. 15 Tons" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="weight" class="mb-1.5 block text-sm font-semibold text-slate-100">Weight <span class="text-blue-400">*</span></label>
+            <input id="weight" name="weight" required type="text" placeholder="e.g. 15 Tons" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
-            <label for="material" class="mb-1.5 block text-sm font-semibold text-slate-900">Material <span class="text-blue-600">*</span></label>
-            <input id="material" name="material" required type="text" placeholder="e.g. Steel coils, FMCG cartons" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="material" class="mb-1.5 block text-sm font-semibold text-slate-100">Material <span class="text-blue-400">*</span></label>
+            <input id="material" name="material" required type="text" placeholder="e.g. Steel coils, FMCG cartons" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
-            <label for="loadingDate" class="mb-1.5 block text-sm font-semibold text-slate-900">Date of Loading <span class="text-blue-600">*</span></label>
-            <input id="loadingDate" name="loadingDate" required type="date" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="loadingDate" class="mb-1.5 block text-sm font-semibold text-slate-100">Date of Loading <span class="text-blue-400">*</span></label>
+            <input id="loadingDate" name="loadingDate" required type="date" class="w-full rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div>
-            <label for="distance" class="mb-1.5 block text-sm font-semibold text-slate-900">Distance (Km) <span class="text-blue-600">*</span></label>
-            <input id="distance" name="distance" required type="number" min="1" step="1" placeholder="e.g. 1420" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            <label for="distance" class="mb-1.5 block text-sm font-semibold text-slate-100">Distance (Km) <span class="text-blue-400">*</span></label>
+            <input id="distance" name="distance" required type="number" min="1" step="1" placeholder="e.g. 1420" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
           </div>
           <div class="sm:col-span-2">
-            <label for="shipperPhone" class="mb-1.5 block text-sm font-semibold text-slate-900">Shipper Contact Phone <span class="text-blue-600">*</span></label>
-            <input id="shipperPhone" name="shipperPhone" required type="tel" pattern="[0-9+\-\s]{8,15}" placeholder="e.g. +91 98765 43210" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            <p class="mt-1.5 text-xs text-slate-600">Must exactly match your <strong>My Profile</strong> contact number — verified to prevent fake bids/contacts.</p>
+            <label for="shipperPhone" class="mb-1.5 block text-sm font-semibold text-slate-100">Shipper Contact Phone <span class="text-blue-400">*</span></label>
+            <input id="shipperPhone" name="shipperPhone" required type="tel" pattern="[0-9+\-\s]{8,15}" placeholder="e.g. +91 98765 43210" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+            <p class="mt-1.5 text-xs text-slate-400">Must exactly match your <strong>My Profile</strong> contact number — verified to prevent fake bids/contacts.</p>
           </div>
         </div>
         <div class="mt-6 flex flex-col gap-4">
-          <label class="flex items-start gap-2 text-sm text-slate-700">
-            <input id="post-terms-agree" type="checkbox" required class="mt-1 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-            <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="transporter" class="font-semibold text-blue-600 underline hover:text-blue-800">Terms &amp; Conditions</button> for posting loads on this online platform.</span>
+          <label class="flex items-start gap-2 text-sm text-slate-300">
+            <input id="post-terms-agree" type="checkbox" required class="mt-1 rounded border-slate-700 text-blue-400 focus:ring-blue-500" />
+            <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="transporter" class="font-semibold text-blue-400 underline hover:text-blue-300">Terms &amp; Conditions</button> for posting loads on this online platform.</span>
           </label>
           <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-xs text-slate-600">Status starts as <span class="font-semibold text-blue-700">Live</span> · Free to post</p>
-            <button type="submit" id="post-submit-btn" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+            <p class="text-xs text-slate-400">Status starts as <span class="font-semibold text-blue-400">Live</span> · Free to post</p>
+            <button type="submit" id="post-submit-btn" class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-slate-950 transition-colors">
               Publish to Live Loads
             </button>
           </div>
@@ -270,98 +273,98 @@
 
     <section id="panel-profile" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-900">My Profile</h2>
-        <p class="mt-1 text-sm text-slate-600">Sign in with Google to manage your details, posted loads, and bids.</p>
+        <h2 class="font-display text-2xl font-bold text-slate-100">My Profile</h2>
+        <p class="mt-1 text-sm text-slate-400">Sign in with Google to manage your details, posted loads, and bids.</p>
       </div>
 
-      <div id="profile-signed-out" class="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-          <svg class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <div id="profile-signed-out" class="mx-auto max-w-lg rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-6 text-center shadow-xl shadow-black/25 sm:p-8">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+          <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         </div>
-        <h3 class="font-display text-lg font-bold text-slate-900">Sign in to view your profile</h3>
-        <p class="mt-1 mb-5 text-sm text-slate-600">Your posted loads and placed bids appear here after Google Sign-In.</p>
-        <button type="button" id="btn-google-signin-profile" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Continue with Google</button>
+        <h3 class="font-display text-lg font-bold text-slate-100">Sign in to view your profile</h3>
+        <p class="mt-1 mb-5 text-sm text-slate-400">Your posted loads and placed bids appear here after Google Sign-In.</p>
+        <button type="button" id="btn-google-signin-profile" class="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">Continue with Google</button>
       </div>
 
       <div id="profile-signed-in" class="hidden space-y-6">
-        <form id="profile-form" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <form id="profile-form" class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25 sm:p-8">
           <div class="mb-5 flex flex-wrap items-center gap-3">
-            <img id="profile-avatar" alt="" class="h-14 w-14 rounded-full border border-slate-200 object-cover" />
+            <img id="profile-avatar" alt="" class="h-14 w-14 rounded-full border border-slate-800 object-cover" />
             <div>
-              <p id="profile-email" class="text-sm font-semibold text-slate-900"></p>
-              <p class="text-xs text-slate-600">Google account linked</p>
+              <p id="profile-email" class="text-sm font-semibold text-slate-100"></p>
+              <p class="text-xs text-slate-400">Google account linked</p>
             </div>
           </div>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
-              <label for="profile-fullName" class="mb-1.5 block text-sm font-semibold text-slate-900">Full Name <span class="text-blue-600">*</span></label>
-              <input id="profile-fullName" name="fullName" required type="text" placeholder="Your full name" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <label for="profile-fullName" class="mb-1.5 block text-sm font-semibold text-slate-100">Full Name <span class="text-blue-400">*</span></label>
+              <input id="profile-fullName" name="fullName" required type="text" placeholder="Your full name" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
             </div>
             <div>
-              <label for="profile-contact" class="mb-1.5 block text-sm font-semibold text-slate-900">Contact Number <span class="text-blue-600">*</span></label>
-              <input id="profile-contact" name="contactNumber" required type="tel" placeholder="+91 …" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <label for="profile-contact" class="mb-1.5 block text-sm font-semibold text-slate-100">Contact Number <span class="text-blue-400">*</span></label>
+              <input id="profile-contact" name="contactNumber" required type="tel" placeholder="+91 …" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
             </div>
             <div>
-              <label for="profile-role" class="mb-1.5 block text-sm font-semibold text-slate-900">I am a <span class="text-blue-600">*</span></label>
-              <select id="profile-role" name="role" required class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <label for="profile-role" class="mb-1.5 block text-sm font-semibold text-slate-100">I am a <span class="text-blue-400">*</span></label>
+              <select id="profile-role" name="role" required class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
                 <option value="">Select role</option>
                 <option value="transporter">Transporter (Load Poster)</option>
                 <option value="fleet_owner">Vehicle owner / Fleet owner</option>
               </select>
             </div>
             <div id="field-gstin" class="hidden sm:col-span-2">
-              <label for="profile-gstin" class="mb-1.5 block text-sm font-semibold text-slate-900">GSTIN No <span class="text-slate-500 font-normal">(optional)</span></label>
-              <input id="profile-gstin" name="gstin" type="text" maxlength="15" placeholder="e.g. 22AAAAA0000A1Z5" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <label for="profile-gstin" class="mb-1.5 block text-sm font-semibold text-slate-100">GSTIN No <span class="text-slate-500 font-normal">(optional)</span></label>
+              <input id="profile-gstin" name="gstin" type="text" maxlength="15" placeholder="e.g. 22AAAAA0000A1Z5" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm uppercase tabular-nums tracking-wide text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
             </div>
             <div id="field-dl" class="hidden sm:col-span-2">
-              <label for="profile-dl" class="mb-1.5 block text-sm font-semibold text-slate-900">Driving Licence Number <span class="text-blue-600">*</span></label>
-              <input id="profile-dl" name="drivingLicence" type="text" placeholder="Driving licence number" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <label for="profile-dl" class="mb-1.5 block text-sm font-semibold text-slate-100">Driving Licence Number <span class="text-blue-400">*</span></label>
+              <input id="profile-dl" name="drivingLicence" type="text" placeholder="Driving licence number" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm uppercase tabular-nums tracking-wide text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
             </div>
             <div id="field-fleet-vehicle" class="hidden">
-              <label for="profile-vehicleSize" class="mb-1.5 block text-sm font-semibold text-slate-900">Your vehicle size <span class="text-blue-600">*</span></label>
-              <select id="profile-vehicleSize" name="vehicleSize" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <label for="profile-vehicleSize" class="mb-1.5 block text-sm font-semibold text-slate-100">Your vehicle size <span class="text-blue-400">*</span></label>
+              <select id="profile-vehicleSize" name="vehicleSize" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25">
                 <option value="">Select your vehicle size</option>
               </select>
               <p class="mt-1 text-xs text-slate-500">Loads up to this size (e.g. 7–10 ft for a 10 ft truck) will match you.</p>
             </div>
             <div id="field-fleet-city" class="hidden">
-              <label for="profile-currentCity" class="mb-1.5 block text-sm font-semibold text-slate-900">Current city <span class="text-blue-600">*</span></label>
-              <input id="profile-currentCity" name="currentCity" type="text" placeholder="e.g. Chennai" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <label for="profile-currentCity" class="mb-1.5 block text-sm font-semibold text-slate-100">Current city <span class="text-blue-400">*</span></label>
+              <input id="profile-currentCity" name="currentCity" type="text" placeholder="e.g. Chennai" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
               <p class="mt-1 text-xs text-slate-500">Update anytime when you move — matching loads show all India routes for your vehicle size.</p>
             </div>
             <div id="field-fleet-notify" class="hidden sm:col-span-2">
-              <label class="flex items-start gap-2 text-sm text-slate-700">
-                <input id="profile-notifyLoads" type="checkbox" class="mt-1 rounded border-slate-300 text-blue-600" checked />
+              <label class="flex items-start gap-2 text-sm text-slate-300">
+                <input id="profile-notifyLoads" type="checkbox" class="mt-1 rounded border-slate-700 text-blue-400" checked />
                 <span>Browser alert + email (to your Google account) when a new Live Load matches my vehicle size.</span>
               </label>
             </div>
           </div>
           <div class="mt-5 flex justify-end">
-            <button type="submit" id="profile-save-btn" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Save Profile</button>
+            <button type="submit" id="profile-save-btn" class="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">Save Profile</button>
           </div>
         </form>
 
 
-        <div id="profile-matching-loads-wrap" class="hidden rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm sm:p-6">
+        <div id="profile-matching-loads-wrap" class="hidden rounded-xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-md p-5 shadow-xl shadow-black/25 sm:p-6">
           <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 class="font-display text-lg font-bold text-slate-900">Matching loads for your vehicle</h3>
-              <p id="profile-matching-sub" class="text-xs text-slate-600">Live loads that fit your registered vehicle size — any route in India</p>
+              <h3 class="font-display text-lg font-bold text-slate-100">Matching loads for your vehicle</h3>
+              <p id="profile-matching-sub" class="text-xs text-slate-400">Live loads that fit your registered vehicle size — any route in India</p>
             </div>
-            <span id="profile-matching-count" class="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">0 matches</span>
+            <span id="profile-matching-count" class="rounded-full border border-blue-500/30 bg-slate-900/70 backdrop-blur-md px-3 py-1 text-xs font-semibold text-blue-400">0 matches</span>
           </div>
           <div id="profile-matching-loads" class="space-y-3"></div>
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 class="font-display text-lg font-bold text-slate-900">Loads I posted</h3>
-            <p class="mb-3 text-xs text-slate-600">Freight you published · accept lowest bids from your profile or Live Loads</p>
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25">
+            <h3 class="font-display text-lg font-bold text-slate-100">Loads I posted</h3>
+            <p class="mb-3 text-xs text-slate-400">Freight you published · accept lowest bids from your profile or Live Loads</p>
             <div id="profile-my-loads" class="space-y-3"></div>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 class="font-display text-lg font-bold text-slate-900">Bids I placed</h3>
-            <p class="mb-3 text-xs text-slate-600">When a poster accepts your bid, shipper contact appears here</p>
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25">
+            <h3 class="font-display text-lg font-bold text-slate-100">Bids I placed</h3>
+            <p class="mb-3 text-xs text-slate-400">When a poster accepts your bid, shipper contact appears here</p>
             <div id="profile-my-bids" class="space-y-3"></div>
           </div>
         </div>
@@ -370,63 +373,63 @@
 
     <section id="panel-vip" class="tab-panel hidden animate-fade-in">
       <div class="mb-6">
-        <h2 class="font-display text-2xl font-bold text-slate-900">VIP Access</h2>
-        <p class="mt-1 text-sm text-slate-600">View all contacts &amp; bid amounts, mark loads booked, or delete posts in Firebase.</p>
+        <h2 class="font-display text-2xl font-bold text-slate-100">VIP Access</h2>
+        <p class="mt-1 text-sm text-slate-400">View all contacts &amp; bid amounts, mark loads booked, or delete posts in Firebase.</p>
       </div>
 
-      <div id="vip-gate" class="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-          <svg class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+      <div id="vip-gate" class="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900/70 backdrop-blur-md p-6 shadow-lg shadow-black/20 sm:p-8">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+          <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
         </div>
-        <h3 class="font-display text-lg font-bold text-slate-900">Secure VIP Login</h3>
-        <p class="mt-1 mb-5 text-sm text-slate-600">Enter the admin password to unlock the oversight dashboard.</p>
+        <h3 class="font-display text-lg font-bold text-slate-100">Secure VIP Login</h3>
+        <p class="mt-1 mb-5 text-sm text-slate-400">Enter the admin password to unlock the oversight dashboard.</p>
         <form id="vip-login-form" class="space-y-4">
           <div>
-            <label for="vip-password" class="mb-1.5 block text-sm font-semibold text-slate-900">Password</label>
-            <input id="vip-password" type="password" required autocomplete="current-password" placeholder="Enter VIP password" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
-            <p id="vip-error" class="mt-2 hidden text-sm font-medium text-red-600">Incorrect password. Try again.</p>
+            <label for="vip-password" class="mb-1.5 block text-sm font-semibold text-slate-100">Password</label>
+            <input id="vip-password" type="password" required autocomplete="current-password" placeholder="Enter VIP password" class="w-full rounded-lg border border-slate-700 bg-slate-950/50 px-3 py-2.5 text-sm tabular-nums text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" />
+            <p id="vip-error" class="mt-2 hidden text-sm font-medium text-red-400">Incorrect password. Try again.</p>
           </div>
-          <button type="submit" class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">Unlock Dashboard</button>
+          <button type="submit" class="w-full rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-400 transition-colors">Unlock Dashboard</button>
         </form>
       </div>
 
       <div id="vip-dashboard" class="hidden">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Admin session active</span>
-            <span id="vip-stats" class="text-sm text-slate-600"></span>
+            <span class="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400">Admin session active</span>
+            <span id="vip-stats" class="text-sm text-slate-400"></span>
           </div>
           <div class="flex gap-2">
-            <button type="button" id="clear-all-data" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Clear All Data</button>
-            <button type="button" id="vip-logout" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Lock VIP</button>
+            <button type="button" id="clear-all-data" class="rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800/50 transition-colors">Clear All Data</button>
+            <button type="button" id="vip-logout" class="rounded-lg border border-slate-800 bg-slate-900/70 backdrop-blur-md px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800/50 transition-colors">Lock VIP</button>
           </div>
         </div>
 
-        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70 backdrop-blur-md shadow-lg shadow-black/20">
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead class="bg-slate-50">
+            <table class="min-w-full divide-y divide-slate-800 text-left text-sm">
+              <thead class="bg-slate-800/40">
                 <tr>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Route / Status</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Loading Date</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Size</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Shipper Contact</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Bidders (full details)</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">Actions</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Route / Status</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Loading Date</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Size</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Shipper Contact</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Bidders (full details)</th>
+                  <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-100">Actions</th>
                 </tr>
               </thead>
-              <tbody id="vip-table-body" class="divide-y divide-slate-100 bg-white"></tbody>
+              <tbody id="vip-table-body" class="divide-y divide-slate-800 bg-slate-900/70 backdrop-blur-md"></tbody>
             </table>
           </div>
-          <div id="vip-empty" class="hidden p-10 text-center text-sm text-slate-600">No loads posted yet.</div>
+          <div id="vip-empty" class="hidden p-10 text-center text-sm text-slate-400">No loads posted yet.</div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="mt-10 border-t border-slate-200 bg-white">
-    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-      <p><span class="font-display font-semibold text-slate-900">Verified Trucks</span> — data synced with Cloud Firestore.</p>
+  <footer class="mt-10 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <p><span class="font-display font-semibold text-slate-100">Verified Trucks</span> — data synced with Cloud Firestore.</p>
       <p class="text-xs">Free marketplace · Accept bids on your posts · Terms on every load</p>
     </div>
   </footer>
@@ -547,7 +550,7 @@
 
     function termsLinkHtml(role) {
       const r = role === "fleet_owner" ? "fleet_owner" : "transporter";
-      return `<p class="mt-2 text-xs text-slate-600">I agree to the <button type="button" data-action="show-terms" data-terms-role="${r}" class="font-semibold text-blue-600 underline hover:text-blue-800">Terms &amp; Conditions</button>.</p>`;
+      return `<p class="mt-2 text-xs text-slate-400">I agree to the <button type="button" data-action="show-terms" data-terms-role="${r}" class="font-semibold text-blue-400 underline hover:text-blue-300">Terms &amp; Conditions</button>.</p>`;
     }
 
     function openTermsModal(role) {
@@ -557,7 +560,7 @@
         ? "Terms & Conditions — Vehicle / Fleet Owner"
         : "Terms & Conditions — Load Poster / Transporter";
       document.getElementById("terms-modal-body").innerHTML = lines
-        .map((line, i) => `<p><span class="font-semibold text-slate-900">${i + 1}.</span> ${escapeHtml(line)}</p>`)
+        .map((line, i) => `<p><span class="font-semibold text-slate-100">${i + 1}.</span> ${escapeHtml(line)}</p>`)
         .join("");
       const modal = document.getElementById("terms-modal");
       modal.classList.remove("hidden");
@@ -624,10 +627,10 @@
       if (!currentUser || load.posterUid !== currentUser.uid) return "";
       const accepted = (load.bids || []).find((b) => b.accepted);
       if (accepted && canViewBidderContact(load, accepted)) {
-        return `<div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-          <p class="text-xs font-semibold uppercase text-emerald-800">Accepted bid · contact unlocked</p>
-          <p class="text-sm font-bold text-slate-900">${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
-          <p class="mt-1 text-xs text-emerald-800">Bidder contact: <span class="font-semibold">${escapeHtml(accepted.phone || "—")}</span> · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
+        return `<div class="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
+          <p class="text-xs font-semibold uppercase text-emerald-300">Accepted bid · contact unlocked</p>
+          <p class="text-sm font-bold text-slate-100">${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
+          <p class="mt-1 text-xs text-emerald-300">Bidder contact: <span class="font-semibold">${escapeHtml(accepted.phone || "—")}</span> · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
         </div>`;
       }
       if (load.status !== "Live" || !(load.bids || []).length) return "";
@@ -638,10 +641,10 @@
       if (!currentUser || !load.bids) return "";
       const accepted = (load.bids || []).find((b) => b.accepted && b.bidderUid === currentUser.uid);
       if (!accepted || !canViewShipperContact(load, accepted)) return "";
-      return `<div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-        <p class="text-xs font-semibold uppercase text-emerald-800">Your bid was accepted · contact unlocked</p>
-        <p class="text-sm font-bold text-slate-900">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</p>
-        <p class="mt-1 text-xs text-emerald-800">Load poster contact: <span class="font-semibold">${escapeHtml(load.shipperPhone || "—")}</span></p>
+      return `<div class="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
+        <p class="text-xs font-semibold uppercase text-emerald-300">Your bid was accepted · contact unlocked</p>
+        <p class="text-sm font-bold text-slate-100">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</p>
+        <p class="mt-1 text-xs text-emerald-300">Load poster contact: <span class="font-semibold">${escapeHtml(load.shipperPhone || "—")}</span></p>
       </div>`;
     }
 
@@ -649,11 +652,11 @@
       const banner = document.getElementById("firebase-banner");
       const msg = document.getElementById("firebase-banner-msg");
       banner.classList.remove("hidden");
-      banner.classList.toggle("border-amber-200", !isError);
-      banner.classList.toggle("bg-amber-50", !isError);
-      banner.classList.toggle("border-red-200", !!isError);
-      banner.classList.toggle("bg-red-50", !!isError);
-      msg.className = "text-sm " + (isError ? "text-red-900" : "text-amber-900");
+      banner.classList.toggle("border-amber-500/30", !isError);
+      banner.classList.toggle("bg-amber-500/10", !isError);
+      banner.classList.toggle("border-red-500/30", !!isError);
+      banner.classList.toggle("bg-red-500/10", !!isError);
+      msg.className = "text-sm " + (isError ? "text-red-300" : "text-amber-200");
       msg.textContent = message;
     }
 
@@ -760,17 +763,17 @@
       const hasAccepted = (load.bids || []).some((b) => b.accepted);
       const best = rank === 1;
       const tag = bid.accepted
-        ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
+        ? '<span class="text-xs font-semibold text-emerald-400">Accepted</span>'
         : '<span class="text-xs text-slate-500">Pending</span>';
       const acceptBtn =
         showAccept && load.status === "Live" && !hasAccepted && !bid.accepted
-          ? `<button type="button" data-action="accept-bid" data-load-id="${escapeHtml(load.id)}" data-bid-id="${escapeHtml(bid.id)}" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">${best ? "Accept best rate" : "Accept"}</button>`
+          ? `<button type="button" data-action="accept-bid" data-load-id="${escapeHtml(load.id)}" data-bid-id="${escapeHtml(bid.id)}" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400">${best ? "Accept best rate" : "Accept"}</button>`
           : "";
-      return `<div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border ${best ? "border-emerald-200 bg-emerald-50/60" : "border-slate-100 bg-slate-50"} px-3 py-2">
+      return `<div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border ${best ? "border-emerald-500/30 bg-emerald-500/10" : "border-slate-800/60 bg-slate-800/40"} px-3 py-2">
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold uppercase tracking-wide ${best ? "text-emerald-800" : "text-slate-500"}">#${rank}${best ? " · Best rate" : ""}</p>
-          <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bidDisplayName(bid))}</p>
-          <p class="text-xs font-semibold text-blue-700">${formatCurrency(bid.amount)} · Veh ${escapeHtml(bid.vehicleNumber || "—")}</p>
+          <p class="text-xs font-semibold uppercase tracking-wide ${best ? "text-emerald-300" : "text-slate-500"}">#${rank}${best ? " · Best rate" : ""}</p>
+          <p class="truncate text-sm font-semibold text-slate-100">${escapeHtml(bidDisplayName(bid))}</p>
+          <p class="text-xs font-semibold text-blue-400">${formatCurrency(bid.amount)} · Veh ${escapeHtml(bid.vehicleNumber || "—")}</p>
         </div>
         <div class="flex flex-col items-end gap-1">${tag}${acceptBtn}</div>
       </div>`;
@@ -935,7 +938,7 @@
       if (!userProfile.vehicleSize) {
         sub.textContent = "Save your vehicle size in the profile form above to see matching loads.";
         countEl.textContent = "0 matches";
-        list.innerHTML = '<p class="text-sm text-slate-600 italic">Add vehicle size and save profile.</p>';
+        list.innerHTML = '<p class="text-sm text-slate-400 italic">Add vehicle size and save profile.</p>';
         return;
       }
 
@@ -950,17 +953,17 @@
       countEl.textContent = matching.length + " match" + (matching.length === 1 ? "" : "es");
 
       if (!matching.length) {
-        list.innerHTML = '<p class="text-sm text-slate-600 italic">No Live Loads matching your vehicle size right now.</p>';
+        list.innerHTML = '<p class="text-sm text-slate-400 italic">No Live Loads matching your vehicle size right now.</p>';
         return;
       }
 
       list.innerHTML = matching
         .slice(0, 12)
         .map(
-          (l) => `<div class="rounded-lg border border-white bg-white px-3 py-2 shadow-sm">
-          <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
-          <p class="text-xs text-slate-600">${escapeHtml(l.vehicleSize)} · ${escapeHtml(l.weight)} · ${formatDate(l.loadingDate)}</p>
-          <button type="button" data-action="goto-load" data-load-id="${escapeHtml(l.id)}" class="mt-2 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700">View &amp; bid</button>
+          (l) => `<div class="rounded-lg border border-white bg-slate-900/70 backdrop-blur-md px-3 py-2 shadow-lg shadow-black/20">
+          <p class="text-sm font-semibold text-slate-100">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
+          <p class="text-xs text-slate-400">${escapeHtml(l.vehicleSize)} · ${escapeHtml(l.weight)} · ${formatDate(l.loadingDate)}</p>
+          <button type="button" data-action="goto-load" data-load-id="${escapeHtml(l.id)}" class="mt-2 rounded-md bg-blue-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-400">View &amp; bid</button>
         </div>`
         )
         .join("");
@@ -972,11 +975,11 @@
       if (currentUser && userProfile?.contactNumber) {
         shipperInput.value = userProfile.contactNumber;
         shipperInput.readOnly = true;
-        shipperInput.classList.add("bg-slate-50");
+        shipperInput.classList.add("bg-slate-800/40");
         shipperInput.title = "Must match your My Profile contact number";
       } else {
         shipperInput.readOnly = false;
-        shipperInput.classList.remove("bg-slate-50");
+        shipperInput.classList.remove("bg-slate-800/40");
         shipperInput.removeAttribute("title");
       }
     }
@@ -1201,20 +1204,20 @@
               const top3 = getTopLowestBids(l.bids, 3);
               let actionBlock = "";
               if (accepted && canViewBidderContact(l, accepted)) {
-                actionBlock = `<div class="mt-2 rounded border border-emerald-100 bg-white px-2 py-1.5">
-                  <p class="text-xs font-semibold text-emerald-800">Accepted · ${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
-                  <p class="text-xs text-emerald-700">Bidder contact: ${escapeHtml(accepted.phone || "—")} · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
+                actionBlock = `<div class="mt-2 rounded border border-emerald-500/20 bg-slate-900/70 backdrop-blur-md px-2 py-1.5">
+                  <p class="text-xs font-semibold text-emerald-300">Accepted · ${formatCurrency(accepted.amount)} · ${escapeHtml(bidDisplayName(accepted))}</p>
+                  <p class="text-xs text-emerald-400">Bidder contact: ${escapeHtml(accepted.phone || "—")} · Veh ${escapeHtml(accepted.vehicleNumber || "—")}</p>
                 </div>`;
               } else if (l.status === "Live" && top3.length) {
                 actionBlock = `<div class="mt-2 space-y-1.5">
-                  <p class="text-xs font-semibold text-blue-800">Lowest bids (top 3${totalBids > 3 ? " of " + totalBids : ""})</p>
+                  <p class="text-xs font-semibold text-blue-300">Lowest bids (top 3${totalBids > 3 ? " of " + totalBids : ""})</p>
                   <p class="text-xs text-slate-500">Bidder phone numbers stay hidden until you accept a bid.</p>
                   ${top3.map((bid, idx) => renderTransporterBidRow(l, bid, idx + 1, true)).join("")}
                 </div>`;
               }
-              return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-            <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
-            <p class="text-xs text-slate-600">${escapeHtml(l.status)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>
+              return `<div class="rounded-lg border border-slate-800/60 bg-slate-800/40 px-3 py-2">
+            <p class="text-sm font-semibold text-slate-100">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
+            <p class="text-xs text-slate-400">${escapeHtml(l.status)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>
             <p class="text-xs text-slate-500">${(l.bids || []).length} bid(s)</p>
             ${actionBlock}
           </div>`;
@@ -1228,14 +1231,14 @@
               const accepted = !!b.accepted;
               let contactLine = "";
               if (accepted && canViewShipperContact(l, b)) {
-                contactLine = `<p class="text-xs text-emerald-700 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
-                    <p class="text-xs text-slate-600">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>`;
+                contactLine = `<p class="text-xs text-emerald-400 mt-1">Load poster contact: <span class="font-semibold">${escapeHtml(l.shipperPhone || "—")}</span></p>
+                    <p class="text-xs text-slate-400">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)} · ${escapeHtml(l.vehicleSize)} · ${formatDate(l.loadingDate)}</p>`;
               } else {
                 contactLine = `<p class="text-xs text-slate-500 mt-1">Awaiting acceptance by load poster — contact hidden until then</p>`;
               }
-              return `<div class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-            <p class="text-sm font-semibold text-slate-900">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
-            <p class="text-xs text-slate-600">Your bid: <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span> · Veh ${escapeHtml(b.vehicleNumber || "—")}</p>
+              return `<div class="rounded-lg border border-slate-800/60 bg-slate-800/40 px-3 py-2">
+            <p class="text-sm font-semibold text-slate-100">${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</p>
+            <p class="text-xs text-slate-400">Your bid: <span class="font-semibold text-blue-400">${formatCurrency(b.amount)}</span> · Veh ${escapeHtml(b.vehicleNumber || "—")}</p>
             <p class="text-xs text-slate-500">${accepted ? "Accepted" : "Pending"}</p>
             ${contactLine}
           </div>`;
@@ -1463,7 +1466,7 @@
         escapeHtml(userProfile.vehicleSize) +
         "</strong> vehicle" +
         (userProfile.currentCity ? " · You are in <strong>" + escapeHtml(userProfile.currentCity) + "</strong>" : "") +
-        " · All routes shown. <button type=\"button\" data-action=\"goto-profile-matches\" class=\"ml-1 font-semibold text-blue-700 underline\">View matches</button>";
+        " · All routes shown. <button type=\"button\" data-action=\"goto-profile-matches\" class=\"ml-1 font-semibold text-blue-400 underline\">View matches</button>";
     }
 
     function getFilteredLoads() {
@@ -1516,8 +1519,8 @@
       const isOwner = currentUser && load.posterUid === currentUser.uid;
       const statusBadge =
         load.status === "Live"
-          ? '<span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700"><span class="live-dot h-1.5 w-1.5 rounded-full bg-blue-600"></span>Live</span>'
-          : '<span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Booked</span>';
+          ? '<span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-400"><span class="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Live</span>'
+          : '<span class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">Booked</span>';
 
       const bidCount = (load.bids || []).length;
       const bidsHtml = !bidCount
@@ -1529,12 +1532,12 @@
           : (load.bids || [])
               .map((bid) => {
                 const tag = bid.accepted
-                  ? '<span class="text-xs font-semibold text-emerald-700">Accepted</span>'
+                  ? '<span class="text-xs font-semibold text-emerald-400">Accepted</span>'
                   : '<span class="text-xs text-slate-500">Pending</span>';
                 return `
-                <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800/60 bg-slate-800/40 px-3 py-2">
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(bidDisplayName(bid))}</p>
+                    <p class="truncate text-sm font-semibold text-slate-100">${escapeHtml(bidDisplayName(bid))}</p>
                     <p class="text-xs text-slate-500">Amount hidden publicly</p>
                   </div>
                   ${tag}
@@ -1547,12 +1550,12 @@
 
       const bookingNote =
         load.status === "Booked"
-          ? `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-800">Booked / Accepted</p>
-              <p class="mt-0.5 text-sm font-semibold text-slate-900">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ""))}</p>
+          ? `<div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-300">Booked / Accepted</p>
+              <p class="mt-0.5 text-sm font-semibold text-slate-100">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ""))}</p>
             </div>`
-          : `<div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Marketplace notice</p>
+          : `<div class="rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Marketplace notice</p>
               <p class="mt-0.5 text-sm text-slate-500">Loads and bids are from individuals — verify independently before loading or handing consignment.</p>
             </div>`;
 
@@ -1563,42 +1566,42 @@
       const profilePhoneOk = bidPhoneCheck.ok;
       const bidForm =
         load.status === "Live" && !acceptedBid
-          ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-100 pt-3" data-load-id="${escapeHtml(load.id)}">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Place a Bid</p>
+          ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-800/60 pt-3" data-load-id="${escapeHtml(load.id)}">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Place a Bid</p>
               <p class="text-xs text-slate-500">${currentUser ? "Bid contact uses your profile number only — shared with the poster only if they accept your bid." : "Sign in with Google to place a bid."}</p>
-              ${currentUser && !profilePhoneOk ? '<p class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-900">' + escapeHtml(bidPhoneCheck.message) + "</p>" : ""}
+              ${currentUser && !profilePhoneOk ? '<p class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs font-semibold text-amber-200">' + escapeHtml(bidPhoneCheck.message) + "</p>" : ""}
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <input name="name" required type="text" placeholder="Your name / company" value="${escapeHtml((userProfile && userProfile.fullName) || (currentUser && currentUser.displayName) || "")}" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="name" required type="text" placeholder="Your name / company" value="${escapeHtml((userProfile && userProfile.fullName) || (currentUser && currentUser.displayName) || "")}" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
                 <input type="hidden" name="phone" value="${escapeHtml(profileContact)}" />
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm text-slate-700">
+                <div class="rounded-lg border border-slate-700 bg-slate-950/40 px-2.5 py-2 text-sm text-slate-300">
                   <span class="text-xs text-slate-500 block">Your contact (hidden until bid accepted)</span>
                   <span class="font-semibold">${escapeHtml(profileContact.trim() ? "Saved in profile" : "Save contact in My Profile")}</span>
                 </div>
-                <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
-                <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="rounded-lg border border-slate-200 px-2.5 py-2 text-sm uppercase focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="amount" required type="number" min="1" step="1" placeholder="Bid amount ₹" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <input name="vehicleNumber" required type="text" placeholder="Vehicle number" class="rounded-lg border border-slate-800 px-2.5 py-2 text-sm uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/25" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
               </div>
-              <label class="flex items-start gap-2 text-xs text-slate-600">
-                <input name="bidTerms" type="checkbox" required class="mt-0.5 rounded border-slate-300 text-blue-600" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
-                <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="fleet_owner" class="font-semibold text-blue-600 underline">Terms &amp; Conditions</button>.</span>
+              <label class="flex items-start gap-2 text-xs text-slate-400">
+                <input name="bidTerms" type="checkbox" required class="mt-0.5 rounded border-slate-700 text-blue-400" ${currentUser && !profilePhoneOk ? "disabled" : ""} />
+                <span>I agree to the <button type="button" data-action="show-terms" data-terms-role="fleet_owner" class="font-semibold text-blue-400 underline">Terms &amp; Conditions</button>.</span>
               </label>
-              <button type="submit" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors sm:w-auto disabled:cursor-not-allowed disabled:opacity-50" ${currentUser && !profilePhoneOk ? "disabled" : ""}>${currentUser ? (profilePhoneOk ? "Submit Bid" : "Cannot bid — profile number required") : "Sign in & Submit Bid"}</button>
+              <button type="submit" class="w-full rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400 transition-colors sm:w-auto disabled:cursor-not-allowed disabled:opacity-50" ${currentUser && !profilePhoneOk ? "disabled" : ""}>${currentUser ? (profilePhoneOk ? "Submit Bid" : "Cannot bid — profile number required") : "Sign in & Submit Bid"}</button>
             </form>`
           : "";
 
       return `
-          <article class="animate-fade-in flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm" data-load-id="${escapeHtml(load.id)}">
+          <article class="animate-fade-in flex flex-col rounded-xl border border-slate-800 bg-slate-900/75 backdrop-blur-md p-5 shadow-xl shadow-black/25" data-load-id="${escapeHtml(load.id)}">
             <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
-                <h3 class="font-display text-lg font-bold text-slate-900 truncate">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</h3>
-                <p class="mt-0.5 text-xs text-slate-600">
+                <h3 class="font-display text-lg font-bold text-slate-100 truncate">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</h3>
+                <p class="mt-0.5 text-xs text-slate-400">
                   <span class="relative-time" data-created="${escapeHtml(load.createdAt)}">${relativeTime(load.createdAt)}</span>
-                  · ${escapeHtml(load.loadType)} · ${escapeHtml(load.distance)} km
+                  · ${escapeHtml(load.loadType)} · <span class="tabular-nums">${escapeHtml(load.distance)}</span> km
                 </p>
                 ${termsLinkHtml("transporter")}
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 ${statusBadge}
-                <a href="${whatsAppShareUrl(load)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors" title="Share on WhatsApp">
+                <a href="${whatsAppShareUrl(load)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors" title="Share on WhatsApp">
                   <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   WhatsApp
                 </a>
@@ -1607,20 +1610,20 @@
 
             <div class="mb-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <div>
-                <p class="text-xs text-slate-600">Vehicle size</p>
-                <p class="font-semibold text-slate-900">${escapeHtml(load.vehicleSize)}</p>
+                <p class="text-xs text-slate-400">Vehicle size</p>
+                <p class="font-semibold text-slate-100">${escapeHtml(load.vehicleSize)}</p>
               </div>
               <div>
-                <p class="text-xs text-slate-600">Weight</p>
-                <p class="font-semibold text-slate-900">${escapeHtml(load.weight)}</p>
+                <p class="text-xs text-slate-400">Weight</p>
+                <p class="font-semibold text-slate-100">${escapeHtml(load.weight)}</p>
               </div>
               <div>
-                <p class="text-xs text-slate-600">Material</p>
-                <p class="font-semibold text-slate-900 truncate" title="${escapeHtml(load.material)}">${escapeHtml(load.material)}</p>
+                <p class="text-xs text-slate-400">Material</p>
+                <p class="font-semibold text-slate-100 truncate" title="${escapeHtml(load.material)}">${escapeHtml(load.material)}</p>
               </div>
               <div>
-                <p class="text-xs text-slate-600">Loading</p>
-                <p class="font-semibold text-slate-900">${formatDate(load.loadingDate)}</p>
+                <p class="text-xs text-slate-400">Loading</p>
+                <p class="font-semibold text-slate-100">${formatDate(load.loadingDate)}</p>
               </div>
             </div>
 
@@ -1629,7 +1632,7 @@
             ${renderAcceptedBidderContactPanel(load)}
 
             <div class="mt-3">
-              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">${bidsHeading}</p>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">${bidsHeading}</p>
               <div class="space-y-2">${bidsHtml}</div>
             </div>
 
@@ -1911,17 +1914,17 @@
         .map((load) => {
           const statusClass =
             load.status === "Live"
-              ? "text-blue-700 bg-blue-50 border-blue-200"
-              : "text-emerald-700 bg-emerald-50 border-emerald-200";
+              ? "text-blue-400 bg-blue-500/10 border-blue-500/30"
+              : "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
           const bidsDetail = (load.bids || []).length
             ? sortBidsLowestFirst(load.bids)
                 .map((b) => {
-                  const tag = b.accepted ? ' <span class="font-semibold text-emerald-700">(Accepted)</span>' : "";
-                  return `<div class="mb-1.5 last:mb-0 border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
-                  <span class="font-semibold text-slate-900">${escapeHtml(bidDisplayName(b))}</span>${tag}<br/>
-                  <span class="text-slate-600">${escapeHtml(b.phone)}</span><br/>
-                  <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span>
-                  · Veh: <span class="font-medium text-slate-900">${escapeHtml(b.vehicleNumber || "—")}</span>
+                  const tag = b.accepted ? ' <span class="font-semibold text-emerald-400">(Accepted)</span>' : "";
+                  return `<div class="mb-1.5 last:mb-0 border-b border-slate-800/60 pb-1.5 last:border-0 last:pb-0">
+                  <span class="font-semibold text-slate-100">${escapeHtml(bidDisplayName(b))}</span>${tag}<br/>
+                  <span class="text-slate-400">${escapeHtml(b.phone)}</span><br/>
+                  <span class="font-semibold text-blue-400">${formatCurrency(b.amount)}</span>
+                  · Veh: <span class="font-medium text-slate-100">${escapeHtml(b.vehicleNumber || "—")}</span>
                 </div>`;
                 })
                 .join("")
@@ -1929,28 +1932,28 @@
 
           const bookBtn =
             load.status === "Live"
-              ? `<button type="button" data-action="vip-book" data-load="${escapeHtml(load.id)}" class="rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Mark Booked</button>`
-              : `<span class="text-xs text-emerald-700 font-semibold">Booked<br/><span class="font-normal text-slate-600">${escapeHtml(load.bookedVehicleNumber || "—")}</span></span>`;
+              ? `<button type="button" data-action="vip-book" data-load="${escapeHtml(load.id)}" class="rounded-md bg-blue-500 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-400">Mark Booked</button>`
+              : `<span class="text-xs text-emerald-400 font-semibold">Booked<br/><span class="font-normal text-slate-400">${escapeHtml(load.bookedVehicleNumber || "—")}</span></span>`;
 
           return `
-            <tr class="align-top hover:bg-slate-50/80">
+            <tr class="align-top hover:bg-slate-800/50">
               <td class="px-4 py-3">
-                <p class="font-semibold text-slate-900">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</p>
+                <p class="font-semibold text-slate-100">${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}</p>
                 <p class="mt-1"><span class="inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${statusClass}">${escapeHtml(load.status)}</span>
-                <span class="ml-1 text-xs text-slate-600">${escapeHtml(load.loadType)} · ${escapeHtml(load.material)}</span></p>
-                <p class="mt-1 text-xs text-slate-500">${escapeHtml(load.weight)} · ${escapeHtml(load.distance)} km</p>
+                <span class="ml-1 text-xs text-slate-400">${escapeHtml(load.loadType)} · ${escapeHtml(load.material)}</span></p>
+                <p class="mt-1 text-xs text-slate-500">${escapeHtml(load.weight)} · <span class="tabular-nums">${escapeHtml(load.distance)}</span> km</p>
               </td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-900">${formatDate(load.loadingDate)}</td>
-              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">${escapeHtml(load.vehicleSize)}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-100">${formatDate(load.loadingDate)}</td>
+              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-100">${escapeHtml(load.vehicleSize)}</td>
               <td class="whitespace-nowrap px-4 py-3">
-                <p class="font-semibold text-slate-900">${escapeHtml(load.shipperPhone)}</p>
+                <p class="font-semibold text-slate-100">${escapeHtml(load.shipperPhone)}</p>
                 <p class="text-xs text-slate-500">Shipper</p>
               </td>
               <td class="px-4 py-3 text-sm min-w-[220px]">${bidsDetail}</td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex flex-col gap-2">
                   ${bookBtn}
-                  <button type="button" data-action="vip-delete" data-load="${escapeHtml(load.id)}" class="rounded-md border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100">Delete Post</button>
+                  <button type="button" data-action="vip-delete" data-load="${escapeHtml(load.id)}" class="rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/20">Delete Post</button>
                 </div>
               </td>
             </tr>`;
