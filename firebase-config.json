@@ -1,8 +1,9 @@
 {
-  "apiKey": "PENDING_FIREBASE_SETUP",
-  "authDomain": "PENDING_FIREBASE_SETUP.firebaseapp.com",
-  "projectId": "PENDING_FIREBASE_SETUP",
-  "storageBucket": "PENDING_FIREBASE_SETUP.appspot.com",
-  "messagingSenderId": "000000000000",
-  "appId": "1:000000000000:web:pending"
+  "apiKey": "AIzaSyA6sGqI5JUUyJHd5CYbqk9wi96Hp0utT0M",
+  "authDomain": "verifiedtrucks-20.firebaseapp.com",
+  "projectId": "verifiedtrucks-20",
+  "storageBucket": "verifiedtrucks-20.firebasestorage.app",
+  "messagingSenderId": "213417142299",
+  "appId": "1:213417142299:web:f07b15517e540053a230be",
+  "measurementId": "G-7944BE0EDS"
 }

@@ -20,8 +20,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <style>
     html { scroll-behavior: smooth; }
     body { font-family: 'DM Sans', system-ui, sans-serif; }
@@ -283,306 +281,328 @@
     </div>
   </footer>
 
-  <script>
-    (function () {
-      'use strict';
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      onSnapshot,
+      getDocs,
+      writeBatch,
+    } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-      const VIP_SESSION_KEY = 'verified_trucks_vip_session';
-      const VIP_PASSWORD = 'Deva@2001';
-      const LOADS_COLLECTION = 'loads';
+    const LOADS_COLLECTION = "loads";
+    const VIP_SESSION_KEY = "verified_trucks_vip_session";
+    const VIP_PASSWORD = "Deva@2001";
 
-      const VEHICLE_SIZES = [
-        '7 ft', '9 ft', '14 ft', '17 ft', '19 ft', '20 ft',
-        '22 ft', '24 ft', '28 ft', '32 ft Single Axle', '32 ft Multi Axle'
-      ];
+    const VEHICLE_SIZES = [
+      "7 ft", "9 ft", "14 ft", "17 ft", "19 ft", "20 ft",
+      "22 ft", "24 ft", "28 ft", "32 ft Single Axle", "32 ft Multi Axle",
+    ];
 
-      let db = null;
-      let loads = [];
-      let vipUnlocked = false;
-      let toastTimer = null;
-      let firebaseReady = false;
-      let seededOnce = false;
-      let unsubscribeLoads = null;
+    let db = null;
+    let loads = [];
+    let vipUnlocked = false;
+    let toastTimer = null;
+    let firebaseReady = false;
+    let seededOnce = false;
+    let unsubscribeLoads = null;
 
-      function showBanner(message, isError) {
-        const banner = document.getElementById('firebase-banner');
-        const msg = document.getElementById('firebase-banner-msg');
-        banner.classList.remove('hidden');
-        banner.classList.toggle('border-amber-200', !isError);
-        banner.classList.toggle('bg-amber-50', !isError);
-        banner.classList.toggle('border-red-200', !!isError);
-        banner.classList.toggle('bg-red-50', !!isError);
-        msg.className = 'text-sm ' + (isError ? 'text-red-900' : 'text-amber-900');
-        msg.textContent = message;
+    window.__vt = { get loads() { return loads; }, get ready() { return firebaseReady; } };
+
+    function showBanner(message, isError) {
+      const banner = document.getElementById("firebase-banner");
+      const msg = document.getElementById("firebase-banner-msg");
+      banner.classList.remove("hidden");
+      banner.classList.toggle("border-amber-200", !isError);
+      banner.classList.toggle("bg-amber-50", !isError);
+      banner.classList.toggle("border-red-200", !!isError);
+      banner.classList.toggle("bg-red-50", !!isError);
+      msg.className = "text-sm " + (isError ? "text-red-900" : "text-amber-900");
+      msg.textContent = message;
+    }
+
+    function hideBanner() {
+      document.getElementById("firebase-banner").classList.add("hidden");
+    }
+
+    function showToast(message) {
+      const el = document.getElementById("toast");
+      const msg = document.getElementById("toast-msg");
+      msg.textContent = message;
+      el.classList.remove("hidden");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add("hidden"), 3200);
+    }
+
+    function uid() {
+      return "ld_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function relativeTime(iso) {
+      const then = new Date(iso).getTime();
+      if (Number.isNaN(then)) return "Unknown";
+      const diff = Math.max(0, Date.now() - then);
+      const sec = Math.floor(diff / 1000);
+      if (sec < 45) return "Just now";
+      const mins = Math.floor(sec / 60);
+      if (mins < 60) return mins === 1 ? "1 min ago" : mins + " mins ago";
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs === 1 ? "1 hr since posted" : hrs + " hrs since posted";
+      const days = Math.floor(hrs / 24);
+      return days === 1 ? "1 day since posted" : days + " days since posted";
+    }
+
+    function formatCurrency(amount) {
+      const n = Number(amount);
+      if (Number.isNaN(n)) return "₹" + amount;
+      return "₹" + n.toLocaleString("en-IN");
+    }
+
+    function formatDate(isoDate) {
+      if (!isoDate) return "—";
+      try {
+        const d = new Date(isoDate + "T00:00:00");
+        return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+      } catch {
+        return isoDate;
       }
+    }
 
-      function hideBanner() {
-        document.getElementById('firebase-banner').classList.add('hidden');
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function maskVehicleNumber(vn) {
+      const s = String(vn || "").replace(/\s+/g, "").toUpperCase();
+      if (!s) return "—";
+      if (s.length <= 4) return "****";
+      if (s.length <= 5) return s.slice(0, Math.max(0, s.length - 4)) + "****";
+      return s.slice(0, 5) + "****";
+    }
+
+    function buildWhatsAppMessage(load) {
+      return [
+        "*Verified Trucks — Load Available*",
+        "",
+        "Route: " + load.origin + " → " + load.destination,
+        "Vehicle size: " + load.vehicleSize,
+        "Weight: " + load.weight,
+        "Material: " + load.material,
+        "Loading date: " + formatDate(load.loadingDate),
+        "",
+        "Book now if interested!",
+        "Reply here or bid on Verified Trucks Live Loads.",
+      ].join("\n");
+    }
+
+    function whatsAppShareUrl(load) {
+      return "https://wa.me/?text=" + encodeURIComponent(buildWhatsAppMessage(load));
+    }
+
+    function bidDisplayName(bid) {
+      return bid.name || bid.company || "Bidder";
+    }
+
+    function normalizeLoad(id, data) {
+      const load = Object.assign({ id }, data || {});
+      if (!Array.isArray(load.bids)) load.bids = [];
+      load.bids.forEach((b) => {
+        if (!b.name && b.company) b.name = b.company;
+        if (!b.vehicleNumber) b.vehicleNumber = "";
+      });
+      if (!load.bookedVehicleNumber) load.bookedVehicleNumber = "";
+      return load;
+    }
+
+    async function saveLoad(load) {
+      if (!db) throw new Error("Firebase not ready");
+      const payload = Object.assign({}, load);
+      const id = payload.id;
+      delete payload.id;
+      const writePromise = setDoc(doc(db, LOADS_COLLECTION, id), payload, { merge: true });
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore write timed out — check Firestore rules allow write on /loads")), 15000)
+      );
+      await Promise.race([writePromise, timeout]);
+    }
+
+    async function deleteLoad(loadId) {
+      if (!db) throw new Error("Firebase not ready");
+      const delPromise = deleteDoc(doc(db, LOADS_COLLECTION, loadId));
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Firestore delete timed out — check security rules")), 15000)
+      );
+      await Promise.race([delPromise, timeout]);
+    }
+
+    async function clearAllLoads() {
+      if (!db) throw new Error("Firebase not ready");
+      const snap = await getDocs(collection(db, LOADS_COLLECTION));
+      const batch = writeBatch(db);
+      snap.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+
+    window.switchTab = function (tab) {
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("tab-active"));
+      const panel = document.getElementById("panel-" + tab);
+      if (panel) {
+        panel.classList.remove("hidden");
+        panel.classList.remove("animate-fade-in");
+        void panel.offsetWidth;
+        panel.classList.add("animate-fade-in");
       }
+      const btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+      if (btn) btn.classList.add("tab-active");
+      if (tab === "vip") renderVip();
+      if (tab === "board") renderBoard();
+    };
 
-      function showToast(message) {
-        const el = document.getElementById('toast');
-        const msg = document.getElementById('toast-msg');
-        msg.textContent = message;
-        el.classList.remove('hidden');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+    document.getElementById("main-nav").addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab-btn");
+      if (!btn) return;
+      switchTab(btn.dataset.tab);
+    });
+
+    function populateVehicleSelects() {
+      const postSelect = document.getElementById("vehicleSize");
+      const filterSelect = document.getElementById("filter-vehicle");
+      VEHICLE_SIZES.forEach((size) => {
+        const o1 = document.createElement("option");
+        o1.value = size;
+        o1.textContent = size;
+        postSelect.appendChild(o1);
+        const o2 = document.createElement("option");
+        o2.value = size;
+        o2.textContent = size;
+        filterSelect.appendChild(o2);
+      });
+    }
+
+    function setMinLoadingDate() {
+      const input = document.getElementById("loadingDate");
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      input.min = yyyy + "-" + mm + "-" + dd;
+    }
+
+    document.getElementById("post-load-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!firebaseReady) {
+        showToast("Firebase is not connected yet");
+        return;
       }
-
-      function uid() {
-        return 'ld_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
-      }
-
-      function relativeTime(iso) {
-        const then = new Date(iso).getTime();
-        if (Number.isNaN(then)) return 'Unknown';
-        const diff = Math.max(0, Date.now() - then);
-        const sec = Math.floor(diff / 1000);
-        if (sec < 45) return 'Just now';
-        const mins = Math.floor(sec / 60);
-        if (mins < 60) return mins === 1 ? '1 min ago' : mins + ' mins ago';
-        const hrs = Math.floor(mins / 60);
-        if (hrs < 24) return hrs === 1 ? '1 hr since posted' : hrs + ' hrs since posted';
-        const days = Math.floor(hrs / 24);
-        return days === 1 ? '1 day since posted' : days + ' days since posted';
-      }
-
-      function formatCurrency(amount) {
-        const n = Number(amount);
-        if (Number.isNaN(n)) return '₹' + amount;
-        return '₹' + n.toLocaleString('en-IN');
-      }
-
-      function formatDate(isoDate) {
-        if (!isoDate) return '—';
-        try {
-          const d = new Date(isoDate + 'T00:00:00');
-          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        } catch {
-          return isoDate;
-        }
-      }
-
-      function escapeHtml(str) {
-        return String(str ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      function maskVehicleNumber(vn) {
-        const s = String(vn || '').replace(/\s+/g, '').toUpperCase();
-        if (!s) return '—';
-        if (s.length <= 4) return '****';
-        if (s.length <= 5) return s.slice(0, Math.max(0, s.length - 4)) + '****';
-        return s.slice(0, 5) + '****';
-      }
-
-      function buildWhatsAppMessage(load) {
-        return [
-          '*Verified Trucks — Load Available*',
-          '',
-          'Route: ' + load.origin + ' → ' + load.destination,
-          'Vehicle size: ' + load.vehicleSize,
-          'Weight: ' + load.weight,
-          'Material: ' + load.material,
-          'Loading date: ' + formatDate(load.loadingDate),
-          '',
-          'Book now if interested!',
-          'Reply here or bid on Verified Trucks Live Loads.'
-        ].join('\n');
-      }
-
-      function whatsAppShareUrl(load) {
-        return 'https://wa.me/?text=' + encodeURIComponent(buildWhatsAppMessage(load));
-      }
-
-      function bidDisplayName(bid) {
-        return bid.name || bid.company || 'Bidder';
-      }
-
-      function normalizeLoad(id, data) {
-        const load = Object.assign({ id: id }, data || {});
-        if (!Array.isArray(load.bids)) load.bids = [];
-        load.bids.forEach((b) => {
-          if (!b.name && b.company) b.name = b.company;
-          if (!b.vehicleNumber) b.vehicleNumber = '';
-        });
-        if (!load.bookedVehicleNumber) load.bookedVehicleNumber = '';
-        return load;
-      }
-
-      async function saveLoad(load) {
-        if (!db) throw new Error('Firebase not ready');
-        const payload = Object.assign({}, load);
-        const id = payload.id;
-        delete payload.id;
-        await db.collection(LOADS_COLLECTION).doc(id).set(payload, { merge: true });
-      }
-
-      async function deleteLoad(loadId) {
-        if (!db) throw new Error('Firebase not ready');
-        await db.collection(LOADS_COLLECTION).doc(loadId).delete();
-      }
-
-      async function clearAllLoads() {
-        if (!db) throw new Error('Firebase not ready');
-        const snap = await db.collection(LOADS_COLLECTION).get();
-        const batch = db.batch();
-        snap.docs.forEach((d) => batch.delete(d.ref));
-        await batch.commit();
-      }
-
-      window.switchTab = function (tab) {
-        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('tab-active'));
-        const panel = document.getElementById('panel-' + tab);
-        if (panel) {
-          panel.classList.remove('hidden');
-          panel.classList.remove('animate-fade-in');
-          void panel.offsetWidth;
-          panel.classList.add('animate-fade-in');
-        }
-        const btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
-        if (btn) btn.classList.add('tab-active');
-        if (tab === 'vip') renderVip();
-        if (tab === 'board') renderBoard();
+      const form = e.target;
+      const btn = document.getElementById("post-submit-btn");
+      const data = new FormData(form);
+      const load = {
+        id: uid(),
+        origin: String(data.get("origin")).trim(),
+        destination: String(data.get("destination")).trim(),
+        loadType: String(data.get("loadType")),
+        vehicleSize: String(data.get("vehicleSize")),
+        weight: String(data.get("weight")).trim(),
+        material: String(data.get("material")).trim(),
+        loadingDate: String(data.get("loadingDate")),
+        distance: Number(data.get("distance")),
+        shipperPhone: String(data.get("shipperPhone")).trim(),
+        status: "Live",
+        bids: [],
+        bookedVehicleNumber: "",
+        createdAt: new Date().toISOString(),
       };
 
-      document.getElementById('main-nav').addEventListener('click', (e) => {
-        const btn = e.target.closest('.tab-btn');
-        if (!btn) return;
-        switchTab(btn.dataset.tab);
+      btn.disabled = true;
+      btn.textContent = "Publishing…";
+      try {
+        await saveLoad(load);
+        form.reset();
+        setMinLoadingDate();
+        showToast("Load published to Firebase — Live Loads");
+        switchTab("board");
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to publish: " + (err.message || "unknown error"));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Publish to Live Loads";
+      }
+    });
+
+    ["filter-status", "filter-type", "filter-vehicle", "filter-search"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", renderBoard);
+      document.getElementById(id).addEventListener("change", renderBoard);
+    });
+
+    function getFilteredLoads() {
+      const status = document.getElementById("filter-status").value;
+      const type = document.getElementById("filter-type").value;
+      const vehicle = document.getElementById("filter-vehicle").value;
+      const search = document.getElementById("filter-search").value.trim().toLowerCase();
+
+      return loads.filter((l) => {
+        if (status !== "all" && l.status !== status) return false;
+        if (type !== "all" && l.loadType !== type) return false;
+        if (vehicle !== "all" && l.vehicleSize !== vehicle) return false;
+        if (search) {
+          const hay = (l.origin + " " + l.destination).toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        return true;
       });
+    }
 
-      function populateVehicleSelects() {
-        const postSelect = document.getElementById('vehicleSize');
-        const filterSelect = document.getElementById('filter-vehicle');
-        VEHICLE_SIZES.forEach((size) => {
-          const o1 = document.createElement('option');
-          o1.value = size;
-          o1.textContent = size;
-          postSelect.appendChild(o1);
-          const o2 = document.createElement('option');
-          o2.value = size;
-          o2.textContent = size;
-          filterSelect.appendChild(o2);
-        });
+    function updateCounts() {
+      document.getElementById("live-count").textContent = loads.filter((l) => l.status === "Live").length;
+      document.getElementById("booked-count").textContent = loads.filter((l) => l.status === "Booked").length;
+    }
+
+    function renderBoard() {
+      const board = document.getElementById("load-board");
+      const empty = document.getElementById("empty-board");
+      const loading = document.getElementById("loading-state");
+      if (!firebaseReady) {
+        loading.classList.remove("hidden");
+        board.innerHTML = "";
+        empty.classList.add("hidden");
+        return;
       }
+      loading.classList.add("hidden");
+      const filtered = getFilteredLoads();
+      updateCounts();
 
-      function setMinLoadingDate() {
-        const input = document.getElementById('loadingDate');
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        input.min = yyyy + '-' + mm + '-' + dd;
+      if (!filtered.length) {
+        board.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
       }
+      empty.classList.add("hidden");
+      board.innerHTML = filtered.map((load) => renderLoadCard(load)).join("");
+    }
 
-      document.getElementById('post-load-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!firebaseReady) {
-          showToast('Firebase is not connected yet');
-          return;
-        }
-        const form = e.target;
-        const btn = document.getElementById('post-submit-btn');
-        const data = new FormData(form);
-        const load = {
-          id: uid(),
-          origin: String(data.get('origin')).trim(),
-          destination: String(data.get('destination')).trim(),
-          loadType: String(data.get('loadType')),
-          vehicleSize: String(data.get('vehicleSize')),
-          weight: String(data.get('weight')).trim(),
-          material: String(data.get('material')).trim(),
-          loadingDate: String(data.get('loadingDate')),
-          distance: Number(data.get('distance')),
-          shipperPhone: String(data.get('shipperPhone')).trim(),
-          status: 'Live',
-          bids: [],
-          bookedVehicleNumber: '',
-          createdAt: new Date().toISOString(),
-        };
-
-        btn.disabled = true;
-        btn.textContent = 'Publishing…';
-        try {
-          await saveLoad(load);
-          form.reset();
-          setMinLoadingDate();
-          showToast('Load published to Firebase — Live Loads');
-          switchTab('board');
-        } catch (err) {
-          console.error(err);
-          showToast('Failed to publish: ' + (err.message || 'unknown error'));
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Publish to Live Loads';
-        }
-      });
-
-      ['filter-status', 'filter-type', 'filter-vehicle', 'filter-search'].forEach((id) => {
-        document.getElementById(id).addEventListener('input', renderBoard);
-        document.getElementById(id).addEventListener('change', renderBoard);
-      });
-
-      function getFilteredLoads() {
-        const status = document.getElementById('filter-status').value;
-        const type = document.getElementById('filter-type').value;
-        const vehicle = document.getElementById('filter-vehicle').value;
-        const search = document.getElementById('filter-search').value.trim().toLowerCase();
-
-        return loads.filter((l) => {
-          if (status !== 'all' && l.status !== status) return false;
-          if (type !== 'all' && l.loadType !== type) return false;
-          if (vehicle !== 'all' && l.vehicleSize !== vehicle) return false;
-          if (search) {
-            const hay = (l.origin + ' ' + l.destination).toLowerCase();
-            if (!hay.includes(search)) return false;
-          }
-          return true;
-        });
-      }
-
-      function updateCounts() {
-        document.getElementById('live-count').textContent = loads.filter((l) => l.status === 'Live').length;
-        document.getElementById('booked-count').textContent = loads.filter((l) => l.status === 'Booked').length;
-      }
-
-      function renderBoard() {
-        const board = document.getElementById('load-board');
-        const empty = document.getElementById('empty-board');
-        const loading = document.getElementById('loading-state');
-        if (!firebaseReady) {
-          loading.classList.remove('hidden');
-          board.innerHTML = '';
-          empty.classList.add('hidden');
-          return;
-        }
-        loading.classList.add('hidden');
-        const filtered = getFilteredLoads();
-        updateCounts();
-
-        if (!filtered.length) {
-          board.innerHTML = '';
-          empty.classList.remove('hidden');
-          return;
-        }
-        empty.classList.add('hidden');
-        board.innerHTML = filtered.map((load) => renderLoadCard(load)).join('');
-      }
-
-      function renderLoadCard(load) {
-        const acceptedBid = (load.bids || []).find((b) => b.accepted);
-        const statusBadge = load.status === 'Live'
+    function renderLoadCard(load) {
+      const acceptedBid = (load.bids || []).find((b) => b.accepted);
+      const statusBadge =
+        load.status === "Live"
           ? '<span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700"><span class="live-dot h-1.5 w-1.5 rounded-full bg-blue-600"></span>Live</span>'
           : '<span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Booked</span>';
 
-        const bidsHtml = (load.bids || []).length
-          ? (load.bids || []).map((bid) => {
+      const bidsHtml = (load.bids || []).length
+        ? (load.bids || [])
+            .map((bid) => {
               const tag = bid.accepted
                 ? '<span class="text-xs font-semibold text-emerald-700">Selected</span>'
                 : '<span class="text-xs text-slate-500">Pending</span>';
@@ -594,21 +614,24 @@
                   </div>
                   ${tag}
                 </div>`;
-            }).join('')
-          : '<p class="text-xs text-slate-500 italic">No bids yet — be the first to bid.</p>';
+            })
+            .join("")
+        : '<p class="text-xs text-slate-500 italic">No bids yet — be the first to bid.</p>';
 
-        const bookingNote = load.status === 'Booked'
+      const bookingNote =
+        load.status === "Booked"
           ? `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
               <p class="text-xs font-semibold uppercase tracking-wide text-emerald-800">Booked</p>
-              <p class="mt-0.5 text-sm font-semibold text-slate-900">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ''))}</p>
-              <p class="text-xs text-slate-600">${acceptedBid ? 'Transporter: ' + escapeHtml(bidDisplayName(acceptedBid)) + ' · ' : ''}Full contacts &amp; amounts in VIP Access only.</p>
+              <p class="mt-0.5 text-sm font-semibold text-slate-900">Vehicle: ${escapeHtml(maskVehicleNumber(load.bookedVehicleNumber || (acceptedBid && acceptedBid.vehicleNumber) || ""))}</p>
+              <p class="text-xs text-slate-600">${acceptedBid ? "Transporter: " + escapeHtml(bidDisplayName(acceptedBid)) + " · " : ""}Full contacts &amp; amounts in VIP Access only.</p>
             </div>`
           : `<div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Privacy</p>
               <p class="mt-0.5 text-sm text-slate-500">Bid amounts, phones &amp; full vehicle numbers are VIP-only. Booking is done by VIP admin.</p>
             </div>`;
 
-        const bidForm = load.status === 'Live'
+      const bidForm =
+        load.status === "Live"
           ? `<form class="bid-form mt-3 space-y-2 border-t border-slate-100 pt-3" data-load-id="${escapeHtml(load.id)}">
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">Place a Bid</p>
               <p class="text-xs text-slate-500">Your amount &amp; phone stay hidden on Live Loads — VIP admin reviews them.</p>
@@ -620,9 +643,9 @@
               </div>
               <button type="submit" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors sm:w-auto">Submit Bid</button>
             </form>`
-          : '';
+          : "";
 
-        return `
+      return `
           <article class="animate-fade-in flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm" data-load-id="${escapeHtml(load.id)}">
             <div class="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
@@ -669,236 +692,251 @@
 
             ${bidForm}
           </article>`;
+    }
+
+    document.getElementById("load-board").addEventListener("submit", async (e) => {
+      const form = e.target.closest(".bid-form");
+      if (!form) return;
+      e.preventDefault();
+      if (!firebaseReady) {
+        showToast("Firebase is not connected yet");
+        return;
       }
+      const loadId = form.dataset.loadId;
+      const load = loads.find((l) => l.id === loadId);
+      if (!load || load.status !== "Live") return;
 
-      document.getElementById('load-board').addEventListener('submit', async (e) => {
-        const form = e.target.closest('.bid-form');
-        if (!form) return;
-        e.preventDefault();
-        if (!firebaseReady) {
-          showToast('Firebase is not connected yet');
-          return;
-        }
-        const loadId = form.dataset.loadId;
-        const load = loads.find((l) => l.id === loadId);
-        if (!load || load.status !== 'Live') return;
-
-        const fd = new FormData(form);
-        const bid = {
-          id: 'bd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
-          name: String(fd.get('name')).trim(),
-          phone: String(fd.get('phone')).trim(),
-          amount: Number(fd.get('amount')),
-          vehicleNumber: String(fd.get('vehicleNumber')).trim().toUpperCase().replace(/\s+/g, ''),
-          accepted: false,
-          createdAt: new Date().toISOString(),
-        };
-        const next = Object.assign({}, load, { bids: (load.bids || []).concat([bid]) });
-        try {
-          await saveLoad(next);
-          showToast('Bid submitted by ' + bid.name);
-        } catch (err) {
-          console.error(err);
-          showToast('Failed to submit bid: ' + (err.message || 'error'));
-        }
-      });
-
-      function tickRelativeTimes() {
-        document.querySelectorAll('.relative-time').forEach((el) => {
-          const created = el.dataset.created;
-          if (created) el.textContent = relativeTime(created);
-        });
+      const fd = new FormData(form);
+      const bid = {
+        id: "bd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6),
+        name: String(fd.get("name")).trim(),
+        phone: String(fd.get("phone")).trim(),
+        amount: Number(fd.get("amount")),
+        vehicleNumber: String(fd.get("vehicleNumber")).trim().toUpperCase().replace(/\s+/g, ""),
+        accepted: false,
+        createdAt: new Date().toISOString(),
+      };
+      const next = Object.assign({}, load, { bids: (load.bids || []).concat([bid]) });
+      try {
+        await saveLoad(next);
+        showToast("Bid submitted by " + bid.name);
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to submit bid: " + (err.message || "error"));
       }
+    });
 
-      const bookModal = document.getElementById('book-modal');
-      const bookBidSelect = document.getElementById('book-bid');
-      const bookVehicleInput = document.getElementById('book-vehicle-number');
-      const bookMaskPreview = document.getElementById('book-mask-preview');
+    function tickRelativeTimes() {
+      document.querySelectorAll(".relative-time").forEach((el) => {
+        const created = el.dataset.created;
+        if (created) el.textContent = relativeTime(created);
+      });
+    }
 
-      function openBookModal(loadId) {
-        const load = loads.find((l) => l.id === loadId);
-        if (!load || load.status !== 'Live') {
-          showToast('Only Live loads can be marked booked');
-          return;
-        }
-        if (!(load.bids || []).length) {
-          showToast('No bids yet — cannot mark booked without a bidder');
-          return;
-        }
-        document.getElementById('book-load-id').value = loadId;
-        bookBidSelect.innerHTML = (load.bids || []).map((b) =>
-          `<option value="${escapeHtml(b.id)}">${escapeHtml(bidDisplayName(b))} · ${formatCurrency(b.amount)} · ${escapeHtml(b.vehicleNumber || 'no vehicle')}</option>`
-        ).join('');
-        const first = load.bids[0];
-        bookVehicleInput.value = first.vehicleNumber || '';
-        bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
-        bookModal.classList.remove('hidden');
-        bookModal.classList.add('flex');
+    const bookModal = document.getElementById("book-modal");
+    const bookBidSelect = document.getElementById("book-bid");
+    const bookVehicleInput = document.getElementById("book-vehicle-number");
+    const bookMaskPreview = document.getElementById("book-mask-preview");
+
+    function openBookModal(loadId) {
+      const load = loads.find((l) => l.id === loadId);
+      if (!load || load.status !== "Live") {
+        showToast("Only Live loads can be marked booked");
+        return;
       }
-
-      function closeBookModal() {
-        bookModal.classList.add('hidden');
-        bookModal.classList.remove('flex');
+      if (!(load.bids || []).length) {
+        showToast("No bids yet — cannot mark booked without a bidder");
+        return;
       }
+      document.getElementById("book-load-id").value = loadId;
+      bookBidSelect.innerHTML = (load.bids || [])
+        .map(
+          (b) =>
+            `<option value="${escapeHtml(b.id)}">${escapeHtml(bidDisplayName(b))} · ${formatCurrency(b.amount)} · ${escapeHtml(b.vehicleNumber || "no vehicle")}</option>`
+        )
+        .join("");
+      const first = load.bids[0];
+      bookVehicleInput.value = first.vehicleNumber || "";
+      bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
+      bookModal.classList.remove("hidden");
+      bookModal.classList.add("flex");
+    }
 
-      bookBidSelect.addEventListener('change', () => {
-        const load = loads.find((l) => l.id === document.getElementById('book-load-id').value);
-        const bid = ((load && load.bids) || []).find((b) => b.id === bookBidSelect.value);
-        if (bid && bid.vehicleNumber) {
-          bookVehicleInput.value = bid.vehicleNumber;
-          bookMaskPreview.textContent = maskVehicleNumber(bid.vehicleNumber);
-        }
-      });
+    function closeBookModal() {
+      bookModal.classList.add("hidden");
+      bookModal.classList.remove("flex");
+    }
 
-      bookVehicleInput.addEventListener('input', () => {
-        bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
-      });
+    bookBidSelect.addEventListener("change", () => {
+      const load = loads.find((l) => l.id === document.getElementById("book-load-id").value);
+      const bid = ((load && load.bids) || []).find((b) => b.id === bookBidSelect.value);
+      if (bid && bid.vehicleNumber) {
+        bookVehicleInput.value = bid.vehicleNumber;
+        bookMaskPreview.textContent = maskVehicleNumber(bid.vehicleNumber);
+      }
+    });
 
-      document.getElementById('book-cancel').addEventListener('click', closeBookModal);
-      bookModal.addEventListener('click', (e) => {
-        if (e.target === bookModal) closeBookModal();
-      });
+    bookVehicleInput.addEventListener("input", () => {
+      bookMaskPreview.textContent = maskVehicleNumber(bookVehicleInput.value);
+    });
 
-      document.getElementById('book-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const loadId = document.getElementById('book-load-id').value;
-        const bidId = bookBidSelect.value;
-        const vehicleNumber = bookVehicleInput.value.trim().toUpperCase().replace(/\s+/g, '');
+    document.getElementById("book-cancel").addEventListener("click", closeBookModal);
+    bookModal.addEventListener("click", (e) => {
+      if (e.target === bookModal) closeBookModal();
+    });
+
+    document.getElementById("book-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loadId = document.getElementById("book-load-id").value;
+      const bidId = bookBidSelect.value;
+      const vehicleNumber = bookVehicleInput.value.trim().toUpperCase().replace(/\s+/g, "");
+      const load = loads.find((l) => l.id === loadId);
+      if (!load) return;
+      if (vehicleNumber.length < 5) {
+        showToast("Vehicle number must be at least 5 characters");
+        return;
+      }
+      const bids = (load.bids || []).map((b) => Object.assign({}, b, { accepted: b.id === bidId }));
+      try {
+        await saveLoad(
+          Object.assign({}, load, {
+            bids,
+            status: "Booked",
+            bookedVehicleNumber: vehicleNumber,
+          })
+        );
+        closeBookModal();
+        showToast("Load marked Booked — public sees " + maskVehicleNumber(vehicleNumber));
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to book: " + (err.message || "error"));
+      }
+    });
+
+    function checkVipSession() {
+      vipUnlocked = sessionStorage.getItem(VIP_SESSION_KEY) === "1";
+      syncVipUi();
+    }
+
+    function syncVipUi() {
+      const gate = document.getElementById("vip-gate");
+      const dash = document.getElementById("vip-dashboard");
+      if (vipUnlocked) {
+        gate.classList.add("hidden");
+        dash.classList.remove("hidden");
+        renderVipDashboard();
+      } else {
+        gate.classList.remove("hidden");
+        dash.classList.add("hidden");
+      }
+    }
+
+    function renderVip() {
+      checkVipSession();
+      syncVipUi();
+    }
+
+    document.getElementById("vip-login-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("vip-password");
+      const err = document.getElementById("vip-error");
+      if (input.value === VIP_PASSWORD) {
+        vipUnlocked = true;
+        sessionStorage.setItem(VIP_SESSION_KEY, "1");
+        err.classList.add("hidden");
+        input.value = "";
+        syncVipUi();
+        showToast("VIP dashboard unlocked");
+      } else {
+        err.classList.remove("hidden");
+        input.focus();
+      }
+    });
+
+    document.getElementById("vip-logout").addEventListener("click", () => {
+      vipUnlocked = false;
+      sessionStorage.removeItem(VIP_SESSION_KEY);
+      syncVipUi();
+      showToast("VIP session locked");
+    });
+
+    document.getElementById("clear-all-data").addEventListener("click", async () => {
+      if (!confirm("Delete ALL loads from Firebase? This cannot be undone.")) return;
+      try {
+        await clearAllLoads();
+        showToast("All Firebase load data cleared");
+      } catch (err) {
+        console.error(err);
+        showToast("Clear failed: " + (err.message || "error"));
+      }
+    });
+
+    document.getElementById("vip-table-body").addEventListener("click", async (e) => {
+      const bookBtn = e.target.closest('[data-action="vip-book"]');
+      const delBtn = e.target.closest('[data-action="vip-delete"]');
+      if (bookBtn) {
+        openBookModal(bookBtn.dataset.load);
+        return;
+      }
+      if (delBtn) {
+        const loadId = delBtn.dataset.load;
         const load = loads.find((l) => l.id === loadId);
         if (!load) return;
-        if (vehicleNumber.length < 5) {
-          showToast('Vehicle number must be at least 5 characters');
-          return;
-        }
-        const bids = (load.bids || []).map((b) => Object.assign({}, b, { accepted: b.id === bidId }));
+        if (!confirm("Delete post " + load.origin + " → " + load.destination + " from Firebase?")) return;
         try {
-          await saveLoad(Object.assign({}, load, {
-            bids: bids,
-            status: 'Booked',
-            bookedVehicleNumber: vehicleNumber,
-          }));
-          closeBookModal();
-          showToast('Load marked Booked — public sees ' + maskVehicleNumber(vehicleNumber));
+          await deleteLoad(loadId);
+          showToast("Post deleted from Firebase");
         } catch (err) {
           console.error(err);
-          showToast('Failed to book: ' + (err.message || 'error'));
-        }
-      });
-
-      function checkVipSession() {
-        vipUnlocked = sessionStorage.getItem(VIP_SESSION_KEY) === '1';
-        syncVipUi();
-      }
-
-      function syncVipUi() {
-        const gate = document.getElementById('vip-gate');
-        const dash = document.getElementById('vip-dashboard');
-        if (vipUnlocked) {
-          gate.classList.add('hidden');
-          dash.classList.remove('hidden');
-          renderVipDashboard();
-        } else {
-          gate.classList.remove('hidden');
-          dash.classList.add('hidden');
+          showToast("Delete failed: " + (err.message || "error"));
         }
       }
+    });
 
-      function renderVip() {
-        checkVipSession();
-        syncVipUi();
+    function renderVipDashboard() {
+      const tbody = document.getElementById("vip-table-body");
+      const empty = document.getElementById("vip-empty");
+      const stats = document.getElementById("vip-stats");
+
+      stats.textContent =
+        loads.length +
+        " load" +
+        (loads.length === 1 ? "" : "s") +
+        " · " +
+        loads.reduce((n, l) => n + (l.bids || []).length, 0) +
+        " bids total";
+
+      if (!loads.length) {
+        tbody.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
       }
+      empty.classList.add("hidden");
 
-      document.getElementById('vip-login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = document.getElementById('vip-password');
-        const err = document.getElementById('vip-error');
-        if (input.value === VIP_PASSWORD) {
-          vipUnlocked = true;
-          sessionStorage.setItem(VIP_SESSION_KEY, '1');
-          err.classList.add('hidden');
-          input.value = '';
-          syncVipUi();
-          showToast('VIP dashboard unlocked');
-        } else {
-          err.classList.remove('hidden');
-          input.focus();
-        }
-      });
-
-      document.getElementById('vip-logout').addEventListener('click', () => {
-        vipUnlocked = false;
-        sessionStorage.removeItem(VIP_SESSION_KEY);
-        syncVipUi();
-        showToast('VIP session locked');
-      });
-
-      document.getElementById('clear-all-data').addEventListener('click', async () => {
-        if (!confirm('Delete ALL loads from Firebase? This cannot be undone.')) return;
-        try {
-          await clearAllLoads();
-          showToast('All Firebase load data cleared');
-        } catch (err) {
-          console.error(err);
-          showToast('Clear failed: ' + (err.message || 'error'));
-        }
-      });
-
-      document.getElementById('vip-table-body').addEventListener('click', async (e) => {
-        const bookBtn = e.target.closest('[data-action="vip-book"]');
-        const delBtn = e.target.closest('[data-action="vip-delete"]');
-        if (bookBtn) {
-          openBookModal(bookBtn.dataset.load);
-          return;
-        }
-        if (delBtn) {
-          const loadId = delBtn.dataset.load;
-          const load = loads.find((l) => l.id === loadId);
-          if (!load) return;
-          if (!confirm('Delete post ' + load.origin + ' → ' + load.destination + ' from Firebase?')) return;
-          try {
-            await deleteLoad(loadId);
-            showToast('Post deleted from Firebase');
-          } catch (err) {
-            console.error(err);
-            showToast('Delete failed: ' + (err.message || 'error'));
-          }
-        }
-      });
-
-      function renderVipDashboard() {
-        const tbody = document.getElementById('vip-table-body');
-        const empty = document.getElementById('vip-empty');
-        const stats = document.getElementById('vip-stats');
-
-        stats.textContent = loads.length + ' load' + (loads.length === 1 ? '' : 's') + ' · ' +
-          loads.reduce((n, l) => n + (l.bids || []).length, 0) + ' bids total';
-
-        if (!loads.length) {
-          tbody.innerHTML = '';
-          empty.classList.remove('hidden');
-          return;
-        }
-        empty.classList.add('hidden');
-
-        tbody.innerHTML = loads.map((load) => {
-          const statusClass = load.status === 'Live'
-            ? 'text-blue-700 bg-blue-50 border-blue-200'
-            : 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      tbody.innerHTML = loads
+        .map((load) => {
+          const statusClass =
+            load.status === "Live"
+              ? "text-blue-700 bg-blue-50 border-blue-200"
+              : "text-emerald-700 bg-emerald-50 border-emerald-200";
           const bidsDetail = (load.bids || []).length
-            ? (load.bids || []).map((b) => {
-                const tag = b.accepted ? ' <span class="font-semibold text-emerald-700">(Accepted)</span>' : '';
-                return `<div class="mb-1.5 last:mb-0 border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+            ? (load.bids || [])
+                .map((b) => {
+                  const tag = b.accepted ? ' <span class="font-semibold text-emerald-700">(Accepted)</span>' : "";
+                  return `<div class="mb-1.5 last:mb-0 border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
                   <span class="font-semibold text-slate-900">${escapeHtml(bidDisplayName(b))}</span>${tag}<br/>
                   <span class="text-slate-600">${escapeHtml(b.phone)}</span><br/>
                   <span class="font-semibold text-blue-700">${formatCurrency(b.amount)}</span>
-                  · Veh: <span class="font-medium text-slate-900">${escapeHtml(b.vehicleNumber || '—')}</span>
+                  · Veh: <span class="font-medium text-slate-900">${escapeHtml(b.vehicleNumber || "—")}</span>
                 </div>`;
-              }).join('')
+                })
+                .join("")
             : '<span class="text-slate-500 italic">No bids</span>';
 
-          const bookBtn = load.status === 'Live'
-            ? `<button type="button" data-action="vip-book" data-load="${escapeHtml(load.id)}" class="rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Mark Booked</button>`
-            : `<span class="text-xs text-emerald-700 font-semibold">Booked<br/><span class="font-normal text-slate-600">${escapeHtml(load.bookedVehicleNumber || '—')}</span></span>`;
+          const bookBtn =
+            load.status === "Live"
+              ? `<button type="button" data-action="vip-book" data-load="${escapeHtml(load.id)}" class="rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">Mark Booked</button>`
+              : `<span class="text-xs text-emerald-700 font-semibold">Booked<br/><span class="font-normal text-slate-600">${escapeHtml(load.bookedVehicleNumber || "—")}</span></span>`;
 
           return `
             <tr class="align-top hover:bg-slate-50/80">
@@ -922,130 +960,151 @@
                 </div>
               </td>
             </tr>`;
-        }).join('');
-      }
+        })
+        .join("");
+    }
 
-      async function seedIfEmpty() {
-        if (seededOnce || loads.length) return;
-        seededOnce = true;
-        const now = Date.now();
-        const demos = [
-          {
-            id: uid(),
-            origin: 'Pune, MH',
-            destination: 'Hyderabad, TS',
-            loadType: 'FTL',
-            vehicleSize: '22 ft',
-            weight: '12 Tons',
-            material: 'Auto parts',
-            loadingDate: new Date(now + 86400000 * 2).toISOString().slice(0, 10),
-            distance: 560,
-            shipperPhone: '+91 98111 22001',
-            status: 'Live',
-            bookedVehicleNumber: '',
-            bids: [
-              {
-                id: 'bd_seed1',
-                name: 'Deccan Logistics',
-                phone: '+91 99001 11223',
-                amount: 42000,
-                vehicleNumber: 'MH12AB1234',
-                accepted: false,
-                createdAt: new Date(now - 120000).toISOString(),
-              },
-            ],
-            createdAt: new Date(now - 300000).toISOString(),
-          },
-          {
-            id: uid(),
-            origin: 'Ahmedabad, GJ',
-            destination: 'Jaipur, RJ',
-            loadType: 'PTL',
-            vehicleSize: '14 ft',
-            weight: '4 Tons',
-            material: 'Textile rolls',
-            loadingDate: new Date(now + 86400000).toISOString().slice(0, 10),
-            distance: 670,
-            shipperPhone: '+91 98222 33445',
-            status: 'Live',
-            bookedVehicleNumber: '',
-            bids: [],
-            createdAt: new Date(now - 7200000).toISOString(),
-          },
-        ];
-        try {
-          await Promise.all(demos.map((d) => saveLoad(d)));
-        } catch (err) {
-          console.error('Seed failed', err);
-          seededOnce = false;
-        }
+    async function seedIfEmpty() {
+      if (seededOnce || loads.length) return;
+      seededOnce = true;
+      const now = Date.now();
+      const demos = [
+        {
+          id: uid(),
+          origin: "Pune, MH",
+          destination: "Hyderabad, TS",
+          loadType: "FTL",
+          vehicleSize: "22 ft",
+          weight: "12 Tons",
+          material: "Auto parts",
+          loadingDate: new Date(now + 86400000 * 2).toISOString().slice(0, 10),
+          distance: 560,
+          shipperPhone: "+91 98111 22001",
+          status: "Live",
+          bookedVehicleNumber: "",
+          bids: [
+            {
+              id: "bd_seed1",
+              name: "Deccan Logistics",
+              phone: "+91 99001 11223",
+              amount: 42000,
+              vehicleNumber: "MH12AB1234",
+              accepted: false,
+              createdAt: new Date(now - 120000).toISOString(),
+            },
+          ],
+          createdAt: new Date(now - 300000).toISOString(),
+        },
+        {
+          id: uid(),
+          origin: "Ahmedabad, GJ",
+          destination: "Jaipur, RJ",
+          loadType: "PTL",
+          vehicleSize: "14 ft",
+          weight: "4 Tons",
+          material: "Textile rolls",
+          loadingDate: new Date(now + 86400000).toISOString().slice(0, 10),
+          distance: 670,
+          shipperPhone: "+91 98222 33445",
+          status: "Live",
+          bookedVehicleNumber: "",
+          bids: [],
+          createdAt: new Date(now - 7200000).toISOString(),
+        },
+      ];
+      try {
+        await Promise.all(demos.map((d) => saveLoad(d)));
+      } catch (err) {
+        console.error("Seed failed", err);
+        seededOnce = false;
       }
+    }
 
-      function subscribeLoads() {
-        if (unsubscribeLoads) unsubscribeLoads();
-        unsubscribeLoads = db.collection(LOADS_COLLECTION).onSnapshot(
-          async (snap) => {
-            loads = snap.docs
-              .map((d) => normalizeLoad(d.id, d.data()))
-              .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-            if (!loads.length) {
-              await seedIfEmpty();
-            }
-            document.getElementById('loading-state').classList.add('hidden');
-            renderBoard();
-            if (vipUnlocked) renderVipDashboard();
-          },
-          (err) => {
-            console.error(err);
-            showBanner('Firestore error: ' + (err.message || 'permission or network failure'), true);
-            document.getElementById('loading-state').classList.add('hidden');
+    function subscribeLoads() {
+      if (unsubscribeLoads) unsubscribeLoads();
+      unsubscribeLoads = onSnapshot(
+        collection(db, LOADS_COLLECTION),
+        async (snap) => {
+          loads = snap.docs
+            .map((d) => normalizeLoad(d.id, d.data()))
+            .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+          document.getElementById("loading-state").classList.add("hidden");
+          renderBoard();
+          if (vipUnlocked) renderVipDashboard();
+          if (!loads.length) {
+            seedIfEmpty().catch((err) => {
+              console.error(err);
+              showBanner(
+                "Firestore connected, but writes are blocked. Open Firebase Console → Firestore → Rules and allow read/write on /loads (or complete Firebase login in chat so we can deploy rules).",
+                true
+              );
+            });
           }
-        );
-      }
-
-      async function initFirebase() {
-        showBanner('Connecting to Firebase…', false);
-        let config;
-        try {
-          const res = await fetch('firebase-config.json', { cache: 'no-store' });
-          if (!res.ok) throw new Error('Could not load firebase-config.json');
-          config = await res.json();
-        } catch (err) {
-          showBanner('Missing firebase-config.json — complete Firebase setup to sync data.', true);
-          document.getElementById('loading-state').innerHTML = '<p class="text-sm font-medium text-red-700">Firebase config not found.</p>';
-          return;
-        }
-
-        if (!config.apiKey || config.apiKey === 'PENDING_FIREBASE_SETUP' || String(config.projectId).includes('PENDING')) {
-          showBanner('Firebase project not linked yet. Sign in to Firebase in chat so we can finish setup.', true);
-          document.getElementById('loading-state').innerHTML = '<p class="text-sm font-medium text-amber-800">Waiting for Firebase project credentials…</p>';
-          return;
-        }
-
-        try {
-          firebase.initializeApp(config);
-          db = firebase.firestore();
-          firebaseReady = true;
-          hideBanner();
-          subscribeLoads();
-          showToast('Connected to Firebase Firestore');
-        } catch (err) {
+        },
+        (err) => {
           console.error(err);
-          showBanner('Firebase init failed: ' + (err.message || 'error'), true);
+          showBanner("Firestore error: " + (err.message || "permission or network failure"), true);
+          document.getElementById("loading-state").classList.add("hidden");
         }
+      );
+    }
+
+    async function initFirebase() {
+      showBanner("Connecting to Firebase…", false);
+
+      // Embedded web config for verifiedtrucks-20 (also mirrored in firebase-config.json)
+      const embeddedConfig = {
+        apiKey: "AIzaSyA6sGqI5JUUyJHd5CYbqk9wi96Hp0utT0M",
+        authDomain: "verifiedtrucks-20.firebaseapp.com",
+        projectId: "verifiedtrucks-20",
+        storageBucket: "verifiedtrucks-20.firebasestorage.app",
+        messagingSenderId: "213417142299",
+        appId: "1:213417142299:web:f07b15517e540053a230be",
+        measurementId: "G-7944BE0EDS",
+      };
+
+      let config = embeddedConfig;
+      try {
+        const res = await fetch("firebase-config.json", { cache: "no-store" });
+        if (res.ok) {
+          const fileConfig = await res.json();
+          if (fileConfig.apiKey && fileConfig.apiKey !== "PENDING_FIREBASE_SETUP") {
+            config = fileConfig;
+          }
+        }
+      } catch (_) {
+        /* use embedded config */
       }
 
-      function init() {
-        populateVehicleSelects();
-        setMinLoadingDate();
-        checkVipSession();
-        renderBoard();
-        setInterval(tickRelativeTimes, 15000);
-        initFirebase();
+      try {
+        const app = initializeApp(config);
+        try {
+          getAnalytics(app);
+        } catch (_) {
+          /* Analytics optional in some environments */
+        }
+        db = getFirestore(app);
+        firebaseReady = true;
+        hideBanner();
+        subscribeLoads();
+        showToast("Connected to Firebase Firestore");
+      } catch (err) {
+        console.error(err);
+        showBanner("Firebase init failed: " + (err.message || "error"), true);
       }
+    }
 
-      init();
-    })();
+    function init() {
+      populateVehicleSelects();
+      setMinLoadingDate();
+      checkVipSession();
+      renderBoard();
+      setInterval(tickRelativeTimes, 15000);
+      initFirebase();
+    }
+
+    init();
   </script>
+
 </body>
 </html>
