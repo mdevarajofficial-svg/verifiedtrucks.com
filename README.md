@@ -9,9 +9,9 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 ## Features
 
+- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence). View your posted loads and bids on **My Profile**
 - **Live Loads** — Real-time Firestore sync of posted freight
-- **Post a Load** — Origin/destination, FTL/PTL, vehicle size, weight, material, loading date, distance, shipper phone
-- **Bidding** — Name, contact, bid amount (₹), vehicle number (amounts hidden publicly)
+- **Post a Load / Bid** — Requires Google Sign-In so activity links to your profile
 - **VIP Access** (`Deva@2001`) — Full contacts & amounts, Mark Booked, Delete Post
 - **Booked vehicle privacy** — Public shows first 5 chars only (`TN09C****`)
 - **WhatsApp share** — Route, vehicle size, weight, material, loading date
