@@ -1,0 +1,7 @@
+.firebase/
+.firebaserc.local
+agent-tools/
+node_modules/
+package-lock.json
+.DS_Store
+*.log

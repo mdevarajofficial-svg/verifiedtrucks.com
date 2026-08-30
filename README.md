@@ -1,5 +1,8 @@
 # Verified Trucks
 
+GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
+Live: https://verifiedtrucks-20.web.app  
+
 A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post loads to Live Loads, place bids, share on WhatsApp, and manage bookings from VIP Access. Data syncs in real time across browsers — no `localStorage`.
 
 > Note: Structured load/bid data uses **Cloud Firestore**. Firebase Storage is for files (images/PDFs); Firestore is the correct product for this marketplace.
