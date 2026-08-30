@@ -18,19 +18,16 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 ## Razorpay setup
 
 1. Open [Razorpay Dashboard → API Keys](https://dashboard.razorpay.com/app/keys)
-2. Copy your **Key ID** into `razorpay-config.json`:
+2. Copy your **Key ID** into `razorpay-config.json` (see file for three plan tiers).
+3. **Enable UPI (required for GPay / PhonePe / Paytm):**
+   - Dashboard → **Account & Settings → Payment Methods → UPI**
+   - Complete KYC if the Payment Methods tab is missing
+   - Ensure UPI status is **Activated** (live mode can take a few days after request)
+4. Redeploy hosting. Checkout shows **Pay with UPI** first, plus cards, net banking, and wallets.
 
-```json
-{
-  "keyId": "rzp_live_xxxxxxxx",
-  "amountInr": 99,
-  "durationDays": 30
-}
-```
+Users must save a **10-digit mobile** in My Profile — Razorpay uses it for UPI intent on phones.
 
-3. Redeploy hosting. Checkout runs in the browser (₹99 = 9900 paise).
-
-> This project is on the Firebase Spark plan (no Cloud Functions billing). Payment success activates the subscription on the user profile and writes a `payments/{paymentId}` receipt. For signature verification with Key Secret, upgrade to Blaze and add Cloud Functions later.
+> Optional: create a checkout layout in the Razorpay Dashboard and paste its Configuration ID into `checkoutConfigId` in `razorpay-config.json`.
 
 ## Firebase
 
