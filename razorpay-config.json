@@ -1,9 +1,11 @@
 {
   "keyId": "rzp_live_TVvBRTHGmWdinY",
   "currency": "INR",
-  "amountInr": 99,
-  "planName": "Verified Trucks Monthly",
-  "durationDays": 30,
   "companyName": "Verified Trucks",
-  "themeColor": "#2563eb"
+  "themeColor": "#2563eb",
+  "plans": [
+    { "id": "week_99", "label": "1 Week", "amountInr": 99, "days": 7 },
+    { "id": "month_250", "label": "1 Month", "amountInr": 250, "days": 30 },
+    { "id": "half_year_359", "label": "6 Months", "amountInr": 359, "days": 180 }
+  ]
 }
