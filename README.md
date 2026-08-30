@@ -6,8 +6,9 @@ A single-file freight marketplace for shippers and transporters. Post loads, pla
 
 - **Post a Load** — Origin/destination, FTL/PTL, vehicle size (7–32 ft), weight, material, loading date, distance, and shipper phone
 - **Live Load Board** — Filterable cards with live relative timestamps (“Just now”, “5 mins ago”, …)
-- **Transporter Bidding** — Inline bids with company, phone, and amount in ₹; accept a bid to book the load and unlock the shipper contact
-- **VIP Access** — Admin table (password: `Deva@2001`) with full shipper and bidder contact details
+- **Transporter Bidding** — Inline bids with company, phone, and amount in ₹; accept a bid to book the load
+- **Private contacts** — Shipper and bidder phone numbers are never shown on the public board
+- **VIP Access** — Admin table (password: `Deva@2001`) is the only place that shows shipper and bidder contact details
 
 ## Run locally
 
@@ -34,5 +35,5 @@ python3 -m http.server 43123 --bind 127.0.0.1
 ## Notes
 
 - No authentication on the public marketplace — anyone can post and bid immediately
-- Contact numbers stay locked on load cards until a bid is accepted
+- Contact numbers are stored in localStorage but rendered only inside VIP Access
 - VIP password is client-side only (suitable for demos; not production auth)
