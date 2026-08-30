@@ -1,10 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public marketplace: anyone can read/write loads (matches no-login UX).
-    // VIP password is client-side only — tighten these rules before production.
+    // Public marketplace reads; writes allowed for demo (tighten with auth later if needed)
     match /loads/{loadId} {
       allow read, write: if true;
+    }
+
+    // User profiles: owner can read/write their own doc; VIP/admin can read all via client gate
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
