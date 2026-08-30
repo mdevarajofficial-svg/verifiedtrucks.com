@@ -1075,9 +1075,8 @@
     }
 
     async function initFirebase() {
-      showBanner("Connecting to Firebase…", false);
+      showBanner("Connecting to Firebase project verifiedtrucks-20…", false);
 
-      // Embedded web config for verifiedtrucks-20 (also mirrored in firebase-config.json)
       const embeddedConfig = {
         apiKey: "AIzaSyA6sGqI5JUUyJHd5CYbqk9wi96Hp0utT0M",
         authDomain: "verifiedtrucks-20.firebaseapp.com",
@@ -1106,13 +1105,54 @@
         try {
           getAnalytics(app);
         } catch (_) {
-          /* Analytics optional in some environments */
+          /* Analytics optional */
         }
         db = getFirestore(app);
         firebaseReady = true;
-        hideBanner();
-        subscribeLoads();
-        showToast("Connected to Firebase Firestore");
+
+        // Probe API — Firestore must be enabled in the Google Cloud / Firebase console
+        try {
+          const probe = await Promise.race([
+            getDocs(collection(db, LOADS_COLLECTION)),
+            new Promise((_, reject) =>
+              setTimeout(
+                () =>
+                  reject(
+                    new Error(
+                      "Firestore API not responding. Enable Cloud Firestore for project verifiedtrucks-20: create a database at https://console.firebase.google.com/project/verifiedtrucks-20/firestore and publish open rules for /loads."
+                    )
+                  ),
+                12000
+              )
+            ),
+          ]);
+          hideBanner();
+          loads = probe.docs
+            .map((d) => normalizeLoad(d.id, d.data()))
+            .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+          document.getElementById("loading-state").classList.add("hidden");
+          renderBoard();
+          subscribeLoads();
+          if (!loads.length) {
+            try {
+              await seedIfEmpty();
+              await refreshLoadsOnce();
+            } catch (err) {
+              console.error(err);
+              showBanner(
+                "Firestore is on, but writes are blocked. Publish rules from firestore.rules (allow read, write on /loads).",
+                true
+              );
+            }
+          } else {
+            showToast("Connected to Firebase Firestore");
+          }
+        } catch (probeErr) {
+          console.error(probeErr);
+          document.getElementById("loading-state").classList.add("hidden");
+          showBanner(probeErr.message || String(probeErr), true);
+          renderBoard();
+        }
       } catch (err) {
         console.error(err);
         showBanner("Firebase init failed: " + (err.message || "error"), true);
