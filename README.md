@@ -7,7 +7,7 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 ## Features
 
-- **Google Sign-In profiles** — Full Name, contact, role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
+- **Login** — Phone OTP, Google, Apple, or email/password. Profiles store Full Name, contact, and role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
 - **Free to use** — Unlimited load posts, bids, and contact sharing after bid acceptance
 - **Accept bids** — Transporters see the **top 3 lowest bids** and can accept the best rate
 - **Phone match rule** — Post/bid contact must match My Profile number
@@ -20,6 +20,23 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 Active project: **`verifiedtrucks-20`**  
 Config: `firebase-config.json` · Rules: `firestore.rules`
+
+### Authentication
+
+These sign-in methods are enabled on the Firebase project:
+
+- Email / password
+- Phone (SMS OTP)
+- Google
+- Apple (provider is on; complete Apple Developer IDs in Console)
+
+Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `localhost`, and `127.0.0.1`.
+
+Phone SMS in production needs a paid (Blaze) Firebase billing account. Apple Sign-In on the web needs an Apple Service ID, Team ID, and key in [Firebase Console → Authentication → Sign-in method → Apple](https://console.firebase.google.com/project/verifiedtrucks-20/authentication/providers).
+
+```bash
+npx firebase-tools deploy --only auth --project verifiedtrucks-20
+```
 
 ## Live site
 

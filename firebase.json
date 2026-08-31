@@ -1,27 +1,27 @@
 {
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
   "hosting": {
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "agent-tools/**",
-      "README.md",
-      "package.json"
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "auth": {
     "providers": {
-      "anonymous": false,
       "emailPassword": true,
+      "phoneNumber": true,
       "googleSignIn": {
         "oAuthBrandDisplayName": "Verified Trucks",
         "supportEmail": "mdevarajofficial@gmail.com"
-      }
+      },
+      "appleSignIn": true
     }
   }
 }
