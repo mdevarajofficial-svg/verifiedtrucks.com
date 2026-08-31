@@ -15,13 +15,10 @@
   },
   "auth": {
     "providers": {
-      "emailPassword": true,
-      "phoneNumber": true,
       "googleSignIn": {
         "oAuthBrandDisplayName": "Verified Trucks",
         "supportEmail": "mdevarajofficial@gmail.com"
-      },
-      "appleSignIn": true
+      }
     }
   }
 }

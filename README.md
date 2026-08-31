@@ -7,7 +7,7 @@ A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post
 
 ## Features
 
-- **Login** — Phone OTP, Google, Apple, or email/password. Profiles store Full Name, contact, and role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
+- **Login** — Google Sign-In. Profiles store Full Name, contact, and role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
 - **Free to use** — Unlimited load posts, bids, and contact sharing after bid acceptance
 - **Accept bids** — Transporters see the **top 3 lowest bids** and can accept the best rate
 - **Phone match rule** — Post/bid contact must match My Profile number
@@ -23,24 +23,9 @@ Config: `firebase-config.json` · Rules: `firestore.rules`
 
 ### Authentication
 
-These sign-in methods are enabled on the Firebase project:
+The app uses **Google Sign-In** only.
 
-- Email / password
-- Phone (SMS OTP)
-- Google
-- Apple (provider is on; complete Apple Developer IDs in Console)
-
-Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `verifiedtrucks-20.firebaseapp.com`, and `127.0.0.1`. Firebase does **not** allow phone auth on the hostname `localhost` — use `127.0.0.1` or the live site.
-
-Phone SMS uses `signInWithPhoneNumber` then `confirmationResult.confirm(code)`. Live SMS to real numbers needs a paid (Blaze) Firebase billing account.
-
-**Test numbers** (no SMS, no billing): `+16505553434` code `654321`, or `+16505550123` code `123456`.
-
-Apple Sign-In on the web needs an Apple Service ID, Team ID, and key in [Firebase Console → Authentication → Sign-in method → Apple](https://console.firebase.google.com/project/verifiedtrucks-20/authentication/providers).
-
-```bash
-npx firebase-tools deploy --only auth --project verifiedtrucks-20
-```
+Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `verifiedtrucks-20.firebaseapp.com`, and `127.0.0.1`.
 
 ## Live site
 
