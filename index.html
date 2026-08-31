@@ -211,7 +211,7 @@
             <input id="auth-phone-consent" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
             <span>I agree to receive an SMS verification code and understand Google may store this number for abuse prevention.</span>
           </label>
-          <div id="auth-recaptcha" class="flex min-h-[78px] justify-center"></div>
+          <div id="recaptcha-container"></div>
           <button type="button" id="auth-phone-send" class="min-h-[44px] w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Send SMS code</button>
           <div id="auth-phone-otp-wrap" class="hidden space-y-3">
             <label class="block text-sm font-semibold text-slate-900">SMS code
@@ -610,6 +610,7 @@
       OAuthProvider,
       RecaptchaVerifier,
       PhoneAuthProvider,
+      useDeviceLanguage,
       signInWithPopup,
       signInWithPhoneNumber,
       signInWithCredential,
@@ -1523,6 +1524,8 @@
     let phoneConfirmation = null;
     let recaptchaVerifier = null;
     let recaptchaWidgetId = null;
+    let recaptchaMode = "invisible";
+    let phoneSendInFlight = false;
 
     function closeLoginMenu() {
       const menu = document.getElementById("login-menu");
@@ -1609,25 +1612,22 @@
       }
     }
 
-    function phoneAuthLanguage() {
-      const map = { US: "en", Sweden: "sv", Germany: "de", India: "en", China: "zh-CN", Europe: "en" };
-      return map[selectedCountry] || "en";
-    }
-
     function resetRecaptchaWidget() {
       const grecaptcha = window.grecaptcha;
-      if (grecaptcha && recaptchaWidgetId != null) {
+      const widgetId = recaptchaWidgetId ?? window.recaptchaWidgetId;
+      if (grecaptcha && widgetId != null) {
         try {
-          grecaptcha.reset(recaptchaWidgetId);
+          grecaptcha.reset(widgetId);
           return;
         } catch (_) {
           /* rebuild below */
         }
       }
-      if (recaptchaVerifier) {
-        recaptchaVerifier.render().then((widgetId) => {
-          recaptchaWidgetId = widgetId;
-          if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then((id) => {
+          recaptchaWidgetId = id;
+          window.recaptchaWidgetId = id;
+          if (window.grecaptcha) window.grecaptcha.reset(id);
         }).catch(() => {
           rebuildRecaptcha();
         });
@@ -1641,10 +1641,12 @@
         } catch (_) {
           /* widget already gone */
         }
-        recaptchaVerifier = null;
-        recaptchaWidgetId = null;
       }
-      const el = document.getElementById("auth-recaptcha");
+      recaptchaVerifier = null;
+      recaptchaWidgetId = null;
+      window.recaptchaVerifier = null;
+      window.recaptchaWidgetId = null;
+      const el = document.getElementById("recaptcha-container");
       if (el) el.innerHTML = "";
       setupRecaptcha();
     }
@@ -1652,20 +1654,37 @@
     function setupRecaptcha() {
       if (!auth) return null;
       if (recaptchaVerifier) return recaptchaVerifier;
-      recaptchaVerifier = new RecaptchaVerifier(auth, "auth-recaptcha", {
-        size: "normal",
-        callback: () => {},
+      useDeviceLanguage(auth);
+      recaptchaMode = "invisible";
+      recaptchaVerifier = new RecaptchaVerifier(auth, "auth-phone-send", {
+        size: "invisible",
+        callback: () => {
+          sendPhoneCode();
+        },
         "expired-callback": () => {
           resetRecaptchaWidget();
         },
       });
       recaptchaVerifier.render().then((widgetId) => {
         recaptchaWidgetId = widgetId;
+        window.recaptchaWidgetId = widgetId;
       }).catch((err) => {
         console.error(err);
         recaptchaVerifier = null;
         recaptchaWidgetId = null;
+        recaptchaMode = "normal";
+        recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "normal",
+          callback: () => {},
+          "expired-callback": () => resetRecaptchaWidget(),
+        });
+        recaptchaVerifier.render().then((widgetId) => {
+          recaptchaWidgetId = widgetId;
+          window.recaptchaWidgetId = widgetId;
+        });
+        window.recaptchaVerifier = recaptchaVerifier;
       });
+      window.recaptchaVerifier = recaptchaVerifier;
       return recaptchaVerifier;
     }
 
@@ -1692,26 +1711,37 @@
         showToast("Auth not ready");
         return;
       }
+      if (phoneSendInFlight) return;
       const phone = readPhoneForm();
-      if (!phone) return;
+      if (!phone) {
+        resetRecaptchaWidget();
+        return;
+      }
       const sendBtn = document.getElementById("auth-phone-send");
-      sendBtn.disabled = true;
+      phoneSendInFlight = true;
       sendBtn.textContent = "Sending…";
       try {
-        auth.languageCode = phoneAuthLanguage();
+        useDeviceLanguage(auth);
         setupRecaptcha();
-        phoneConfirmation = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
-        if (phoneConfirmation?.verificationId) {
-          sessionStorage.setItem(PHONE_VERIFICATION_ID_KEY, phoneConfirmation.verificationId);
+        const appVerifier = window.recaptchaVerifier || recaptchaVerifier;
+        const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+        window.confirmationResult = confirmationResult;
+        phoneConfirmation = confirmationResult;
+        if (confirmationResult?.verificationId) {
+          sessionStorage.setItem(PHONE_VERIFICATION_ID_KEY, confirmationResult.verificationId);
         }
         document.getElementById("auth-phone-otp-wrap").classList.remove("hidden");
         showToast("Enter the 6-digit SMS code");
       } catch (err) {
         console.error(err);
-        resetRecaptchaWidget();
+        if (window.grecaptcha && window.recaptchaWidgetId != null) {
+          window.grecaptcha.reset(window.recaptchaWidgetId);
+        } else {
+          resetRecaptchaWidget();
+        }
         showToast(friendlyAuthError(err));
       } finally {
-        sendBtn.disabled = false;
+        phoneSendInFlight = false;
         sendBtn.textContent = "Send SMS code";
       }
     }
@@ -1722,9 +1752,10 @@
         showToast("Enter the SMS code");
         return;
       }
+      const confirmationResult = window.confirmationResult || phoneConfirmation;
       try {
-        if (phoneConfirmation) {
-          await phoneConfirmation.confirm(code);
+        if (confirmationResult) {
+          await confirmationResult.confirm(code);
         } else {
           const verificationId = sessionStorage.getItem(PHONE_VERIFICATION_ID_KEY);
           if (!verificationId) {
@@ -1736,6 +1767,7 @@
         }
         sessionStorage.removeItem(PHONE_VERIFICATION_ID_KEY);
         phoneConfirmation = null;
+        window.confirmationResult = null;
         closeAuthModal();
         showToast("Signed in with phone");
         switchTab("profile");
@@ -1837,7 +1869,9 @@
     });
     document.getElementById("auth-email-signin").addEventListener("click", emailSignIn);
     document.getElementById("auth-email-signup").addEventListener("click", emailSignUp);
-    document.getElementById("auth-phone-send").addEventListener("click", sendPhoneCode);
+    document.getElementById("auth-phone-send").addEventListener("click", () => {
+      if (recaptchaMode === "normal") sendPhoneCode();
+    });
     document.getElementById("auth-phone-verify").addEventListener("click", verifyPhoneCode);
     document.getElementById("auth-phone-resend").addEventListener("click", sendPhoneCode);
 
@@ -2859,6 +2893,7 @@
         }
         db = getFirestore(app);
         auth = getAuth(app);
+        useDeviceLanguage(auth);
         googleProvider = new GoogleAuthProvider();
         googleProvider.setCustomParameters({ prompt: "select_account" });
         appleProvider = new OAuthProvider("apple.com");
