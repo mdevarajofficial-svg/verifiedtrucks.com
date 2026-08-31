@@ -202,14 +202,20 @@
           </div>
         </div>
         <div id="auth-panel-phone" class="mt-4 hidden space-y-3">
-          <div id="auth-recaptcha"></div>
+          <p class="text-sm text-slate-600">We’ll send a one-time SMS code. Standard messaging rates apply. Phone numbers are sent to Google for spam and abuse prevention.</p>
+          <p class="text-xs text-slate-500">Phone login is convenient but less secure than Google or email — anyone who can receive SMS on this number can sign in.</p>
           <label class="block text-sm font-semibold text-slate-900">Phone number
-            <input id="auth-phone" type="tel" class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20" placeholder="+91 98765 43210" />
+            <input id="auth-phone" type="tel" autocomplete="tel" class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20" placeholder="+91 98765 43210" />
           </label>
-          <button type="button" id="auth-phone-send" class="min-h-[44px] w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Send code</button>
+          <label class="flex items-start gap-2 text-sm text-slate-700">
+            <input id="auth-phone-consent" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+            <span>I agree to receive an SMS verification code and understand Google may store this number for abuse prevention.</span>
+          </label>
+          <div id="auth-recaptcha" class="flex justify-center"></div>
+          <button type="button" id="auth-phone-send" class="min-h-[44px] w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Send SMS code</button>
           <div id="auth-phone-otp-wrap" class="hidden space-y-3">
             <label class="block text-sm font-semibold text-slate-900">SMS code
-              <input id="auth-phone-otp" type="text" inputmode="numeric" maxlength="6" class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm tabular-nums text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20" placeholder="6-digit code" />
+              <input id="auth-phone-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm tabular-nums text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20" placeholder="6-digit code" />
             </label>
             <button type="button" id="auth-phone-verify" class="min-h-[44px] w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Verify &amp; login</button>
           </div>
@@ -602,8 +608,10 @@
       GoogleAuthProvider,
       OAuthProvider,
       RecaptchaVerifier,
+      PhoneAuthProvider,
       signInWithPopup,
       signInWithPhoneNumber,
+      signInWithCredential,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
       signOut,
@@ -625,6 +633,7 @@
     const USERS_COLLECTION = "users";
     const VIP_SESSION_KEY = "verified_trucks_vip_session";
     const VIP_PASSWORD = "Deva@2001";
+    const PHONE_VERIFICATION_ID_KEY = "authVerificationID";
 
     const TERMS_TRANSPORTER = [
       "Verified Trucks is an online freight marketplace platform connecting independent transporters, load providers, and vehicle owners.",
@@ -1555,7 +1564,12 @@
       if (code === "auth/invalid-phone-number") return "Enter a valid phone with country code, e.g. +91…";
       if (code === "auth/missing-phone-number") return "Enter your phone number";
       if (code === "auth/invalid-verification-code") return "That SMS code is incorrect";
+      if (code === "auth/code-expired" || code === "auth/session-expired") return "That SMS code expired — send a new one";
       if (code === "auth/too-many-requests") return "Too many attempts — try again later";
+      if (code === "auth/quota-exceeded") return "SMS quota reached — try again later or use Google / email";
+      if (code === "auth/billing-not-enabled") return "Live SMS needs Firebase Blaze billing. Use a test number from the README, or Google / email login.";
+      if (code === "auth/captcha-check-failed") return "Complete the reCAPTCHA, then send the code again";
+      if (code === "auth/missing-verification-id") return "Send a new SMS code, then enter it";
       return (err && (err.message || err.code)) || "Sign-in failed";
     }
 
@@ -1592,10 +1606,39 @@
       }
     }
 
+    function phoneAuthLanguage() {
+      const map = { US: "en", Sweden: "sv", Germany: "de", India: "en", China: "zh-CN", Europe: "en" };
+      return map[selectedCountry] || "en";
+    }
+
+    function clearRecaptcha() {
+      if (recaptchaVerifier) {
+        try {
+          recaptchaVerifier.clear();
+        } catch (_) {
+          /* widget already gone */
+        }
+        recaptchaVerifier = null;
+      }
+      const el = document.getElementById("auth-recaptcha");
+      if (el) el.innerHTML = "";
+    }
+
     function setupRecaptcha() {
-      if (!auth) return;
-      if (recaptchaVerifier) return;
-      recaptchaVerifier = new RecaptchaVerifier(auth, "auth-recaptcha", { size: "invisible" });
+      if (!auth) return null;
+      if (recaptchaVerifier) return recaptchaVerifier;
+      recaptchaVerifier = new RecaptchaVerifier(auth, "auth-recaptcha", {
+        size: "normal",
+        callback: () => {},
+        "expired-callback": () => {
+          clearRecaptcha();
+        },
+      });
+      recaptchaVerifier.render().catch((err) => {
+        console.error(err);
+        clearRecaptcha();
+      });
+      return recaptchaVerifier;
     }
 
     async function sendPhoneCode() {
@@ -1604,25 +1647,47 @@
         return;
       }
       const phone = document.getElementById("auth-phone").value.trim().replace(/\s+/g, "");
+      const consent = document.getElementById("auth-phone-consent");
       if (!phone) {
         showToast("Enter your phone number");
         return;
       }
+      if (!phone.startsWith("+")) {
+        showToast("Include the country code, e.g. +91…");
+        return;
+      }
+      if (consent && !consent.checked) {
+        showToast("Confirm you agree to receive an SMS code");
+        return;
+      }
+      const sendBtn = document.getElementById("auth-phone-send");
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending…";
       try {
+        auth.languageCode = phoneAuthLanguage();
         setupRecaptcha();
         phoneConfirmation = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
+        if (phoneConfirmation?.verificationId) {
+          sessionStorage.setItem(PHONE_VERIFICATION_ID_KEY, phoneConfirmation.verificationId);
+        }
         document.getElementById("auth-phone-otp-wrap").classList.remove("hidden");
-        showToast("SMS code sent");
+        showToast("Enter the 6-digit SMS code");
       } catch (err) {
         console.error(err);
-        recaptchaVerifier = null;
+        clearRecaptcha();
+        setupRecaptcha();
         showToast(friendlyAuthError(err));
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send SMS code";
       }
     }
 
     async function verifyPhoneCode() {
       const code = document.getElementById("auth-phone-otp").value.trim();
-      if (!phoneConfirmation) {
+      const verificationId =
+        phoneConfirmation?.verificationId || sessionStorage.getItem(PHONE_VERIFICATION_ID_KEY);
+      if (!verificationId) {
         showToast("Send a code first");
         return;
       }
@@ -1631,7 +1696,11 @@
         return;
       }
       try {
-        await phoneConfirmation.confirm(code);
+        const credential = PhoneAuthProvider.credential(verificationId, code);
+        await signInWithCredential(auth, credential);
+        sessionStorage.removeItem(PHONE_VERIFICATION_ID_KEY);
+        phoneConfirmation = null;
+        clearRecaptcha();
         closeAuthModal();
         showToast("Signed in with phone");
         switchTab("profile");
@@ -1746,10 +1815,10 @@
       }
       out.classList.add("hidden");
       inn.classList.remove("hidden");
-      document.getElementById("profile-email").textContent = currentUser.email || "";
+      document.getElementById("profile-email").textContent = currentUser.email || currentUser.phoneNumber || "";
       document.getElementById("profile-avatar").src = currentUser.photoURL || "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
       document.getElementById("profile-fullName").value = userProfile?.fullName || currentUser.displayName || "";
-      document.getElementById("profile-contact").value = userProfile?.contactNumber || "";
+      document.getElementById("profile-contact").value = userProfile?.contactNumber || currentUser.phoneNumber || "";
       document.getElementById("profile-role").value = userProfile?.role || "";
       document.getElementById("profile-gstin").value = userProfile?.gstin || "";
       document.getElementById("profile-dl").value = userProfile?.drivingLicence || "";

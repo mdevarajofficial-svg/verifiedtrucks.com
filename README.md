@@ -32,7 +32,11 @@ These sign-in methods are enabled on the Firebase project:
 
 Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `localhost`, and `127.0.0.1`.
 
-Phone SMS in production needs a paid (Blaze) Firebase billing account. Apple Sign-In on the web needs an Apple Service ID, Team ID, and key in [Firebase Console → Authentication → Sign-in method → Apple](https://console.firebase.google.com/project/verifiedtrucks-20/authentication/providers).
+Phone SMS uses Firebase web reCAPTCHA (not iOS APNs). Live SMS to real numbers needs a paid (Blaze) Firebase billing account.
+
+**Test numbers** (no SMS, no billing): `+16505553434` code `654321`, or `+16505550123` code `123456`.
+
+Apple Sign-In on the web needs an Apple Service ID, Team ID, and key in [Firebase Console → Authentication → Sign-in method → Apple](https://console.firebase.google.com/project/verifiedtrucks-20/authentication/providers).
 
 ```bash
 npx firebase-tools deploy --only auth --project verifiedtrucks-20
