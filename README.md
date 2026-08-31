@@ -30,9 +30,9 @@ These sign-in methods are enabled on the Firebase project:
 - Google
 - Apple (provider is on; complete Apple Developer IDs in Console)
 
-Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `localhost`, and `127.0.0.1`.
+Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `verifiedtrucks-20.firebaseapp.com`, and `127.0.0.1`. Firebase does **not** allow phone auth on the hostname `localhost` — use `127.0.0.1` or the live site.
 
-Phone SMS uses Firebase web reCAPTCHA (not iOS APNs). Live SMS to real numbers needs a paid (Blaze) Firebase billing account.
+Phone SMS uses the Firebase **web** SDK: visible reCAPTCHA, then `signInWithPhoneNumber`, then `confirmationResult.confirm(code)`. This is not an Android or iOS app (no Play Integrity / APNs). Live SMS to real numbers needs a paid (Blaze) Firebase billing account.
 
 **Test numbers** (no SMS, no billing): `+16505553434` code `654321`, or `+16505550123` code `123456`.
 

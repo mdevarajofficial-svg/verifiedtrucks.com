@@ -211,13 +211,14 @@
             <input id="auth-phone-consent" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
             <span>I agree to receive an SMS verification code and understand Google may store this number for abuse prevention.</span>
           </label>
-          <div id="auth-recaptcha" class="flex justify-center"></div>
+          <div id="auth-recaptcha" class="flex min-h-[78px] justify-center"></div>
           <button type="button" id="auth-phone-send" class="min-h-[44px] w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Send SMS code</button>
           <div id="auth-phone-otp-wrap" class="hidden space-y-3">
             <label class="block text-sm font-semibold text-slate-900">SMS code
               <input id="auth-phone-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm tabular-nums text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20" placeholder="6-digit code" />
             </label>
             <button type="button" id="auth-phone-verify" class="min-h-[44px] w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Verify &amp; login</button>
+            <button type="button" id="auth-phone-resend" class="min-h-[44px] w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50">Resend code</button>
           </div>
         </div>
       </div>
@@ -1521,6 +1522,7 @@
     let appleProvider = null;
     let phoneConfirmation = null;
     let recaptchaVerifier = null;
+    let recaptchaWidgetId = null;
 
     function closeLoginMenu() {
       const menu = document.getElementById("login-menu");
@@ -1570,6 +1572,7 @@
       if (code === "auth/billing-not-enabled") return "Live SMS needs Firebase Blaze billing. Use a test number from the README, or Google / email login.";
       if (code === "auth/captcha-check-failed") return "Complete the reCAPTCHA, then send the code again";
       if (code === "auth/missing-verification-id") return "Send a new SMS code, then enter it";
+      if (code === "auth/unauthorized-domain") return "This site is not an authorized domain for phone login. Use verifiedtrucks.com or verifiedtrucks-20.web.app (not localhost).";
       return (err && (err.message || err.code)) || "Sign-in failed";
     }
 
@@ -1611,7 +1614,27 @@
       return map[selectedCountry] || "en";
     }
 
-    function clearRecaptcha() {
+    function resetRecaptchaWidget() {
+      const grecaptcha = window.grecaptcha;
+      if (grecaptcha && recaptchaWidgetId != null) {
+        try {
+          grecaptcha.reset(recaptchaWidgetId);
+          return;
+        } catch (_) {
+          /* rebuild below */
+        }
+      }
+      if (recaptchaVerifier) {
+        recaptchaVerifier.render().then((widgetId) => {
+          recaptchaWidgetId = widgetId;
+          if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+        }).catch(() => {
+          rebuildRecaptcha();
+        });
+      }
+    }
+
+    function rebuildRecaptcha() {
       if (recaptchaVerifier) {
         try {
           recaptchaVerifier.clear();
@@ -1619,9 +1642,11 @@
           /* widget already gone */
         }
         recaptchaVerifier = null;
+        recaptchaWidgetId = null;
       }
       const el = document.getElementById("auth-recaptcha");
       if (el) el.innerHTML = "";
+      setupRecaptcha();
     }
 
     function setupRecaptcha() {
@@ -1631,14 +1656,35 @@
         size: "normal",
         callback: () => {},
         "expired-callback": () => {
-          clearRecaptcha();
+          resetRecaptchaWidget();
         },
       });
-      recaptchaVerifier.render().catch((err) => {
+      recaptchaVerifier.render().then((widgetId) => {
+        recaptchaWidgetId = widgetId;
+      }).catch((err) => {
         console.error(err);
-        clearRecaptcha();
+        recaptchaVerifier = null;
+        recaptchaWidgetId = null;
       });
       return recaptchaVerifier;
+    }
+
+    function readPhoneForm() {
+      const phone = document.getElementById("auth-phone").value.trim().replace(/\s+/g, "");
+      const consent = document.getElementById("auth-phone-consent");
+      if (!phone) {
+        showToast("Enter your phone number");
+        return null;
+      }
+      if (!phone.startsWith("+")) {
+        showToast("Include the country code, e.g. +91…");
+        return null;
+      }
+      if (consent && !consent.checked) {
+        showToast("Confirm you agree to receive an SMS code");
+        return null;
+      }
+      return phone;
     }
 
     async function sendPhoneCode() {
@@ -1646,20 +1692,8 @@
         showToast("Auth not ready");
         return;
       }
-      const phone = document.getElementById("auth-phone").value.trim().replace(/\s+/g, "");
-      const consent = document.getElementById("auth-phone-consent");
-      if (!phone) {
-        showToast("Enter your phone number");
-        return;
-      }
-      if (!phone.startsWith("+")) {
-        showToast("Include the country code, e.g. +91…");
-        return;
-      }
-      if (consent && !consent.checked) {
-        showToast("Confirm you agree to receive an SMS code");
-        return;
-      }
+      const phone = readPhoneForm();
+      if (!phone) return;
       const sendBtn = document.getElementById("auth-phone-send");
       sendBtn.disabled = true;
       sendBtn.textContent = "Sending…";
@@ -1674,8 +1708,7 @@
         showToast("Enter the 6-digit SMS code");
       } catch (err) {
         console.error(err);
-        clearRecaptcha();
-        setupRecaptcha();
+        resetRecaptchaWidget();
         showToast(friendlyAuthError(err));
       } finally {
         sendBtn.disabled = false;
@@ -1685,22 +1718,24 @@
 
     async function verifyPhoneCode() {
       const code = document.getElementById("auth-phone-otp").value.trim();
-      const verificationId =
-        phoneConfirmation?.verificationId || sessionStorage.getItem(PHONE_VERIFICATION_ID_KEY);
-      if (!verificationId) {
-        showToast("Send a code first");
-        return;
-      }
       if (!code) {
         showToast("Enter the SMS code");
         return;
       }
       try {
-        const credential = PhoneAuthProvider.credential(verificationId, code);
-        await signInWithCredential(auth, credential);
+        if (phoneConfirmation) {
+          await phoneConfirmation.confirm(code);
+        } else {
+          const verificationId = sessionStorage.getItem(PHONE_VERIFICATION_ID_KEY);
+          if (!verificationId) {
+            showToast("Send a code first");
+            return;
+          }
+          const credential = PhoneAuthProvider.credential(verificationId, code);
+          await signInWithCredential(auth, credential);
+        }
         sessionStorage.removeItem(PHONE_VERIFICATION_ID_KEY);
         phoneConfirmation = null;
-        clearRecaptcha();
         closeAuthModal();
         showToast("Signed in with phone");
         switchTab("profile");
@@ -1804,6 +1839,7 @@
     document.getElementById("auth-email-signup").addEventListener("click", emailSignUp);
     document.getElementById("auth-phone-send").addEventListener("click", sendPhoneCode);
     document.getElementById("auth-phone-verify").addEventListener("click", verifyPhoneCode);
+    document.getElementById("auth-phone-resend").addEventListener("click", sendPhoneCode);
 
     function renderProfilePage() {
       const out = document.getElementById("profile-signed-out");
