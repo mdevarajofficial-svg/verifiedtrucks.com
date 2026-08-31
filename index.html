@@ -52,6 +52,7 @@
     }
     .live-dot { animation: pulseSoft 1.6s ease-in-out infinite; }
     .tab-active { border-bottom-color: #2563eb !important; color: #1d4ed8 !important; }
+    #recaptcha-container, .grecaptcha-badge { display: none !important; }
     .glass-panel { background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
     select, input[type="date"], input[type="time"] { color-scheme: light; }
     input[type="date"]::-webkit-calendar-picker-indicator,
@@ -211,7 +212,6 @@
             <input id="auth-phone-consent" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
             <span>I agree to receive an SMS verification code and understand Google may store this number for abuse prevention.</span>
           </label>
-          <div id="recaptcha-container"></div>
           <button type="button" id="auth-phone-send" class="min-h-[44px] w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Send SMS code</button>
           <div id="auth-phone-otp-wrap" class="hidden space-y-3">
             <label class="block text-sm font-semibold text-slate-900">SMS code
@@ -1522,9 +1522,7 @@
 
     let appleProvider = null;
     let phoneConfirmation = null;
-    let recaptchaVerifier = null;
-    let recaptchaWidgetId = null;
-    let recaptchaMode = "invisible";
+    let phoneAppVerifier = null;
     let phoneSendInFlight = false;
 
     function closeLoginMenu() {
@@ -1549,7 +1547,7 @@
       title.textContent = mode === "phone" ? "Login with Phone" : "Login with Email";
       modal.classList.remove("hidden");
       modal.classList.add("flex");
-      if (mode === "phone") setupRecaptcha();
+      if (mode === "phone") getPhoneAppVerifier();
     }
 
     function closeAuthModal() {
@@ -1573,7 +1571,7 @@
       if (code === "auth/too-many-requests") return "Too many attempts — try again later";
       if (code === "auth/quota-exceeded") return "SMS quota reached — try again later or use Google / email";
       if (code === "auth/billing-not-enabled") return "Live SMS needs Firebase Blaze billing. Use a test number from the README, or Google / email login.";
-      if (code === "auth/captcha-check-failed") return "Complete the reCAPTCHA, then send the code again";
+      if (code === "auth/captcha-check-failed") return "Could not send the SMS. Try again.";
       if (code === "auth/missing-verification-id") return "Send a new SMS code, then enter it";
       if (code === "auth/unauthorized-domain") return "This site is not an authorized domain for phone login. Use verifiedtrucks.com or verifiedtrucks-20.web.app (not localhost).";
       return (err && (err.message || err.code)) || "Sign-in failed";
@@ -1612,80 +1610,24 @@
       }
     }
 
-    function resetRecaptchaWidget() {
-      const grecaptcha = window.grecaptcha;
-      const widgetId = recaptchaWidgetId ?? window.recaptchaWidgetId;
-      if (grecaptcha && widgetId != null) {
+    function clearPhoneAppVerifier() {
+      if (phoneAppVerifier) {
         try {
-          grecaptcha.reset(widgetId);
-          return;
+          phoneAppVerifier.clear();
         } catch (_) {
-          /* rebuild below */
+          /* already gone */
         }
+        phoneAppVerifier = null;
       }
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.render().then((id) => {
-          recaptchaWidgetId = id;
-          window.recaptchaWidgetId = id;
-          if (window.grecaptcha) window.grecaptcha.reset(id);
-        }).catch(() => {
-          rebuildRecaptcha();
-        });
-      }
-    }
-
-    function rebuildRecaptcha() {
-      if (recaptchaVerifier) {
-        try {
-          recaptchaVerifier.clear();
-        } catch (_) {
-          /* widget already gone */
-        }
-      }
-      recaptchaVerifier = null;
-      recaptchaWidgetId = null;
-      window.recaptchaVerifier = null;
-      window.recaptchaWidgetId = null;
       const el = document.getElementById("recaptcha-container");
       if (el) el.innerHTML = "";
-      setupRecaptcha();
     }
 
-    function setupRecaptcha() {
+    function getPhoneAppVerifier() {
       if (!auth) return null;
-      if (recaptchaVerifier) return recaptchaVerifier;
-      useDeviceLanguage(auth);
-      recaptchaMode = "invisible";
-      recaptchaVerifier = new RecaptchaVerifier(auth, "auth-phone-send", {
-        size: "invisible",
-        callback: () => {
-          sendPhoneCode();
-        },
-        "expired-callback": () => {
-          resetRecaptchaWidget();
-        },
-      });
-      recaptchaVerifier.render().then((widgetId) => {
-        recaptchaWidgetId = widgetId;
-        window.recaptchaWidgetId = widgetId;
-      }).catch((err) => {
-        console.error(err);
-        recaptchaVerifier = null;
-        recaptchaWidgetId = null;
-        recaptchaMode = "normal";
-        recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "normal",
-          callback: () => {},
-          "expired-callback": () => resetRecaptchaWidget(),
-        });
-        recaptchaVerifier.render().then((widgetId) => {
-          recaptchaWidgetId = widgetId;
-          window.recaptchaWidgetId = widgetId;
-        });
-        window.recaptchaVerifier = recaptchaVerifier;
-      });
-      window.recaptchaVerifier = recaptchaVerifier;
-      return recaptchaVerifier;
+      if (phoneAppVerifier) return phoneAppVerifier;
+      phoneAppVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+      return phoneAppVerifier;
     }
 
     function readPhoneForm() {
@@ -1713,18 +1655,13 @@
       }
       if (phoneSendInFlight) return;
       const phone = readPhoneForm();
-      if (!phone) {
-        resetRecaptchaWidget();
-        return;
-      }
+      if (!phone) return;
       const sendBtn = document.getElementById("auth-phone-send");
       phoneSendInFlight = true;
       sendBtn.textContent = "Sending…";
       try {
         useDeviceLanguage(auth);
-        setupRecaptcha();
-        const appVerifier = window.recaptchaVerifier || recaptchaVerifier;
-        const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+        const confirmationResult = await signInWithPhoneNumber(auth, phone, getPhoneAppVerifier());
         window.confirmationResult = confirmationResult;
         phoneConfirmation = confirmationResult;
         if (confirmationResult?.verificationId) {
@@ -1734,11 +1671,7 @@
         showToast("Enter the 6-digit SMS code");
       } catch (err) {
         console.error(err);
-        if (window.grecaptcha && window.recaptchaWidgetId != null) {
-          window.grecaptcha.reset(window.recaptchaWidgetId);
-        } else {
-          resetRecaptchaWidget();
-        }
+        clearPhoneAppVerifier();
         showToast(friendlyAuthError(err));
       } finally {
         phoneSendInFlight = false;
@@ -1869,9 +1802,7 @@
     });
     document.getElementById("auth-email-signin").addEventListener("click", emailSignIn);
     document.getElementById("auth-email-signup").addEventListener("click", emailSignUp);
-    document.getElementById("auth-phone-send").addEventListener("click", () => {
-      if (recaptchaMode === "normal") sendPhoneCode();
-    });
+    document.getElementById("auth-phone-send").addEventListener("click", sendPhoneCode);
     document.getElementById("auth-phone-verify").addEventListener("click", verifyPhoneCode);
     document.getElementById("auth-phone-resend").addEventListener("click", sendPhoneCode);
 
@@ -2982,6 +2913,6 @@
 
     init();
   </script>
-
+  <div id="recaptcha-container" aria-hidden="true"></div>
 </body>
 </html>
