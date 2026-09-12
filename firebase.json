@@ -11,8 +11,9 @@
       { "source": "/book-truck-online", "destination": "/book-truck-online.html" },
       { "source": "/transporters", "destination": "/transporters.html" },
       { "source": "/truck-types", "destination": "/truck-types.html" },
+      { "source": "/verify-truck", "destination": "/verify-truck.html" },
       { "source": "/profile", "destination": "/profile.html" },
-      { "source": "/vip", "destination": "/vip.html" },
+      { "source": "/vip", "destination": "/profile.html" },
       { "source": "**", "destination": "/index.html" }
     ],
     "headers": [

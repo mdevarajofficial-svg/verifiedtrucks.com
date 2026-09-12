@@ -190,6 +190,7 @@ header {
   width: 100%;
 }
 
+.lead-form-container h1,
 .lead-form-container h2 {
   margin: 0 0 20px;
   font-size: 1.25rem;
@@ -682,6 +683,15 @@ header {
   font-size: 0.875rem;
 }
 
+.why-savings {
+  text-align: center;
+  font-size: 1.05rem;
+  margin: 4px auto 0;
+  max-width: 54ch;
+  color: #333;
+  line-height: 1.55;
+}
+
 .why-cta {
   justify-content: center;
 }
@@ -960,9 +970,8 @@ header {
 }
 
 .verify-kyc {
-  margin: 72px 0 8px;
-  padding-top: 40px;
-  border-top: 1px solid #eee;
+  margin: 8px 0;
+  padding-top: 8px;
 }
 
 .verify-kicker {
@@ -1221,6 +1230,83 @@ header {
   padding: 12px;
   background: #f0fdfa;
   border-radius: 8px;
+}
+
+.admin-board {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-card {
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.admin-card-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.admin-card-top p {
+  margin: 4px 0 0;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.admin-stamp {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.admin-bids {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.admin-bid {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0 0;
+  margin-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.admin-bid p {
+  margin: 4px 0 0;
+}
+
+.admin-bid .submit-btn {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
+.admin-ok {
+  color: #065f46;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .admin-card-top,
+  .admin-bid {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .admin-bid .submit-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 700px) {

@@ -342,34 +342,3 @@ form.addEventListener("submit", async (e) => {
   sessionStorage.setItem("vtPendingCustomer", JSON.stringify(pending));
   window.location.href = "/profile.html?next=customer";
 });
-
-const kycForm = document.getElementById("kyc-form");
-const kycSubmit = document.getElementById("kyc-submit");
-const kycMessage = document.getElementById("kyc-message");
-
-kycForm?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = value("kyc-name");
-  const phone = value("kyc-phone");
-  const dlNumber = value("kyc-dl").toUpperCase();
-  const totalVehicles = value("kyc-vehicles");
-  kycMessage.className = "form-message";
-  if (!name || !phone || !dlNumber || !totalVehicles) {
-    kycMessage.textContent = "Please fill in all transporter details.";
-    kycMessage.className = "form-message error";
-    return;
-  }
-  if (!/^\d{10}$/.test(phone)) {
-    kycMessage.textContent = "Please enter a valid 10-digit phone number.";
-    kycMessage.className = "form-message error";
-    return;
-  }
-  kycSubmit.disabled = true;
-  sessionStorage.setItem("vtPendingTransporter", JSON.stringify({
-    name,
-    phone,
-    dlNumber,
-    totalVehicles: Number(totalVehicles),
-  }));
-  window.location.href = "/profile.html?next=transporter";
-});
