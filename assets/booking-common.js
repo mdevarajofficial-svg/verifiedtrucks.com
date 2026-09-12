@@ -93,6 +93,26 @@ export function vehicleSrc(vehicle, bodyType) {
   return `/assets/vehicles/${vehicle.image}-${type}.png`;
 }
 
+export function paradeVehicles() {
+  const items = [];
+  VEHICLES.forEach((v) => {
+    v.bodies.forEach((body) => {
+      items.push({
+        src: vehicleSrc(v, body),
+        name: v.name,
+        body,
+      });
+    });
+  });
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const swap = items[i];
+    items[i] = items[j];
+    items[j] = swap;
+  }
+  return items;
+}
+
 export function truckSrc(bodyType, feet) {
   const list = vehiclesFor(feet, bodyType);
   return vehicleSrc(list[0] || VEHICLES[0], bodyType);

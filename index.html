@@ -164,8 +164,11 @@
       </div>
 
       <div class="preview is-waiting" id="truck-preview">
-        <div class="truck-stage is-driving">
-          <img id="truck-image" class="truck-image is-driving" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" />
+        <div class="truck-stage">
+          <div class="truck-parade" id="truck-parade" aria-hidden="true">
+            <div class="truck-parade-track" id="truck-parade-track"></div>
+          </div>
+          <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" hidden />
           <p id="truck-caption" class="truck-caption" hidden></p>
           <div id="model-picks" class="model-picks" aria-label="Matching vehicles"></div>
           <div class="measure" id="measure" aria-label="Trailer length">

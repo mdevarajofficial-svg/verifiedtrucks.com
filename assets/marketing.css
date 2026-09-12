@@ -156,6 +156,7 @@ header {
   .load-timer.is-heartbeat,
   .truck-image.is-driving,
   .truck-stage.is-driving::before,
+  .truck-parade-track,
   .why-card,
   .booking .lead-form-container {
     animation: none !important;
@@ -434,6 +435,47 @@ header {
   width: 100%;
   max-width: 560px;
   overflow: hidden;
+}
+
+.truck-parade {
+  overflow: hidden;
+  width: 100%;
+  min-height: 168px;
+  mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+
+.truck-parade-track {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  width: max-content;
+  animation: vehicle-parade 150s linear infinite;
+}
+
+.truck-parade-item {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.truck-parade-item img {
+  display: block;
+  height: 150px;
+  width: auto;
+  max-width: 300px;
+  object-fit: contain;
+}
+
+@keyframes vehicle-parade {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.preview.has-pick .truck-parade {
+  display: none;
+}
+
+.truck-image[hidden] {
+  display: none;
 }
 
 .truck-stage.is-driving::before {
