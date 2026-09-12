@@ -53,10 +53,86 @@ header {
 
 .hero-title {
   margin: 0 0 32px;
-  font-size: clamp(1.75rem, 5vw, 2.6rem);
-  font-weight: 700;
   text-align: center;
-  letter-spacing: -0.02em;
+}
+
+.ten-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px 20px;
+  flex-wrap: wrap;
+  font-family: Outfit, "DM Sans", sans-serif;
+  text-align: left;
+}
+
+.ten-mark-dial {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 5px solid #0f766e;
+  box-shadow: inset 0 0 0 3px #fff, 0 0 0 1px #0f766e;
+  background: #f0fdfa;
+}
+
+.ten-mark-tick {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 3px;
+  height: 10px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: #0f766e;
+}
+
+.ten-mark-num {
+  font-weight: 800;
+  font-size: 1.85rem;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: #111;
+}
+
+.ten-mark-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ten-mark-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.ten-mark-line {
+  display: block;
+  font-size: clamp(1.55rem, 4.2vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: #111;
+}
+
+.ten-mark-lg {
+  display: flex;
+  margin: 0 auto 28px;
+}
+
+.ten-mark-lg .ten-mark-dial {
+  width: 96px;
+  height: 96px;
+}
+
+.ten-mark-lg .ten-mark-num {
+  font-size: 2.1rem;
 }
 
 .booking {
@@ -382,13 +458,6 @@ header {
 .why {
   margin-top: 64px;
   padding-top: 8px;
-}
-
-.why-badge {
-  display: block;
-  width: min(420px, 100%);
-  height: auto;
-  margin: 0 auto 28px;
 }
 
 .why h2,
