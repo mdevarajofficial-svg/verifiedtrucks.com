@@ -183,6 +183,18 @@ form.addEventListener("submit", async (e) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Booking…";
   const endsAt = Date.now() + TEN_MIN;
+  const pending = {
+    leadId: null,
+    loadingLocation,
+    unloadingLocation,
+    sizeFt: Number(sizeFeet),
+    bodyType,
+    tonnage,
+    contactName,
+    contactPhone,
+    vehicleName: vehicle.name,
+    timerEndsAt: endsAt,
+  };
 
   try {
     const ref = await addDoc(collection(db, "leads"), {
@@ -205,27 +217,15 @@ form.addEventListener("submit", async (e) => {
       createdAt: serverTimestamp(),
       createdAtMs: Date.now(),
     });
+    pending.leadId = ref.id;
     sessionStorage.setItem("vtLeadId", ref.id);
-    sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
-    sessionStorage.setItem("vtPendingCustomer", JSON.stringify({
-      leadId: ref.id,
-      loadingLocation,
-      unloadingLocation,
-      sizeFt: Number(sizeFeet),
-      bodyType,
-      tonnage,
-      contactName,
-      contactPhone,
-      vehicleName: vehicle.name,
-      timerEndsAt: endsAt,
-    }));
-    window.location.href = "/profile.html?next=customer";
   } catch (err) {
     console.error(err);
-    showMessage("Something went wrong. Please try again.", "error");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Book truck";
   }
+
+  sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
+  sessionStorage.setItem("vtPendingCustomer", JSON.stringify(pending));
+  window.location.href = "/profile.html?next=customer";
 });
 
 const kycForm = document.getElementById("kyc-form");

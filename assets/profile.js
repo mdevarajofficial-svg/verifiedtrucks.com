@@ -203,6 +203,37 @@ async function publishPendingTransporter(user) {
   sessionStorage.removeItem(PENDING_TRANSPORTER);
 }
 
+function paintLoggedOutGate() {
+  const hasC = !!pendingCustomer();
+  const hasT = !!pendingTransporter();
+  if (params.get("next") === "transporter" && hasT) {
+    showGate(
+      "Complete Verify truck with Google",
+      "Your KYC details are ready. Continue with Google to save them and start seeing loads."
+    );
+  } else if (hasC || params.get("next") === "customer") {
+    showGate(
+      "Save this booking to your profile",
+      "Continue with Google to store your load. Track bids, accept the lowest amount, and confirm the vehicle from this profile."
+    );
+  } else if (hasT) {
+    showGate(
+      "Complete Verify truck with Google",
+      "Your KYC details are ready. Continue with Google to save them and start seeing loads."
+    );
+  } else if (params.get("next") === "transporter") {
+    showGate(
+      "Complete Verify truck first",
+      "Fill name, contact, DL number and vehicles owned on the home page, then return here to sign in with Google."
+    );
+  } else {
+    showGate(
+      "Sign in to open your profile",
+      "Book a truck or complete Verify truck first, then continue with Google. Details you filled stay on this profile."
+    );
+  }
+}
+
 googleBtn.addEventListener("click", async () => {
   gateErr.hidden = true;
   try {
@@ -225,29 +256,7 @@ onAuthStateChanged(auth, async (user) => {
     if (customerUnsub) customerUnsub();
     if (openLoadsUnsub) openLoadsUnsub();
     if (wonLoadsUnsub) wonLoadsUnsub();
-    const hasC = !!pendingCustomer();
-    const hasT = !!pendingTransporter();
-    if (hasC) {
-      showGate(
-        "Save this booking to your profile",
-        "Continue with Google to store your load. Track bids, accept the lowest amount, and confirm the vehicle from this profile."
-      );
-    } else if (hasT) {
-      showGate(
-        "Complete Verify truck with Google",
-        "Your KYC details are ready. Continue with Google to save them and start seeing loads."
-      );
-    } else if (params.get("next") === "transporter") {
-      showGate(
-        "Complete Verify truck first",
-        "Fill name, contact, DL number and vehicles owned on the home page, then return here to sign in with Google."
-      );
-    } else {
-      showGate(
-        "Sign in to open your profile",
-        "Book a truck or complete Verify truck first, then continue with Google. Details you filled stay on this profile."
-      );
-    }
+    paintLoggedOutGate();
     return;
   }
 
@@ -589,3 +598,5 @@ async function onPlaceBid(e) {
   }
   if (Object.keys(update).length) await updateDoc(loadRef, update);
 }
+
+paintLoggedOutGate();

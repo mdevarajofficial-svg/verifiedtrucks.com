@@ -289,6 +289,10 @@ header {
   display: none;
 }
 
+.form-message[hidden] {
+  display: none !important;
+}
+
 .form-message.success {
   display: block;
   background: #ecfdf5;
@@ -735,8 +739,7 @@ header {
     font-size: 0.875rem;
   }
 
-  #lead-form .submit-btn,
-  #kyc-form .submit-btn {
+  #lead-form .submit-btn {
     position: sticky;
     bottom: max(12px, env(safe-area-inset-bottom));
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
