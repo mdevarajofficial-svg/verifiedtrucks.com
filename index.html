@@ -2464,9 +2464,6 @@
           if (user) {
             try {
               userProfile = await loadUserProfile(user.uid);
-              if (userProfile?.country && COUNTRY_CONFIG[userProfile.country] && !localStorage.getItem(COUNTRY_STORAGE_KEY)) {
-                setSelectedCountry(userProfile.country, { silent: true });
-              }
             } catch (err) {
               console.error("profile load", err);
             }
@@ -2527,9 +2524,9 @@
     }
 
     function init() {
-      initCountryPicker();
-      bindCountryPicker();
       populateVehicleSelects();
+      populateStateSelects();
+      bindLocationSelects();
       setMinLoadingDate();
       checkVipSession();
       refreshLoadViews();
