@@ -2,6 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/fireba
 import {
   getAuth,
   GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
@@ -13,9 +15,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebas
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+try {
+  await setPersistence(auth, browserLocalPersistence);
+} catch {
+  /* keep the Firebase default (this browser / device) */
+}
 export const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
 provider.addScope("email");
 provider.addScope("profile");
 

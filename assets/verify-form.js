@@ -10,7 +10,7 @@ import {
   doc,
   where,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { VEHICLES, formatMmSs, vehicleSrc } from "/assets/booking-common.js";
+import { formatMmSs } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const db = getFirestore(initializeApp(firebaseConfig));
@@ -41,11 +41,6 @@ function isLive(load) {
   return !load.booked && load.status !== "booked" && remainingMs(load) > 0;
 }
 
-function loadImage(load) {
-  const v = VEHICLES.find((x) => x.id === load.vehicleId);
-  return v ? vehicleSrc(v, load.bodyType || "open") : "/assets/truck-open-medium.png";
-}
-
 function renderBoard() {
   const live = loads.filter(isLive).sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
   if (!live.length) {
@@ -53,12 +48,10 @@ function renderBoard() {
     return;
   }
   board.innerHTML = live.map((load) => `
-    <article class="load-card" data-load="${escapeHtml(load.id)}">
-      <div class="load-card-top">
-        <img src="${loadImage(load)}" alt="" />
+    <article class="load-card load-card-simple" data-load="${escapeHtml(load.id)}">
+      <div class="load-card-head">
         <div>
-          <strong>${escapeHtml(load.vehicleName || "Truck")}</strong>
-          <p>${escapeHtml(load.loadingLocation)} → ${escapeHtml(load.unloadingLocation)}</p>
+          <strong>${escapeHtml(load.loadingLocation)} → ${escapeHtml(load.unloadingLocation)}</strong>
           <p>${escapeHtml(String(load.sizeFt || load.sizeFeet || "—"))} ft · ${escapeHtml(load.bodyType || "—")} · ${escapeHtml(String(load.tonnage || "—"))} T</p>
         </div>
         <div class="load-timer is-heartbeat" data-timer="${escapeHtml(load.id)}">${formatMmSs(remainingMs(load))}</div>
@@ -102,7 +95,7 @@ async function placeBid(e, loadId) {
   msg.className = "form-message";
   const load = loads.find((l) => l.id === loadId);
   if (!load || !isLive(load)) {
-    msg.textContent = "This load’s 10 minutes are over.";
+    msg.textContent = "This load’s 30 minutes are over.";
     msg.className = "form-message error";
     renderBoard();
     return;
