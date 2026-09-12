@@ -8,7 +8,6 @@ export const VEHICLES = [
   { id: "dost", name: "Ashok Leyland Dost", make: "Ashok Leyland", feet: [8, 9], bodies: ["open", "container"], image: "dost" },
   { id: "intra-v70", name: "Tata Intra V70", make: "Tata", feet: [10], bodies: ["open", "container"], image: "v70" },
   { id: "bada-dost", name: "Ashok Leyland Bada Dost", make: "Ashok Leyland", feet: [10], bodies: ["open", "container"], image: "bada-dost" },
-  { id: "bolero-20", name: "Mahindra Bolero 2.0", make: "Mahindra", feet: [10], bodies: ["open"], image: "bolero-20" },
   { id: "tata-407", name: "Tata 407", make: "Tata", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
   { id: "eicher-2049", name: "Eicher Pro 2049", make: "Eicher", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
   { id: "al-partner", name: "Ashok Leyland Partner", make: "Ashok Leyland", feet: [14], bodies: ["open", "container"], image: "lcv-small" },

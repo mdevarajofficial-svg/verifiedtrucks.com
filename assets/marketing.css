@@ -379,6 +379,133 @@ header {
   margin: 48px auto 0;
 }
 
+.why {
+  margin-top: 64px;
+  padding-top: 8px;
+}
+
+.why-badge {
+  display: block;
+  width: min(420px, 100%);
+  height: auto;
+  margin: 0 auto 28px;
+}
+
+.why h2,
+.about h2 {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.compare-wrap {
+  overflow-x: auto;
+}
+
+.compare {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 32px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.compare th,
+.compare td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.compare th:first-child,
+.compare td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.compare th {
+  font-weight: 700;
+}
+
+.mark {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.mark-yes {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.mark-no {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.why-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 8px 0 28px;
+}
+
+.why-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.why-card img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.why-coin {
+  width: 40px !important;
+  height: 40px !important;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.why-card h3 {
+  margin: 12px 0 8px;
+  font-size: 1rem;
+}
+
+.why-card p {
+  margin: 0;
+  color: #444;
+  font-size: 0.875rem;
+}
+
+.why-savings {
+  text-align: center;
+  font-size: 1.125rem;
+  margin: 0 0 8px;
+}
+
+.about {
+  margin-top: 48px;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.about p {
+  color: #333;
+  margin: 0 0 16px;
+}
+
 @media (max-width: 860px) {
   .booking {
     grid-template-columns: 1fr;
@@ -395,5 +522,9 @@ header {
 
   .page {
     padding: 16px 16px 48px;
+  }
+
+  .why-features {
+    grid-template-columns: 1fr;
   }
 }
