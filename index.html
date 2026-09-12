@@ -139,18 +139,6 @@
               <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 9" />
             </div>
           </div>
-          <div class="form-step" data-step="contact-name">
-            <div class="form-field">
-              <label for="contact-name">
-                <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
-                  <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                Contact name
-              </label>
-              <input type="text" id="contact-name" name="contactName" required autocomplete="name" enterkeyhint="next" placeholder="Your name" />
-            </div>
-          </div>
           <div class="form-step" data-step="contact-phone">
             <div class="form-field">
               <label for="contact-phone">
@@ -162,7 +150,7 @@
               <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
             </div>
           </div>
-          <button type="submit" class="submit-btn" id="submit-btn" hidden>Book truck</button>
+          <button type="submit" class="submit-btn" id="submit-btn" hidden>Book now</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
         <div id="status-card" class="status-card" hidden>
@@ -196,9 +184,10 @@
     </div>
 
     <section class="verify-kyc" id="verify">
+      <p class="verify-kicker">For transporters only</p>
       <div class="lead-form-container">
         <h2>Verify truck</h2>
-        <p class="section-lead">Transporters: fill your details first. Google login is enabled only after this KYC. We save what you entered to your profile, then you can see loads and bid.</p>
+        <p class="section-lead">This is not part of the booking form. Transporters fill KYC here, then continue with Google to see loads and bid.</p>
         <form id="kyc-form" novalidate>
           <div class="form-field">
             <label for="kyc-name">

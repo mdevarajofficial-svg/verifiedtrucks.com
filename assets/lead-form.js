@@ -43,7 +43,6 @@ const STEPS = [
     const n = Number(v);
     return Number.isFinite(n) && n >= 1 && n <= 100;
   } },
-  { id: "contact-name", ready: (v) => v.length >= 2 },
   { id: "contact-phone", ready: (v) => /^\d{10}$/.test(v) },
 ];
 
@@ -89,7 +88,7 @@ function scheduleAdvance(id) {
   clearTimeout(stepTimers.get(id));
   const step = STEPS.find((s) => s.id === id);
   if (!step || !fieldReady(step)) return;
-  const delay = id === "body-type" || id === "vehicle-model" ? 80 : 450;
+  const delay = id === "body-type" || id === "vehicle-model" || id === "contact-phone" ? 80 : 450;
   const timer = setTimeout(() => refreshSteps(true), delay);
   stepTimers.set(id, timer);
 }
@@ -232,7 +231,7 @@ measureSlider.addEventListener("input", () => {
   scheduleAdvance("size-feet");
 });
 
-["loading-location", "unloading-location", "tonnage", "contact-name", "contact-phone"].forEach((id) => {
+["loading-location", "unloading-location", "tonnage", "contact-phone"].forEach((id) => {
   const el = document.getElementById(id);
   el.addEventListener("input", () => scheduleAdvance(id));
   el.addEventListener("blur", () => advanceNow(id));
@@ -272,11 +271,10 @@ form.addEventListener("submit", async (e) => {
   const sizeFeet = value("size-feet");
   const bodyType = value("body-type");
   const tonnage = value("tonnage");
-  const contactName = value("contact-name");
   const contactPhone = value("contact-phone");
   const vehicle = selectedVehicle(vehiclesFor(sizeFeet, bodyType));
 
-  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone || !vehicle) {
+  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactPhone || !vehicle) {
     showMessage("Please fill in all details.", "error");
     return;
   }
@@ -296,7 +294,7 @@ form.addEventListener("submit", async (e) => {
     sizeFt: Number(sizeFeet),
     bodyType,
     tonnage,
-    contactName,
+    contactName: "",
     contactPhone,
     vehicleName: vehicle.name,
     timerEndsAt: endsAt,
@@ -309,7 +307,6 @@ form.addEventListener("submit", async (e) => {
       sizeFeet,
       bodyType,
       tonnage,
-      contactName,
       contactPhone,
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
