@@ -52,7 +52,7 @@
               </svg>
               Loading location
             </label>
-            <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" placeholder="City or area" />
+            <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
           </div>
           <div class="form-field">
             <label for="unloading-location">
@@ -62,7 +62,7 @@
               </svg>
               Unloading location
             </label>
-            <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" placeholder="City or area" />
+            <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
           </div>
           <div class="form-row">
             <div class="form-field">
@@ -72,7 +72,7 @@
                 </svg>
                 Size (feet)
               </label>
-              <input type="number" id="size-feet" name="sizeFeet" required min="7" max="40" step="1" value="10" placeholder="e.g. 10" />
+              <input type="number" id="size-feet" name="sizeFeet" required min="7" max="40" step="1" value="10" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 10" />
             </div>
             <div class="form-field">
               <label for="tonnage">
@@ -82,7 +82,7 @@
                 </svg>
                 Tonnage
               </label>
-              <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" placeholder="e.g. 9" />
+              <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 9" />
             </div>
           </div>
           <div class="form-field">
@@ -120,7 +120,7 @@
               </svg>
               Contact name
             </label>
-            <input type="text" id="contact-name" name="contactName" required autocomplete="name" placeholder="Your name" />
+            <input type="text" id="contact-name" name="contactName" required autocomplete="name" enterkeyhint="next" placeholder="Your name" />
           </div>
           <div class="form-field">
             <label for="contact-phone">
@@ -129,7 +129,7 @@
               </svg>
               Contact number
             </label>
-            <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+            <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
           </div>
           <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
           <p id="form-message" class="form-message" role="status"></p>

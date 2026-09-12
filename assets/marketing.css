@@ -1,3 +1,8 @@
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: 'DM Sans', sans-serif;
   line-height: 1.5;
@@ -11,7 +16,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
   position: sticky;
   top: 0;
   background: #fff;
@@ -37,8 +43,12 @@ header {
 .header-link {
   color: #000;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
 }
 
 .header-link:hover {
@@ -192,14 +202,23 @@ header {
 .form-field input,
 .form-field select {
   width: 100%;
-  padding: 10px 12px;
+  min-height: 48px;
+  padding: 12px 14px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 16px;
   box-sizing: border-box;
   background: #fff;
   color: #000;
+  appearance: none;
+}
+
+.form-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
 }
 
 .form-field input:focus,
@@ -210,15 +229,16 @@ header {
 
 .submit-btn {
   width: 100%;
-  padding: 12px 16px;
+  min-height: 52px;
+  padding: 14px 16px;
   margin-top: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #000;
   color: #fff;
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -346,8 +366,28 @@ header {
 
 .measure-slider {
   width: 100%;
-  margin-top: 10px;
+  height: 44px;
+  margin-top: 8px;
   accent-color: #0f766e;
+}
+
+.measure-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0f766e;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #0f766e;
+}
+
+.measure-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0f766e;
+  border: 3px solid #fff;
 }
 
 .status-card.is-waiting h2 {
@@ -399,9 +439,10 @@ header {
   border: 1px solid #ddd;
   background: #fff;
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   color: #111;
@@ -412,6 +453,8 @@ header {
   border-color: #0f766e;
   color: #fff;
 }
+
+.vip-list {
   display: grid;
   gap: 16px;
 }
@@ -578,10 +621,18 @@ header {
 @media (max-width: 860px) {
   .booking {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 
   .preview {
     position: static;
+    order: -1;
+  }
+
+  .truck-image {
+    max-height: 170px;
+    object-fit: contain;
+    margin: 0 auto;
   }
 
   .form-row,
@@ -590,10 +641,89 @@ header {
   }
 
   .page {
-    padding: 16px 16px 48px;
+    padding: 12px 14px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .lead-form-container {
+    padding: 16px;
+    box-shadow: none;
+    border: 1px solid #eee;
+  }
+
+  .ten-mark,
+  .ten-mark-lg {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .ten-mark-copy {
+    align-items: center;
+  }
+
+  .ten-mark-line {
+    font-size: 1.45rem;
+    text-align: center;
+  }
+
+  .ten-mark-dial,
+  .ten-mark-lg .ten-mark-dial {
+    width: 72px;
+    height: 72px;
+  }
+
+  .ten-mark-num,
+  .ten-mark-lg .ten-mark-num {
+    font-size: 1.6rem;
+  }
+
+  .stopwatch svg {
+    width: 132px;
+    height: 154px;
+  }
+
+  .model-picks {
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .model-pick {
+    flex: 1 1 calc(50% - 8px);
+    text-align: center;
+  }
+
+  .why {
+    margin-top: 40px;
   }
 
   .why-features {
     grid-template-columns: 1fr;
+  }
+
+  .compare th,
+  .compare td {
+    padding: 10px 8px;
+    font-size: 0.875rem;
+  }
+
+  .submit-btn {
+    position: sticky;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    z-index: 30;
+  }
+
+  .header-brand {
+    font-size: 1rem;
+  }
+
+  .vip-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .ten-mark-line {
+    font-size: 1.28rem;
   }
 }
