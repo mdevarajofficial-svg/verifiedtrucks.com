@@ -11,7 +11,7 @@ import {
   updateDoc,
   where,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { auth, db, signInGoogle, signOutUser } from "./firebase.js";
+import { auth, db, signInGoogle, signOutUser, completeGoogleRedirect, explainAuthError } from "./firebase.js";
 import {
   VEHICLES,
   formatMmSs,
@@ -234,13 +234,22 @@ function paintLoggedOutGate() {
   }
 }
 
+function showGateError(err) {
+  gateErr.hidden = false;
+  gateErr.className = "form-message error";
+  gateErr.textContent = err?.friendlyMessage || explainAuthError(err) || "Google sign-in failed.";
+}
+
 googleBtn.addEventListener("click", async () => {
   gateErr.hidden = true;
+  gateErr.className = "form-message";
+  googleBtn.disabled = true;
   try {
     await signInGoogle();
   } catch (err) {
-    gateErr.hidden = false;
-    gateErr.textContent = err.message || "Google sign-in failed.";
+    showGateError(err);
+  } finally {
+    googleBtn.disabled = false;
   }
 });
 
@@ -283,7 +292,8 @@ onAuthStateChanged(auth, async (user) => {
     renderShell();
     showApp();
   } catch (err) {
-    showGate("Could not open profile", err.message || "Try again.");
+    showGate("Could not open profile", explainAuthError(err));
+    showGateError(err);
   }
 });
 
@@ -598,5 +608,10 @@ async function onPlaceBid(e) {
   }
   if (Object.keys(update).length) await updateDoc(loadRef, update);
 }
+
+completeGoogleRedirect().catch((err) => {
+  paintLoggedOutGate();
+  showGateError(err);
+});
 
 paintLoggedOutGate();

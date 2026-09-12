@@ -1,5 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
@@ -7,6 +15,9 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
+provider.addScope("email");
+provider.addScope("profile");
 
 export function waitForUser() {
   return new Promise((resolve) => {
@@ -17,9 +28,51 @@ export function waitForUser() {
   });
 }
 
+export function explainAuthError(err) {
+  const code = err?.code || "";
+  const host = location.hostname;
+  if (code === "auth/unauthorized-domain") {
+    return `Google blocked this site (${host}). In Firebase Console → Authentication → Settings → Authorized domains, add ${host}, verifiedtrucks.com, and localhost.`;
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Google sign-in is off in Firebase. Enable the Google provider under Authentication → Sign-in method.";
+  }
+  if (code === "auth/popup-blocked") {
+    return "The Google window was blocked. Allow popups for this site, then try again.";
+  }
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+    return "Google sign-in was closed before it finished. Tap Continue with Google again.";
+  }
+  if (code === "auth/network-request-failed") {
+    return "Network error during Google sign-in. Check your connection and try again.";
+  }
+  if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
+    return "You signed in, but Firestore blocked saving the profile. Deploy the latest firestore.rules for project verifiedtrucks-20.";
+  }
+  return err?.message || "Google sign-in failed.";
+}
+
+export async function completeGoogleRedirect() {
+  try {
+    return await getRedirectResult(auth);
+  } catch (err) {
+    err.friendlyMessage = explainAuthError(err);
+    throw err;
+  }
+}
+
 export async function signInGoogle() {
-  const result = await signInWithPopup(auth, provider);
-  return result.user;
+  try {
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (err) {
+    if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
+    err.friendlyMessage = explainAuthError(err);
+    throw err;
+  }
 }
 
 export function signOutUser() {
