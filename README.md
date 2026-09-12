@@ -3,9 +3,24 @@
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
 Live: https://verifiedtrucks-20.web.app  
 
-A single-file freight marketplace backed by **Cloud Firestore** (Firebase). Post loads to Live Loads, place bids, share on WhatsApp, and manage bookings from VIP Access. Data syncs in real time across browsers.
+Public pages capture **leads** (name, phone, role) into Firestore. The live marketplace app is at `/app.html`.
 
-## Features
+## Public pages
+
+Same white layout on every page: sticky header, hero, lead form.
+
+| Page | URL |
+| --- | --- |
+| Home | `/` |
+| Loads | `/loads.html` |
+| Find Loads | `/find.html` |
+| Post Load | `/post.html` |
+| Profile | `/profile.html` |
+| VIP | `/vip.html` |
+| Get started | `/lead.html` |
+| Marketplace app | `/app.html` |
+
+## Marketplace features
 
 - **Login** — Google Sign-In. Profiles store Full Name, contact, and role (Transporter with optional GSTIN, or Vehicle/Fleet owner with Driving Licence, vehicle size, and current city)
 - **Free to use** — Unlimited load posts, bids, and contact sharing after bid acceptance
@@ -29,7 +44,7 @@ Authorized domains include `verifiedtrucks.com`, `verifiedtrucks-20.web.app`, `v
 
 ## Live site
 
-**https://verifiedtrucks-20.web.app**
+**https://verifiedtrucks-20.web.app** · App: **https://verifiedtrucks-20.web.app/app.html**
 
 ## Run locally
 
@@ -49,5 +64,6 @@ Or push to `main` — GitHub Actions deploys hosting + Firestore rules automatic
 
 ## Stack
 
-- `index.html` + Tailwind CDN + Firebase JS SDK
-- Firestore: `loads`, `users`, `mail` (optional email queue for fleet alerts)
+- Marketing pages: `index.html` + `assets/marketing.css` + `assets/lead-form.js`
+- Marketplace: `app.html` + Tailwind CDN + Firebase JS SDK
+- Firestore: `leads`, `loads`, `users`, `mail` (optional email queue for fleet alerts)

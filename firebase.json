@@ -7,10 +7,14 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/app", "destination": "/app.html" },
+      { "source": "/loads", "destination": "/loads.html" },
+      { "source": "/find", "destination": "/find.html" },
+      { "source": "/post", "destination": "/post.html" },
+      { "source": "/profile", "destination": "/profile.html" },
+      { "source": "/vip", "destination": "/vip.html" },
+      { "source": "/lead", "destination": "/lead.html" },
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "auth": {

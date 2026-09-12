@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Verified Trucks — India Freight Marketplace</title>
+  <title>VIP Access — Verified Trucks</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="theme-color" content="#ffffff" />
-  <meta property="og:title" content="Verified Trucks — India Freight Marketplace" />
-  <meta property="og:description" content="Post loads, find trucks, and grow your transport business. Leave your number and we will set you up." />
+  <meta property="og:title" content="VIP access — Verified Trucks" />
+  <meta property="og:description" content="Request VIP access for full contacts, amounts, and booking tools." />
   <meta property="og:image" content="/assets/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,24 +27,24 @@
       <a href="/find.html" class="header-link">Find Loads</a>
       <a href="/post.html" class="header-link">Post Load</a>
       <a href="/profile.html" class="header-link">Profile</a>
-      <a href="/vip.html" class="header-link">VIP</a>
+      <a href="/vip.html" class="header-link is-active">VIP</a>
       <a href="/lead.html" class="header-cta">Get started</a>
     </nav>
   </header>
 
   <section class="hero">
-    <h1>Join India's freight marketplace</h1>
-    <p>Post loads, place bids, and connect with transporters and fleet owners across India. Free to use.</p>
+    <h1>Request VIP access</h1>
+    <p>VIP unlocks full contacts, amounts, mark booked, and post controls. Request access and we will verify you.</p>
     <ul class="hero-points">
-        <li>Share your name and number — we call you back.</li>
-        <li>Transporters post loads. Fleet owners get matching freight.</li>
-        <li>No app download needed to get started.</li>
+        <li>Full counterparty contacts after verification.</li>
+        <li>See amounts and manage bookings.</li>
+        <li>We confirm VIP on a callback — not self-serve.</li>
     </ul>
 
     <div class="lead-form-container">
-      <h2>Get a callback</h2>
-      <p class="form-intro">Tell us how you move freight. We will reach you on WhatsApp or phone.</p>
-      <form id="lead-form" data-source="home" novalidate>
+      <h2>Request VIP</h2>
+      <p class="form-intro">Leave your number. We will verify your business and call you about VIP access.</p>
+      <form id="lead-form" data-source="vip" data-default-role="other" novalidate>
         <div class="form-field">
           <label for="name">Full name</label>
           <input type="text" id="name" name="name" required autocomplete="name" placeholder="Your name" />
@@ -60,10 +60,9 @@
         <div class="form-field">
           <label for="role">I am a</label>
           <select id="role" name="role" required>
-            <option value="">Select role</option>
             <option value="transporter">Transporter / Load provider</option>
             <option value="fleet-owner">Vehicle / Fleet owner</option>
-            <option value="other">Other</option>
+            <option value="other" selected>Other</option>
           </select>
         </div>
         <button type="submit" class="submit-btn" id="submit-btn">Submit</button>
