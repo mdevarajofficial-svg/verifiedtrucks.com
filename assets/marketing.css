@@ -13,6 +13,7 @@ body {
   padding: 0;
   background-color: #fff;
   overflow-x: clip;
+  overflow-wrap: anywhere;
 }
 
 img {
