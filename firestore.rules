@@ -21,6 +21,15 @@ service cloud.firestore {
     function isAdmin() {
       return adminEmail() || adminPhone();
     }
+    function bookedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['booked', 'bookedAt', 'status'])
+        && request.resource.data.booked == true;
+    }
+    function bidStatKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['lowestBidAmount', 'lowestBidderUid', 'lowestBidId', 'bidCount']);
+    }
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
@@ -29,20 +38,13 @@ service cloud.firestore {
     }
 
     match /loads/{loadId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
-        && request.resource.data.customerUid == request.auth.uid
+      allow read: if true;
+      allow create: if request.resource.data.loadingLocation is string
+        && request.resource.data.unloadingLocation is string
+        && request.resource.data.timerEndsAt is number
+        && request.resource.data.status == 'open'
         && !('contactPhone' in request.resource.data);
-      allow update: if signedIn() && (
-        isAdmin() ||
-        (
-          resource.data.customerUid == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'acceptedBidId', 'acceptedBidderUid', 'booked', 'contactReleased', 'bookedAt'])
-        ) ||
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['lowestBidAmount', 'lowestBidderUid', 'lowestBidId', 'bidCount'])
-      );
+      allow update: if isAdmin() || bookedKeys() || bidStatKeys();
       allow delete: if false;
     }
 
@@ -56,19 +58,16 @@ service cloud.firestore {
     }
 
     match /bids/{bidId} {
-      allow create: if signedIn()
-        && request.resource.data.bidderUid == request.auth.uid;
-      allow read: if signedIn() && (
-        isAdmin() ||
-        resource.data.bidderUid == request.auth.uid ||
-        (
-          get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerUid == request.auth.uid
-          && get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.contactReleased == true
-          && get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.acceptedBidId == bidId
-        )
-      );
-      allow update: if signedIn() && (
-        isAdmin() || resource.data.bidderUid == request.auth.uid
+      allow read: if true;
+      allow create: if request.resource.data.loadId is string
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[0-9]{10}$')
+        && request.resource.data.vehicleNumber is string
+        && request.resource.data.vehicleNumber.size() >= 4;
+      allow update: if isAdmin() || (
+        signedIn() && resource.data.bidderUid == request.auth.uid
       );
       allow delete: if false;
     }
@@ -76,11 +75,7 @@ service cloud.firestore {
     match /leads/{leadId} {
       allow create: if true;
       allow read: if true;
-      allow update: if isAdmin() || (
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['booked', 'bookedAt', 'status'])
-        && request.resource.data.booked == true
-      );
+      allow update: if isAdmin() || bookedKeys();
       allow delete: if false;
     }
 

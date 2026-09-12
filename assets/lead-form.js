@@ -4,6 +4,7 @@ import {
   collection,
   addDoc,
   doc,
+  getDoc,
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
@@ -71,19 +72,20 @@ function openStep(id, focus) {
 }
 
 function refreshSteps(focusNext) {
+  openStep("loading-location", false);
+  openStep("unloading-location", false);
+  const routeReady = fieldReady(STEPS[0]) && fieldReady(STEPS[1]);
+  if (!routeReady) {
+    submitBtn.hidden = true;
+    return;
+  }
   let blocked = false;
-  STEPS.forEach((step, index) => {
-    if (index === 0) {
-      openStep(step.id, false);
-      if (!fieldReady(step)) blocked = true;
-      return;
-    }
+  STEPS.slice(2).forEach((step) => {
     if (blocked) return;
     openStep(step.id, focusNext);
     if (!fieldReady(step)) blocked = true;
   });
-  const allReady = STEPS.every(fieldReady);
-  submitBtn.hidden = !allReady;
+  submitBtn.hidden = !STEPS.every(fieldReady);
 }
 
 function scheduleAdvance(id) {
@@ -106,6 +108,7 @@ let timerEndsAt = null;
 let booked = false;
 let celebrated = false;
 let frozenRemaining = 0;
+let postedLive = false;
 
 function showMessage(text, type) {
   formMessage.textContent = text;
@@ -175,7 +178,7 @@ function paintTimer() {
     return;
   }
   const { remaining, cycle } = loopRemaining(timerEndsAt);
-  const waiting = cycle >= 1;
+  const waiting = postedLive && cycle >= 1;
   setStopwatch(stopwatch, remaining, true, waiting);
   if (waiting) {
     statusCard.hidden = false;
@@ -260,18 +263,36 @@ form.addEventListener("keydown", (e) => {
   }
 });
 
-updateTruckPreview();
-refreshSteps(false);
-setStopwatch(stopwatch, TEN_MIN, false, false);
-
-const savedId = sessionStorage.getItem("vtLeadId");
-const savedEnds = Number(sessionStorage.getItem("vtTimerEndsAt") || 0);
-if (savedId && savedEnds) {
+function showPosted(endsAt, leadId) {
+  postedLive = true;
   form.hidden = true;
   document.getElementById("form-heading").hidden = true;
   statusCard.hidden = false;
-  startCountdown(savedEnds);
-  watchLead(savedId);
+  statusCard.classList.remove("is-waiting");
+  statusCard.classList.add("is-premium");
+  statusTitle.textContent = "Load Posted";
+  statusCopy.textContent = "Best Possible Quote will be Given within 10 Min";
+  startCountdown(endsAt);
+  if (leadId) watchLead(leadId);
+}
+
+function postedParams() {
+  const q = new URLSearchParams(location.search);
+  return { leadId: q.get("posted"), loadId: q.get("load") };
+}
+
+updateTruckPreview();
+refreshSteps(false);
+startCountdown(Date.now() + TEN_MIN);
+
+const existing = postedParams();
+if (existing.leadId) {
+  getDoc(doc(db, "leads", existing.leadId)).then((snap) => {
+    if (!snap.exists()) return;
+    const data = snap.data();
+    showPosted(Number(data.timerEndsAt) || Date.now() + TEN_MIN, snap.id);
+    if (data.booked) celebrateBooked();
+  }).catch((err) => console.error(err));
 }
 
 form.addEventListener("submit", async (e) => {
@@ -297,23 +318,32 @@ form.addEventListener("submit", async (e) => {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Booking…";
+  submitBtn.textContent = "Posting…";
   const endsAt = Date.now() + TEN_MIN;
-  const pending = {
-    leadId: null,
-    loadingLocation,
-    unloadingLocation,
-    sizeFt: Number(sizeFeet),
-    bodyType,
-    tonnage,
-    contactName: "",
-    contactPhone,
-    vehicleName: vehicle.name,
-    timerEndsAt: endsAt,
-  };
 
   try {
-    const ref = await addDoc(collection(db, "leads"), {
+    const loadRef = await addDoc(collection(db, "loads"), {
+      loadingLocation,
+      unloadingLocation,
+      sizeFt: Number(sizeFeet),
+      sizeFeet,
+      bodyType,
+      tonnage,
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      vehicleMake: vehicle.make,
+      timerEndsAt: endsAt,
+      booked: false,
+      status: "open",
+      bidCount: 0,
+      lowestBidAmount: null,
+      lowestBidderUid: null,
+      lowestBidId: null,
+      createdAt: serverTimestamp(),
+      createdAtMs: Date.now(),
+    });
+    const leadRef = await addDoc(collection(db, "leads"), {
+      loadId: loadRef.id,
       loadingLocation,
       unloadingLocation,
       sizeFeet,
@@ -332,13 +362,16 @@ form.addEventListener("submit", async (e) => {
       createdAt: serverTimestamp(),
       createdAtMs: Date.now(),
     });
-    pending.leadId = ref.id;
-    sessionStorage.setItem("vtLeadId", ref.id);
+    const url = new URL(location.href);
+    url.searchParams.set("posted", leadRef.id);
+    url.searchParams.set("load", loadRef.id);
+    url.hash = "book";
+    history.replaceState(null, "", url);
+    showPosted(endsAt, leadRef.id);
   } catch (err) {
     console.error(err);
+    showMessage(err.message || "Could not post this load. Check Firestore rules.", "error");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Book now";
   }
-
-  sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
-  sessionStorage.setItem("vtPendingCustomer", JSON.stringify(pending));
-  window.location.href = "/profile.html?next=customer";
 });

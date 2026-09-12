@@ -117,6 +117,41 @@ header {
   background: #f0fdfa;
 }
 
+.ten-mark.is-running .ten-mark-dial {
+  animation: timer-heartbeat 1.05s ease-in-out infinite;
+}
+
+.ten-mark.is-running .ten-mark-num {
+  animation: timer-heartbeat-num 1.05s ease-in-out infinite;
+}
+
+.load-timer.is-heartbeat {
+  animation: timer-heartbeat 1.05s ease-in-out infinite;
+  transform-origin: center right;
+}
+
+@keyframes timer-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.08); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.05); }
+  56% { transform: scale(1); }
+}
+
+@keyframes timer-heartbeat-num {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  14% { transform: scale(1.06); opacity: 0.85; }
+  28% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ten-mark.is-running .ten-mark-dial,
+  .ten-mark.is-running .ten-mark-num,
+  .load-timer.is-heartbeat {
+    animation: none;
+  }
+}
+
 .ten-mark-ring {
   position: absolute;
   inset: 0;
@@ -346,9 +381,25 @@ header {
   margin: 0 0 8px;
 }
 
-.status-card p {
-  margin: 0;
-  color: #333;
+.status-card.is-premium {
+  border: 1px solid #99f6e4;
+  background: linear-gradient(180deg, #f0fdfa 0%, #fff 70%);
+  padding: 20px 18px;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(15, 118, 110, 0.12);
+}
+
+.premium-kicker {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.route-row {
+  margin-bottom: 4px;
 }
 
 .preview {
@@ -1081,6 +1132,12 @@ header {
 .filter-bar {
   margin: 0 0 16px;
   max-width: 240px;
+}
+
+.bid-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .filter-bar select,
