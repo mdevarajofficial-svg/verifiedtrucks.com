@@ -34,36 +34,78 @@
         <h2 id="form-heading">Book a truck</h2>
         <form id="lead-form" novalidate>
           <div class="form-field">
-            <label for="loading-location">Loading location</label>
+            <label for="loading-location">
+              <svg class="field-icon icon-load" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 20V6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M6 11l6-6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Loading location
+            </label>
             <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" placeholder="City or area" />
           </div>
           <div class="form-field">
-            <label for="unloading-location">Unloading location</label>
+            <label for="unloading-location">
+              <svg class="field-icon icon-unload" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 4v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M18 13l-6 6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Unloading location
+            </label>
             <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" placeholder="City or area" />
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label for="size-feet">Size (feet)</label>
-              <input type="number" id="size-feet" name="sizeFeet" required min="1" max="80" step="1" value="20" placeholder="e.g. 20" />
+              <label for="size-feet">
+                <svg class="field-icon icon-size" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 8h16M4 16h16M8 8v8M16 8v8M4 6v12M20 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Size (feet)
+              </label>
+              <input type="number" id="size-feet" name="sizeFeet" required min="10" max="40" step="1" value="20" placeholder="e.g. 20" />
             </div>
             <div class="form-field">
-              <label for="tonnage">Tonnage</label>
+              <label for="tonnage">
+                <svg class="field-icon icon-weight" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 10h10l-1.2 9H8.2L7 10z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M12 10V5.5a2.5 2.5 0 10-2.5 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Tonnage
+              </label>
               <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" placeholder="e.g. 9" />
             </div>
           </div>
           <div class="form-field">
-            <label for="body-type">Open or container</label>
+            <label for="body-type">
+              <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
+                <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
+                <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
+              </svg>
+              Open or container
+            </label>
             <select id="body-type" name="bodyType" required>
               <option value="container">Container</option>
               <option value="open">Open</option>
             </select>
           </div>
           <div class="form-field">
-            <label for="contact-name">Contact name</label>
+            <label for="contact-name">
+              <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
+                <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Contact name
+            </label>
             <input type="text" id="contact-name" name="contactName" required autocomplete="name" placeholder="Your name" />
           </div>
           <div class="form-field">
-            <label for="contact-phone">Contact number</label>
+            <label for="contact-phone">
+              <svg class="field-icon icon-phone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 3.8h3.2l1 3.2-2 1.4a12 12 0 006.4 6.4l1.4-2 3.2 1V17c0 1.2-1 2.2-2.2 2.2C9.6 19.2 4.8 14.4 4.8 8 4.8 6.8 5.8 5.8 7 5.8V3.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              Contact number
+            </label>
             <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
           </div>
           <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
@@ -76,8 +118,25 @@
       </div>
 
       <div class="preview">
-        <img id="truck-image" class="truck-image" src="/assets/truck-container-medium.png" alt="Selected truck" width="840" height="472" decoding="async" />
-        <p id="truck-caption" class="truck-caption">20 ft · Container</p>
+        <div class="truck-stage">
+          <img id="truck-image" class="truck-image" src="/assets/truck-container-medium.png" alt="Selected truck" width="840" height="472" decoding="async" />
+          <p id="truck-caption" class="truck-caption">20 ft · Container</p>
+          <div class="measure" id="measure" aria-label="Trailer length">
+            <div class="measure-scale">
+              <div class="measure-fill" id="measure-fill">
+                <span class="measure-value" id="measure-value">20 ft</span>
+              </div>
+            </div>
+            <div class="measure-ticks">
+              <span>0 ft</span>
+              <span>10</span>
+              <span>20</span>
+              <span>30</span>
+              <span>40 ft</span>
+            </div>
+            <input class="measure-slider" id="measure-slider" type="range" min="10" max="40" value="20" aria-label="Measure trailer length in feet" />
+          </div>
+        </div>
         <div class="stopwatch" id="stopwatch">
           <svg viewBox="0 0 200 232" role="img">
             <title>10 minute timer</title>
@@ -92,7 +151,7 @@
               <circle cx="34" cy="120" r="3" />
             </g>
             <text data-time x="100" y="116" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#111">10:00</text>
-            <text x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
+            <text data-sub x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
             <line data-hand class="stopwatch-hand" x1="100" y1="120" x2="100" y2="62" stroke="#c2410c" stroke-width="3" stroke-linecap="round" />
             <circle cx="100" cy="120" r="6" fill="#c2410c" />
           </svg>

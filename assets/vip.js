@@ -7,7 +7,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { formatMmSs, showerConfetti, truckSrc } from "/assets/booking-common.js";
+import { formatMmSs, showerConfetti, truckSrc, TEN_MIN, loopRemaining } from "/assets/booking-common.js";
 
 const VIP_CODE = "Deva@2001";
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
@@ -43,8 +43,13 @@ gateForm.addEventListener("submit", (e) => {
 });
 
 function remaining(lead) {
-  if (lead.booked) return Math.max(0, (lead.timerEndsAt || 0) - Date.now());
-  return Math.max(0, (lead.timerEndsAt || 0) - Date.now());
+  if (!lead.timerEndsAt) return 0;
+  return loopRemaining(lead.timerEndsAt).remaining;
+}
+
+function looking(lead) {
+  if (lead.booked || !lead.timerEndsAt) return false;
+  return loopRemaining(lead.timerEndsAt).cycle >= 1;
 }
 
 function renderLead(id, lead) {
@@ -62,6 +67,7 @@ function renderLead(id, lead) {
     <img src="${truckSrc(lead.bodyType, lead.sizeFeet)}" alt="" class="vip-truck" />
     <div class="vip-card-body">
       <p class="vip-timer" data-timer>${booked ? "Stopped" : formatMmSs(ms)}</p>
+      ${looking(lead) && !booked ? `<p class="vip-wait">Unable to find — still looking, kindly wait</p>` : ""}
       <p><strong>${lead.loadingLocation || "—"}</strong> → <strong>${lead.unloadingLocation || "—"}</strong></p>
       <p>${lead.sizeFeet || "—"} ft · ${lead.bodyType || "—"} · ${lead.tonnage || "—"} T</p>
       <p>${lead.contactName || ""} · ${lead.contactPhone || ""}</p>
@@ -116,5 +122,9 @@ setInterval(() => {
     if (lead.booked) return;
     const el = list.querySelector(`[data-id="${id}"] [data-timer]`);
     if (el) el.textContent = formatMmSs(remaining(lead));
+    const wait = list.querySelector(`[data-id="${id}"] .vip-wait`);
+    if (looking(lead) && !wait) {
+      el?.insertAdjacentHTML("afterend", `<p class="vip-wait">Unable to find — still looking, kindly wait</p>`);
+    }
   });
 }, 250);

@@ -1,3 +1,6 @@
+export const TEN_MIN = 10 * 60 * 1000;
+export const MEASURE_MAX_FT = 40;
+
 export function sizeClass(feet) {
   const n = Number(feet);
   if (!n || Number.isNaN(n)) return "medium";
@@ -18,19 +21,29 @@ export function formatMmSs(ms) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function setStopwatch(root, remainingMs, running) {
+export function loopRemaining(timerEndsAt, now = Date.now()) {
+  const start = timerEndsAt - TEN_MIN;
+  const elapsed = Math.max(0, now - start);
+  const cycle = Math.floor(elapsed / TEN_MIN);
+  const remaining = TEN_MIN - (elapsed % TEN_MIN);
+  return { remaining, cycle, elapsed };
+}
+
+export function setStopwatch(root, remainingMs, running, waiting = false) {
   const text = root.querySelector("[data-time]");
   const hand = root.querySelector("[data-hand]");
+  const sub = root.querySelector("[data-sub]");
   if (text) text.textContent = formatMmSs(remainingMs);
+  if (sub) sub.textContent = waiting ? "STILL LOOKING" : "MINUTES";
   if (hand) {
-    const span = 10 * 60 * 1000;
-    const elapsed = Math.min(span, Math.max(0, span - remainingMs));
-    const deg = (elapsed / span) * 360;
+    const elapsed = Math.min(TEN_MIN, Math.max(0, TEN_MIN - remainingMs));
+    const deg = (elapsed / TEN_MIN) * 360;
     hand.style.transform = `rotate(${deg}deg)`;
     hand.style.animation = "none";
   }
   root.classList.toggle("is-running", Boolean(running) && remainingMs > 0);
   root.classList.toggle("is-stopped", !running);
+  root.classList.toggle("is-waiting", waiting);
 }
 
 export function showerConfetti() {

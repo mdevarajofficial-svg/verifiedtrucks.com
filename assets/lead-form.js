@@ -7,9 +7,8 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { truckSrc, sizeClass, setStopwatch, showerConfetti } from "/assets/booking-common.js";
+import { truckSrc, sizeClass, setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining } from "/assets/booking-common.js";
 
-const TEN_MIN = 10 * 60 * 1000;
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const db = getFirestore(initializeApp(firebaseConfig));
 
@@ -24,12 +23,16 @@ const truckCaption = document.getElementById("truck-caption");
 const stopwatch = document.getElementById("stopwatch");
 const sizeInput = document.getElementById("size-feet");
 const bodyInput = document.getElementById("body-type");
+const measureFill = document.getElementById("measure-fill");
+const measureValue = document.getElementById("measure-value");
+const measureSlider = document.getElementById("measure-slider");
 
 let tickId = null;
 let leadUnsub = null;
 let timerEndsAt = null;
 let booked = false;
 let celebrated = false;
+let frozenRemaining = 0;
 
 function showMessage(text, type) {
   formMessage.textContent = text;
@@ -42,10 +45,19 @@ function value(id) {
 
 function updateTruckPreview() {
   const bodyType = bodyInput.value || "container";
-  const feet = sizeInput.value || 20;
+  const feet = Math.max(10, Math.min(MEASURE_MAX_FT, Number(sizeInput.value) || 20));
+  sizeInput.value = String(feet);
+  if (measureSlider) measureSlider.value = String(feet);
   truckImage.src = truckSrc(bodyType, feet);
   const labelType = bodyType === "open" ? "Open" : "Container";
-  truckCaption.textContent = `${feet} ft · ${labelType}`;
+  truckCaption.textContent = `${feet} ft loading trailer · ${labelType}`;
+  if (measureFill) {
+    measureFill.style.width = `${(feet / MEASURE_MAX_FT) * 100}%`;
+  }
+  if (measureValue) {
+    measureValue.textContent = `${feet} ft`;
+    measureValue.style.left = "50%";
+  }
 }
 
 function stopTick() {
@@ -56,21 +68,31 @@ function stopTick() {
 }
 
 function paintTimer() {
+  if (!timerEndsAt) return;
   if (booked) {
-    setStopwatch(stopwatch, Math.max(0, timerEndsAt - Date.now()), false);
+    setStopwatch(stopwatch, frozenRemaining, false, false);
     return;
   }
-  const remaining = timerEndsAt - Date.now();
-  setStopwatch(stopwatch, remaining, remaining > 0);
+  const { remaining, cycle } = loopRemaining(timerEndsAt);
+  const waiting = cycle >= 1;
+  setStopwatch(stopwatch, remaining, true, waiting);
+  if (waiting) {
+    statusCard.hidden = false;
+    statusCard.classList.add("is-waiting");
+    statusTitle.textContent = "Unable to find — still looking";
+    statusCopy.textContent = "Kindly wait. We are searching again for a matching truck.";
+  }
 }
 
 function celebrateBooked() {
   if (celebrated) return;
   celebrated = true;
   booked = true;
+  frozenRemaining = timerEndsAt ? loopRemaining(timerEndsAt).remaining : 0;
   stopTick();
   paintTimer();
   statusCard.hidden = false;
+  statusCard.classList.remove("is-waiting");
   statusTitle.textContent = "Vehicle booked successfully";
   statusCopy.textContent = "Your truck is confirmed. We will share vehicle details on your number.";
   showerConfetti();
@@ -95,6 +117,10 @@ function watchLead(id) {
 
 sizeInput.addEventListener("input", updateTruckPreview);
 bodyInput.addEventListener("change", updateTruckPreview);
+measureSlider.addEventListener("input", () => {
+  sizeInput.value = measureSlider.value;
+  updateTruckPreview();
+});
 updateTruckPreview();
 
 const savedId = sessionStorage.getItem("vtLeadId");
