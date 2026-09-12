@@ -24,14 +24,15 @@
       <a href="/#book">Book truck</a>
       <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
-      <a href="/profile.html" aria-current="page">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html" aria-current="page">Login</a>
     </nav>
   </header>
 
   <main class="page profile-page">
     <div id="profile-gate" class="lead-form-container">
-      <h1 id="gate-title">Sign in to open your profile</h1>
-      <p id="gate-copy">Book a truck or complete Verify truck first, then continue with Google. Details you already filled are saved to this profile.</p>
+      <h1 id="gate-title">Login with Google</h1>
+      <p id="gate-copy">Sign in to see loads you posted, bids you received, the live 30-minute market, and to place bids. You cannot bid on a load you posted.</p>
       <button type="button" class="google-btn" id="profile-google">
         <span class="google-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18">
@@ -59,11 +60,18 @@
       <section class="lead-form-container" aria-labelledby="saved-heading">
         <h2 id="saved-heading">Saved details</h2>
         <div id="profile-details"></div>
+        <form id="phone-form" class="bid-form" style="margin-top:12px">
+          <label>
+            <span class="field-label">Mobile for bids (10 digits)</span>
+            <input id="profile-phone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="Saved on your profile" />
+          </label>
+          <button type="submit" class="submit-btn">Save phone</button>
+        </form>
       </section>
 
       <section id="customer-panel" class="profile-section">
         <h2>Loads you posted</h2>
-        <p class="section-lead">Bids on your loads. Accept the lowest amount, then confirm the vehicle to get the transporter’s contact. They will not get your number.</p>
+        <p class="section-lead">The lowest bid is the best bid. Accept it to get that bidder’s phone and vehicle number, or reject it to wait for another quote.</p>
         <div id="customer-loads" class="load-list"></div>
       </section>
 
@@ -73,9 +81,9 @@
         <div id="my-bids" class="load-list"></div>
       </section>
 
-      <section id="transporter-panel" class="profile-section" hidden>
-        <h2>Open loads to bid</h2>
-        <p class="section-lead">Filter by trailer size. Place or edit a bid. If a competitor is cheaper, they show as #1 and you as #2.</p>
+      <section id="transporter-panel" class="profile-section">
+        <h2>Live market (30 minutes)</h2>
+        <p class="section-lead">Every recent load with a reverse timer from the time it was posted. Place a bid unless you posted it. Loads disappear when the 30 minutes end.</p>
         <div class="filter-bar">
           <label for="size-filter">
             <span class="field-label">Filter by size</span>

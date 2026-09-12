@@ -2,13 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=/profile.html" />
-  <title>Redirecting to profile</title>
-  <link rel="canonical" href="https://verifiedtrucks.com/profile.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VIP — Verified Trucks</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
   <meta name="robots" content="noindex,nofollow" />
-  <script>location.replace("/profile.html");</script>
+  <link rel="stylesheet" href="/assets/marketing.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <p>This page moved to <a href="/profile.html">Profile</a>.</p>
+  <canvas id="confetti"></canvas>
+  <header>
+    <a href="/#home" class="header-brand" aria-label="Verified Trucks home">
+      <img src="/assets/logo-128.png" alt="" width="36" height="36" decoding="async" />
+      Verified Trucks
+    </a>
+    <nav class="site-nav" aria-label="Page">
+      <a href="/#home">Home</a>
+      <a href="/#book">Book truck</a>
+      <a href="/verify-truck.html">Verify truck</a>
+      <a href="/about.html">About</a>
+      <a href="/vip.html" aria-current="page">VIP</a>
+      <a href="/profile.html">Login</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <h1 class="hero-title">VIP bookings</h1>
+
+    <div id="vip-gate" class="lead-form-container vip-gate">
+      <h2>VIP access</h2>
+      <form id="vip-login">
+        <div class="form-field">
+          <label for="vip-code">Access code</label>
+          <input type="password" id="vip-code" required />
+        </div>
+        <button type="submit" class="submit-btn">Enter</button>
+        <p id="vip-error" class="form-message error" hidden>Incorrect code.</p>
+      </form>
+    </div>
+
+    <div id="vip-app" hidden>
+      <p>Mark a request booked to stop its timer and confirm that vehicle.</p>
+      <div id="vip-list" class="vip-list"></div>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/vip.js"></script>
 </body>
 </html>

@@ -31,7 +31,8 @@
       <a href="/#book">Book truck</a>
       <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html" aria-current="page">About</a>
-      <a href="/profile.html">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html">Login</a>
     </nav>
   </header>
 
@@ -54,7 +55,7 @@
         <h2>How online truck booking works here</h2>
         <ol class="about-steps">
           <li>Enter loading and unloading locations, then size in feet, open or container body, vehicle model, tonnage, and your contact number.</li>
-          <li>Sign in with Google so the load is saved to your profile. Your phone is kept private from bidders.</li>
+          <li>Submit the form. The load is saved in Firestore immediately. Your phone stays off the public bid board.</li>
           <li>Transporters bid. You see how many bids arrived and <strong>only the lowest bid amount</strong>.</li>
           <li>Accept that bid, then confirm the vehicle to get the transporter’s number. They are told you will call. They do not get your number.</li>
         </ol>
@@ -67,10 +68,10 @@
 
       <section class="about-block">
         <h2>Verify truck and find loads</h2>
-        <p>Transporters fill name, mobile, driving licence number, and how many vehicles they own, then continue with Google. After that they can filter loads by size and place or edit a bid (name, contact, vehicle number, amount). If another bid is lower, they see that amount at #1 and their own at #2.</p>
+        <p>Transporters fill name, mobile, driving licence number, and how many vehicles they own on Verify truck, then bid on live loads with phone, vehicle number, and amount. Each load leaves that board after ten minutes.</p>
         <div class="cta-row">
           <a class="cta-btn" href="/verify-truck.html">Verify truck</a>
-          <a class="cta-btn cta-btn-secondary" href="/profile.html">Open profile</a>
+          <a class="cta-btn cta-btn-secondary" href="/verify-truck.html">Verify truck</a>
         </div>
       </section>
 
@@ -130,7 +131,7 @@
         </details>
         <details>
           <summary>How do I get loads for my truck?</summary>
-          <p>Use Verify truck, complete Google login, then open Profile to see loads and bid.</p>
+          <p>Open Verify truck. Live loads stay for 10 minutes. Bid with phone and vehicle number — no Google login.</p>
         </details>
       </section>
     </article>
@@ -197,7 +198,7 @@
         "name": "How do I get loads for my truck?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Use Verify truck, complete Google login, then open Profile to see loads and bid."
+          "text": "Open Verify truck. Live loads stay for 10 minutes. Bid with phone and vehicle number — no Google login."
         }
       }
     ]

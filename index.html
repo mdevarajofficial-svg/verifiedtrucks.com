@@ -31,9 +31,11 @@
     <nav class="site-nav" aria-label="Page">
       <a href="#home">Home</a>
       <a href="#book">Book truck</a>
+      <a href="#why">Why us</a>
       <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
-      <a href="/profile.html">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html">Login</a>
     </nav>
   </header>
 
@@ -58,7 +60,8 @@
       <div class="lead-form-container" id="book">
         <h2 id="form-heading">Book a truck</h2>
         <form id="lead-form" novalidate>
-          <div class="form-step is-open" data-step="loading-location">
+          <div class="form-row route-row">
+            <div class="form-step is-open" data-step="loading-location">
             <div class="form-field">
               <label for="loading-location">
                 <svg class="field-icon icon-load" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -70,7 +73,7 @@
               <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
             </div>
           </div>
-          <div class="form-step" data-step="unloading-location">
+            <div class="form-step is-open" data-step="unloading-location">
             <div class="form-field">
               <label for="unloading-location">
                 <svg class="field-icon icon-unload" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -81,6 +84,7 @@
               </label>
               <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
             </div>
+          </div>
           </div>
           <div class="form-step" data-step="size-feet">
             <div class="form-field">
@@ -154,8 +158,9 @@
           <p id="form-message" class="form-message" role="status"></p>
         </form>
         <div id="status-card" class="status-card" hidden>
-          <h2 id="status-title">Truck will be found within 10 minutes</h2>
-          <p id="status-copy">Stay on this number. The timer is counting down while we assign a vehicle.</p>
+          <p class="premium-kicker">Load posted</p>
+          <h2 id="status-title">Load Posted</h2>
+          <p id="status-copy">Best Possible Quote will be Given within 30 Min</p>
         </div>
       </div>
 
@@ -184,6 +189,31 @@
     </div>
 
     <section class="why" id="why">
+      <p class="section-kicker">Why choose us</p>
+      <h2>Why choose Verified Trucks</h2>
+      <p class="why-intro">Post a load, watch the 30-minute reverse timer, and take the lowest bid. Transporters bid from Verify truck or Login. You accept in Profile and get their phone and vehicle number.</p>
+      <div class="why-points">
+        <article class="why-point">
+          <span class="why-num">01</span>
+          <h3>Live 30-minute market</h3>
+          <p>Each posted load stays on the board for 30 minutes with a reverse timer, then it disappears.</p>
+        </article>
+        <article class="why-point">
+          <span class="why-num">02</span>
+          <h3>Lowest bid is the best bid</h3>
+          <p>You see how many bids arrived and the lowest amount. Accept or reject from your Login profile.</p>
+        </article>
+        <article class="why-point">
+          <span class="why-num">03</span>
+          <h3>Anyone can bid — except on their own load</h3>
+          <p>Load posters and transporters use the same market. You cannot bid on a trip you posted.</p>
+        </article>
+        <article class="why-point">
+          <span class="why-num">04</span>
+          <h3>Contact after you accept</h3>
+          <p>When you accept a bid you get that bidder’s phone and vehicle number. They do not get yours.</p>
+        </article>
+      </div>
       <div class="why-features">
         <article class="why-card">
           <img src="/assets/icons/bilty.png" alt="" width="72" height="72" />
@@ -203,6 +233,10 @@
         </article>
       </div>
       <p class="why-savings">When more than one transporter bids, you see the <strong>lowest bid amount</strong> and can accept it. What you pay depends on the route, vehicle, and who is free — not a fixed discount.</p>
+      <div class="cta-row why-cta">
+        <a class="cta-btn" href="#book">Book a truck</a>
+        <a class="cta-btn cta-btn-secondary" href="/verify-truck.html">Verify truck</a>
+      </div>
     </section>
   </main>
 
@@ -216,7 +250,8 @@
       <a href="/truck-types.html">Truck types</a>
       <a href="/transporters.html">For transporters</a>
       <a href="/about.html">About</a>
-      <a href="/profile.html">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html">Login</a>
     </nav>
   </footer>
 

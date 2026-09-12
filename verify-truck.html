@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="theme-color" content="#ffffff" />
-  <meta name="description" content="Verify your truck: enter name, mobile, DL number and vehicles owned, then continue with Google to see loads and bid." />
+  <meta name="description" content="Verify your truck: enter name, mobile, DL number and vehicles owned, then bid on live 30-minute loads with your phone and vehicle number." />
   <meta name="robots" content="index,follow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,7 +27,8 @@
       <a href="/#book">Book truck</a>
       <a href="/verify-truck.html" aria-current="page">Verify truck</a>
       <a href="/about.html">About</a>
-      <a href="/profile.html">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html">Login</a>
     </nav>
   </header>
 
@@ -36,7 +37,7 @@
       <p class="verify-kicker">For transporters only</p>
       <div class="lead-form-container">
         <h1>Verify truck</h1>
-        <p class="section-lead">Fill KYC here, then continue with Google to see loads and bid. This is not the booking form.</p>
+        <p class="section-lead">Fill your details, then bid on live loads. Each load stays on this board for 30 minutes, then it vanishes. Google login is not required.</p>
         <form id="kyc-form" novalidate>
           <div class="form-field">
             <label for="kyc-name">
@@ -65,10 +66,16 @@
             <label for="kyc-vehicles">Total vehicles owned</label>
             <input type="number" id="kyc-vehicles" name="totalVehicles" required min="1" max="999" step="1" inputmode="numeric" placeholder="e.g. 3" />
           </div>
-          <button type="submit" class="submit-btn" id="kyc-submit">Save details &amp; continue</button>
+          <button type="submit" class="submit-btn" id="kyc-submit">Save details</button>
           <p id="kyc-message" class="form-message" role="status"></p>
         </form>
       </div>
+    </section>
+
+    <section class="profile-section" id="live-loads">
+      <h2>Live loads (30 minutes)</h2>
+      <p class="section-lead">Latest posted loads appear here with a reverse timer from the time they were posted. When the timer hits 0:00 the load leaves this board. Bid with your phone and vehicle number while it is live. Login on Profile to accept bids on loads you posted.</p>
+      <div id="load-board" class="load-list"></div>
     </section>
   </main>
 
@@ -78,7 +85,8 @@
       <a href="/#book">Book truck</a>
       <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
-      <a href="/profile.html">Profile</a>
+      <a href="/vip.html">VIP</a>
+      <a href="/profile.html">Login</a>
     </nav>
   </footer>
   <script type="module" src="/assets/verify-form.js"></script>

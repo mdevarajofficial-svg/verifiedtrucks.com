@@ -3,7 +3,7 @@
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
 Live: https://verifiedtrucks-20.web.app  
 
-Public homepage is the book-truck form plus three notes (papers, payment, help). About is `/about.html`. Transporter KYC is `/verify-truck.html`. Admins (`mdevarajofficial@gmail.com`, `mdevaraj159@gmail.com`, or phones `6363655596` / `9113265599`) see a booking dashboard on Profile after Google sign-in.
+Each Google account sees posted loads, the lowest bid (accept/reject), a 30-minute live market, and can bid on any load except their own.
 
 ## Run locally
 

@@ -13,7 +13,7 @@
       { "source": "/truck-types", "destination": "/truck-types.html" },
       { "source": "/verify-truck", "destination": "/verify-truck.html" },
       { "source": "/profile", "destination": "/profile.html" },
-      { "source": "/vip", "destination": "/profile.html" },
+      { "source": "/vip", "destination": "/vip.html" },
       { "source": "**", "destination": "/index.html" }
     ],
     "headers": [
