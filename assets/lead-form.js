@@ -132,6 +132,7 @@ function updateTruckPreview() {
   modelSelect.innerHTML = `<option value="" disabled>Select a vehicle</option>` +
     list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
   if (list.some((v) => v.id === prev)) modelSelect.value = prev;
+  else if (list.length === 1) modelSelect.value = list[0].id;
   else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
