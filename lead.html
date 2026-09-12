@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Get Started — Verified Trucks</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta property="og:title" content="Get Started — Verified Trucks" />
+  <meta property="og:description" content="Join India's freight marketplace. Post loads, place bids, and grow your transport business." />
+  <meta property="og:image" content="/assets/og-image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.5;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      background-color: #fff;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 1000;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+
+    .header-brand img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .header-link {
+      color: #000;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9375rem;
+    }
+
+    .header-link:hover {
+      text-decoration: underline;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(1.75rem, 5vw, 2.5rem);
+      font-weight: 700;
+      text-align: center;
+      max-width: 560px;
+    }
+
+    .hero p {
+      margin: 0 0 32px;
+      font-size: 1.0625rem;
+      color: #444;
+      text-align: center;
+      max-width: 480px;
+    }
+
+    .lead-form-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .lead-form-container h2 {
+      margin: 0 0 20px;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .form-field {
+      margin-bottom: 16px;
+    }
+
+    .form-field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 1rem;
+      box-sizing: border-box;
+      background: #fff;
+      color: #000;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px 16px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 6px;
+      background: #000;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background: #222;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .form-message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      text-align: center;
+      display: none;
+    }
+
+    .form-message.success {
+      display: block;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    .form-message.error {
+      display: block;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="header-brand" aria-label="Verified Trucks home">
+      <img src="/assets/logo-128.png" alt="" width="36" height="36" decoding="async" />
+      Verified Trucks
+    </a>
+    <a href="/" class="header-link">Open app</a>
+  </header>
+
+  <section class="hero">
+    <h1>Join India's freight marketplace</h1>
+    <p>Post loads, place bids, and connect with transporters and fleet owners across India. Free to use.</p>
+
+    <div class="lead-form-container">
+      <h2>Get started</h2>
+      <form id="lead-form" novalidate>
+        <div class="form-field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" required autocomplete="name" placeholder="Your name" />
+        </div>
+        <div class="form-field">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+        </div>
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-field">
+          <label for="role">I am a</label>
+          <select id="role" name="role" required>
+            <option value="">Select role</option>
+            <option value="transporter">Transporter / Load provider</option>
+            <option value="fleet-owner">Vehicle / Fleet owner</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-btn" id="submit-btn">Submit</button>
+        <p id="form-message" class="form-message" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("lead-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const formMessage = document.getElementById("form-message");
+
+    function showMessage(text, type) {
+      formMessage.textContent = text;
+      formMessage.className = `form-message ${type}`;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formMessage.className = "form-message";
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const role = document.getElementById("role").value;
+
+      if (!name || !phone || !role) {
+        showMessage("Please fill in all required fields.", "error");
+        return;
+      }
+
+      if (!/^\d{10}$/.test(phone)) {
+        showMessage("Please enter a valid 10-digit phone number.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting…";
+
+      try {
+        await addDoc(collection(db, "leads"), {
+          name,
+          phone,
+          email: email || null,
+          role,
+          source: "lead-page",
+          createdAt: serverTimestamp(),
+        });
+        form.reset();
+        showMessage("Thanks! We'll be in touch soon.", "success");
+      } catch (err) {
+        console.error(err);
+        showMessage("Something went wrong. Please try again.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit";
+      }
+    });
+  </script>
+</body>
+</html>
