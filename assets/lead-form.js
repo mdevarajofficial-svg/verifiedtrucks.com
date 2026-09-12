@@ -205,6 +205,10 @@ function watchLead(id) {
   });
 }
 
+sizeInput.addEventListener("input", () => {
+  updateTruckPreview();
+  scheduleAdvance("size-feet");
+});
 sizeInput.addEventListener("blur", () => advanceNow("size-feet"));
 bodyInput.addEventListener("change", () => {
   updateTruckPreview();
