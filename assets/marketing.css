@@ -654,7 +654,14 @@ header {
   font-size: 1.02rem;
 }
 
-.why-choose-cards {
+.why-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 8px 0 24px;
+}
+
+.why-features.why-choose-cards {
   grid-template-columns: repeat(4, 1fr);
   margin: 0 0 28px;
 }
@@ -680,13 +687,6 @@ header {
   background: #f0fdfa;
   border: 1px solid #ccfbf1;
   border-radius: 14px;
-}
-
-.why-features {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin: 8px 0 24px;
 }
 
 .why-card {
