@@ -1323,11 +1323,38 @@ header {
   gap: 16px;
 }
 
-.load-card {
-  border: 1px solid #e7e7e7;
-  border-radius: 12px;
-  padding: 16px;
-  background: #fff;
+.load-card-simple {
+  padding: 14px 16px;
+}
+
+.load-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.load-card-head strong {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.load-card-head p {
+  margin: 4px 0 0;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  color: #b91c1c;
+  padding: 0;
+  margin-top: 8px;
+}
+
+.delete-btn:hover,
+.delete-btn:focus {
+  color: #991b1b;
 }
 
 .load-card-top {
@@ -1525,7 +1552,11 @@ header {
     grid-template-columns: 1fr;
   }
 
-  .load-timer {
+  .load-card-head {
+    flex-wrap: wrap;
+  }
+
+  .load-card-head .load-timer {
     text-align: left;
   }
 }

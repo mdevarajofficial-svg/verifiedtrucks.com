@@ -2,6 +2,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/f
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -17,8 +18,6 @@ import {
   VEHICLES,
   formatMmSs,
   remainingUntil,
-  vehicleSrc,
-  vehiclesFor,
 } from "./booking-common.js";
 
 export const PENDING_CUSTOMER = "vtPendingCustomer";
@@ -36,17 +35,15 @@ const sizeFilter = document.getElementById("size-filter");
 
 let currentUser = null;
 let profile = null;
-let customerUnsub = null;
-let customerUnsub2 = null;
+let loadsUnsub = null;
 let myBidsUnsub = null;
 let allBidsUnsub = null;
-let openLoadsUnsub = null;
-let wonLoadsUnsub = null;
-let openLoads = [];
-let wonLoads = [];
+let loadsById = new Map();
+let myBids = [];
 let myLoads = new Map();
 let bidsByLoad = new Map();
 const loadTimers = new Map();
+let expireSweep = null;
 let adminUnsubs = [];
 let adminLoads = [];
 let adminBids = [];
@@ -81,15 +78,23 @@ function showApp() {
   app.hidden = false;
 }
 
-function vehicleMeta(bodyType, sizeFt) {
-  const list = vehiclesFor(sizeFt, bodyType);
-  const v = list[0];
-  if (!v) return { name: "Truck", image: "/assets/truck-open-medium.png" };
-  return { name: v.name, image: vehicleSrc(v, bodyType) };
-}
-
 function bodyLabel(type) {
   return type === "container" ? "Container" : "Open";
+}
+
+function loadLine(data) {
+  const size = data.sizeFt || data.sizeFeet || "—";
+  return `${escapeHtml(String(size))} ft · ${bodyLabel(data.bodyType)} · ${escapeHtml(String(data.tonnage || "—"))} T`;
+}
+
+function loadRoute(data) {
+  return `${escapeHtml(data.loadingLocation || "—")} → ${escapeHtml(data.unloadingLocation || "—")}`;
+}
+
+function isLiveLoad(load) {
+  if (!load) return false;
+  if (load.status === "withdrawn" || load.status === "deleted") return false;
+  return remainingUntil(load.timerEndsAt) > 0;
 }
 
 function formatInr(n) {
@@ -105,20 +110,32 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
-function startLoadTimer(el, endsAt, booked) {
+function startLoadTimer(el, endsAt) {
   if (loadTimers.has(el)) clearInterval(loadTimers.get(el));
   const tick = () => {
-    if (booked) {
-      el.textContent = "Booked";
-      el.classList.add("is-booked");
-      return;
-    }
     const rem = remainingUntil(endsAt);
-    el.textContent = rem > 0 ? formatMmSs(rem) : "Ended";
-    el.classList.toggle("is-booked", rem <= 0);
+    el.textContent = rem > 0 ? formatMmSs(rem) : "0:00";
+    el.classList.toggle("is-heartbeat", rem > 0);
+    if (rem <= 0) {
+      clearInterval(loadTimers.get(el));
+      loadTimers.delete(el);
+    }
   };
   tick();
-  loadTimers.set(el, setInterval(tick, 250));
+  if (remainingUntil(endsAt) > 0) loadTimers.set(el, setInterval(tick, 250));
+}
+
+function bindTimers(root, docs) {
+  docs.forEach((d) => {
+    const timerEl = root.querySelector(`[data-timer="${d.id}"]`);
+    if (timerEl) startLoadTimer(timerEl, d.timerEndsAt);
+  });
+}
+
+function refreshLists() {
+  paintMyLoads(document.getElementById("customer-loads"));
+  paintMyBids();
+  renderBoard();
 }
 
 function fillSizeFilter() {
@@ -218,7 +235,7 @@ async function publishPendingTransporter(user) {
 function paintLoggedOutGate() {
   showGate(
     "Login with Google",
-    "Sign in to see loads you posted, the lowest bid on each, accept or reject, and to bid on the live 30-minute market. You cannot bid on a load you posted."
+    "Sign in with Google. This device stays signed in until you tap Sign out. See live loads you posted, bids you placed, and the 30-minute market."
   );
 }
 
@@ -250,12 +267,13 @@ sizeFilter.addEventListener("change", () => {
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
-    if (customerUnsub) customerUnsub();
-    if (customerUnsub2) customerUnsub2();
+    if (loadsUnsub) loadsUnsub();
     if (myBidsUnsub) myBidsUnsub();
     if (allBidsUnsub) allBidsUnsub();
-    if (openLoadsUnsub) openLoadsUnsub();
-    if (wonLoadsUnsub) wonLoadsUnsub();
+    if (expireSweep) clearInterval(expireSweep);
+    expireSweep = null;
+    loadTimers.forEach((id) => clearInterval(id));
+    loadTimers.clear();
     stopAdmin();
     paintLoggedOutGate();
     return;
@@ -295,11 +313,17 @@ function renderShell() {
   const phoneInput = document.getElementById("profile-phone");
   if (phoneInput) phoneInput.value = profile.phone || "";
   renderDetails();
-  listenCustomerLoads();
+  listenLoads();
   listenAllBids();
   listenMyBids();
   fillSizeFilter();
-  listenBoard();
+  if (expireSweep) clearInterval(expireSweep);
+  expireSweep = setInterval(() => {
+    const expired = [...document.querySelectorAll("[data-ends]")].some(
+      (el) => Number(el.getAttribute("data-ends")) <= Date.now()
+    );
+    if (expired) refreshLists();
+  }, 1000);
   if (admin) listenAdmin();
   else stopAdmin();
 }
@@ -314,28 +338,28 @@ function renderDetails() {
       </div>`;
 }
 
-function listenCustomerLoads() {
+function listenLoads() {
   const list = document.getElementById("customer-loads");
   const panel = document.getElementById("customer-panel");
   panel.hidden = false;
-  myLoads = new Map();
-  const paint = () => paintMyLoads(list);
-  if (customerUnsub) customerUnsub();
-  if (customerUnsub2) customerUnsub2();
-  const apply = (snap) => {
-    snap.docs.forEach((d) => myLoads.set(d.id, { id: d.id, ...d.data() }));
-    paint();
-  };
-  customerUnsub = onSnapshot(
-    query(collection(db, "loads"), where("posterUid", "==", currentUser.uid)),
-    apply,
-    () => paint()
-  );
-  customerUnsub2 = onSnapshot(
-    query(collection(db, "loads"), where("customerUid", "==", currentUser.uid)),
-    apply,
-    () => paint()
-  );
+  if (loadsUnsub) loadsUnsub();
+  loadsUnsub = onSnapshot(collection(db, "loads"), (snap) => {
+    loadsById = new Map();
+    snap.docs.forEach((d) => loadsById.set(d.id, { id: d.id, ...d.data() }));
+    myLoads = new Map();
+    loadsById.forEach((load, id) => {
+      if (load.posterUid === currentUser.uid || load.customerUid === currentUser.uid) {
+        myLoads.set(id, load);
+      }
+    });
+    paintMyLoads(list);
+    paintMyBids();
+    renderBoard();
+  }, () => {
+    paintMyLoads(list);
+    paintMyBids();
+    renderBoard();
+  });
 }
 
 function listenAllBids() {
@@ -350,30 +374,29 @@ function listenAllBids() {
       bidsByLoad.set(b.loadId, arr);
     });
     bidsByLoad.forEach((arr) => arr.sort((a, b) => Number(a.amount) - Number(b.amount)));
-    paintMyLoads(document.getElementById("customer-loads"));
-    renderBoard();
+    refreshLists();
   });
 }
 
 function paintMyLoads(list) {
   if (!list) return;
-  const docs = [...myLoads.values()].sort(
-    (a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0)
-  );
+  const docs = [...myLoads.values()]
+    .filter(isLiveLoad)
+    .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
   if (!docs.length) {
-    list.innerHTML = `<p class="empty-note">No loads on this Google account yet. Login, then book a truck on Home so the load is saved here.</p>`;
+    list.innerHTML = `<p class="empty-note">No live loads on this Google account. Login, then book a truck on Home. Expired posts leave this list when the 30 minutes end.</p>`;
     return;
   }
   list.innerHTML = docs.map((d) => customerLoadCard(d.id, d)).join("");
-  docs.forEach((d) => {
-    const timerEl = list.querySelector(`[data-timer="${d.id}"]`);
-    if (timerEl) startLoadTimer(timerEl, d.timerEndsAt, d.booked || d.status === "confirmed" || d.status === "accepted");
-  });
+  bindTimers(list, docs);
   list.querySelectorAll("[data-accept]").forEach((btn) => {
     btn.addEventListener("click", () => acceptBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
   });
   list.querySelectorAll("[data-reject]").forEach((btn) => {
     btn.addEventListener("click", () => rejectBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
+  });
+  list.querySelectorAll("[data-delete-load]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteLoad(btn.getAttribute("data-delete-load")));
   });
 }
 
@@ -384,27 +407,31 @@ function listenMyBids() {
   panel.hidden = false;
   const q = query(collection(db, "bids"), where("bidderUid", "==", currentUser.uid));
   if (myBidsUnsub) myBidsUnsub();
-  myBidsUnsub = onSnapshot(q, async (snap) => {
-    if (snap.empty) {
-      list.innerHTML = `<p class="empty-note">No bids yet. Place a bid from the live market below.</p>`;
-      return;
-    }
-    const bids = snap.docs
+  myBidsUnsub = onSnapshot(q, (snap) => {
+    myBids = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((b) => b.status !== "rejected")
       .sort((a, b) => (b.updatedAt?.seconds || b.createdAt?.seconds || 0) - (a.updatedAt?.seconds || a.createdAt?.seconds || 0));
-    const cards = await Promise.all(bids.map(async (bid) => {
-      let load = null;
-      try {
-        const loadSnap = await getDoc(doc(db, "loads", bid.loadId));
-        if (loadSnap.exists()) load = { id: loadSnap.id, ...loadSnap.data() };
-      } catch {
-        load = null;
-      }
-      return myBidCard(bid, load);
-    }));
-    list.innerHTML = cards.join("");
+    paintMyBids();
   }, (err) => {
     list.innerHTML = `<p class="empty-note">Could not load your bids. ${escapeHtml(err.message || "")}</p>`;
+  });
+}
+
+function paintMyBids() {
+  const list = document.getElementById("my-bids");
+  if (!list) return;
+  const rows = myBids
+    .map((bid) => ({ bid, load: loadsById.get(bid.loadId) }))
+    .filter(({ load }) => isLiveLoad(load));
+  if (!rows.length) {
+    list.innerHTML = `<p class="empty-note">No live bids. Place a bid from the market below, or wait — ended loads leave this list.</p>`;
+    return;
+  }
+  list.innerHTML = rows.map(({ bid, load }) => myBidCard(bid, load)).join("");
+  bindTimers(list, rows.map((r) => r.load));
+  list.querySelectorAll("[data-delete-bid]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteBid(btn.getAttribute("data-delete-bid"), btn.getAttribute("data-load")));
   });
 }
 
@@ -423,34 +450,25 @@ function myBidStatus(bid, load) {
 }
 
 function myBidCard(bid, load) {
-  const v = load ? vehicleMeta(load.bodyType, Number(load.sizeFt)) : { name: "Load", image: "/assets/truck-open-medium.png" };
-  const route = load
-    ? `${escapeHtml(load.loadingLocation || "—")} → ${escapeHtml(load.unloadingLocation || "—")}`
-    : "Load details unavailable";
-  const meta = load
-    ? `${escapeHtml(String(load.sizeFt || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage || "—"))} T`
-    : "";
   return `
-    <article class="load-card">
-      <div class="load-card-top">
-        <img src="${v.image}" alt="" />
+    <article class="load-card load-card-simple">
+      <div class="load-card-head">
         <div>
-          <strong>${escapeHtml(load?.vehicleName || v.name)}</strong>
-          <p>${route}</p>
-          <p>${meta}</p>
+          <strong>${loadRoute(load)}</strong>
+          <p>${loadLine(load)}</p>
         </div>
+        <div class="load-timer" data-timer="${load.id}" data-ends="${Number(load.timerEndsAt) || 0}">30:00</div>
       </div>
       <dl class="bid-stats">
         <div><dt>Your bid</dt><dd>${formatInr(bid.amount)}</dd></div>
-        <div><dt>Vehicle</dt><dd>${escapeHtml(bid.vehicleNumber || "—")}</dd></div>
+        <div><dt>Vehicle no.</dt><dd>${escapeHtml(bid.vehicleNumber || "—")}</dd></div>
         <div><dt>Status</dt><dd>${escapeHtml(myBidStatus(bid, load))}</dd></div>
       </dl>
-      <p class="admin-stamp">Placed ${formatStamp(bid.createdAt)} · Updated ${formatStamp(bid.updatedAt)}</p>
+      <button class="text-btn delete-btn" type="button" data-delete-bid="${bid.id}" data-load="${load.id}">Delete bid</button>
     </article>`;
 }
 
 function customerLoadCard(id, data) {
-  const v = vehicleMeta(data.bodyType, Number(data.sizeFt || data.sizeFeet));
   const liveBids = (bidsByLoad.get(id) || []).filter((b) => b.status !== "rejected");
   const best = liveBids[0] || null;
   const lowest = best ? best.amount : data.lowestBidAmount;
@@ -472,22 +490,21 @@ function customerLoadCard(id, data) {
     actions = `<p class="field-hint">Waiting for bids.</p>`;
   }
   return `
-    <article class="load-card">
-      <div class="load-card-top">
-        <img src="${v.image}" alt="" />
+    <article class="load-card load-card-simple">
+      <div class="load-card-head">
         <div>
-          <strong>${escapeHtml(data.vehicleName || v.name)}</strong>
-          <p>${escapeHtml(data.loadingLocation)} → ${escapeHtml(data.unloadingLocation)}</p>
-          <p>${escapeHtml(String(data.sizeFt || data.sizeFeet || "—"))} ft · ${bodyLabel(data.bodyType)} · ${escapeHtml(String(data.tonnage))} T</p>
+          <strong>${loadRoute(data)}</strong>
+          <p>${loadLine(data)}</p>
         </div>
-        <div class="load-timer" data-timer="${id}">30:00</div>
+        <div class="load-timer" data-timer="${id}" data-ends="${Number(data.timerEndsAt) || 0}">30:00</div>
       </div>
       <dl class="bid-stats">
-        <div><dt>Total bids</dt><dd>${liveBids.length || data.bidCount || 0}</dd></div>
-        <div><dt>Best bid</dt><dd>${lowest == null ? "None yet" : formatInr(lowest)}</dd></div>
+        <div><dt>Bids</dt><dd>${liveBids.length || data.bidCount || 0}</dd></div>
+        <div><dt>Best</dt><dd>${lowest == null ? "None yet" : formatInr(lowest)}</dd></div>
         <div><dt>Status</dt><dd>${escapeHtml(statusLabel(data))}</dd></div>
       </dl>
       ${actions}
+      <button class="text-btn delete-btn" type="button" data-delete-load="${id}">Delete load</button>
     </article>`;
 }
 
@@ -537,19 +554,45 @@ async function rejectBid(loadId, bidId) {
   });
 }
 
-function listenBoard() {
-  const openQ = query(collection(db, "loads"), where("status", "==", "open"));
-  const wonQ = query(collection(db, "loads"), where("acceptedBidderUid", "==", currentUser.uid));
-  if (openLoadsUnsub) openLoadsUnsub();
-  if (wonLoadsUnsub) wonLoadsUnsub();
-  openLoadsUnsub = onSnapshot(openQ, (snap) => {
-    openLoads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderBoard();
-  });
-  wonLoadsUnsub = onSnapshot(wonQ, (snap) => {
-    wonLoads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderBoard();
-  });
+async function deleteLoad(loadId) {
+  if (!loadId || !currentUser) return;
+  if (!window.confirm("Delete this load? It will leave the market for everyone.")) return;
+  try {
+    await deleteDoc(doc(db, "loads", loadId));
+  } catch (err) {
+    window.alert(err.message || "Could not delete this load.");
+    return;
+  }
+  try {
+    await deleteDoc(doc(db, "loadPrivate", loadId));
+  } catch {
+    /* optional private record */
+  }
+}
+
+async function deleteBid(bidId, loadId) {
+  if (!bidId || !currentUser) return;
+  if (!window.confirm("Delete this bid?")) return;
+  try {
+    await deleteDoc(doc(db, "bids", bidId));
+  } catch (err) {
+    window.alert(err.message || "Could not delete this bid.");
+    return;
+  }
+  const rest = (bidsByLoad.get(loadId) || []).filter((b) => b.id !== bidId && b.status !== "rejected");
+  const next = rest[0];
+  const load = loadsById.get(loadId);
+  if (!load || !isLiveLoad(load)) return;
+  try {
+    await updateDoc(doc(db, "loads", loadId), {
+      lowestBidAmount: next ? Number(next.amount) : null,
+      lowestBidderUid: next?.bidderUid || null,
+      lowestBidId: next ? next.id : null,
+      bidCount: rest.length,
+    });
+  } catch {
+    /* load may already be gone */
+  }
 }
 
 function isOwnLoad(load) {
@@ -558,76 +601,52 @@ function isOwnLoad(load) {
   ));
 }
 
-function isLiveLoad(load) {
-  return load.status === "open" && !load.booked && remainingUntil(load.timerEndsAt) > 0;
-}
-
 function renderBoard() {
   const list = document.getElementById("load-board");
   if (!list || !sizeFilter) return;
   const size = sizeFilter.value;
-  const byId = new Map();
-  [...openLoads, ...wonLoads].forEach((d) => byId.set(d.id, d));
-  const docs = [...byId.values()]
-    .filter((d) => isLiveLoad(d) || d.acceptedBidderUid === currentUser?.uid)
+  const docs = [...loadsById.values()]
+    .filter((d) => isLiveLoad(d) && d.status === "open" && !d.booked && !isOwnLoad(d))
     .filter((d) => size === "all" || Number(d.sizeFt || d.sizeFeet) === Number(size))
     .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
   if (!docs.length) {
     list.innerHTML = `<p class="empty-note">No live loads in this 30-minute window.</p>`;
     return;
   }
-  Promise.all(docs.map((d) => renderTransporterCard(d))).then((html) => {
-    list.innerHTML = html.join("");
-    docs.forEach((d) => {
-      const timerEl = list.querySelector(`[data-timer="${d.id}"]`);
-      if (timerEl) startLoadTimer(timerEl, d.timerEndsAt, d.booked || d.status === "confirmed" || d.status === "accepted");
-    });
-    list.querySelectorAll(".bid-form").forEach((form) => {
-      form.addEventListener("submit", onPlaceBid);
-    });
+  list.innerHTML = docs.map((d) => renderMarketCard(d)).join("");
+  bindTimers(list, docs);
+  list.querySelectorAll(".bid-form").forEach((form) => {
+    form.addEventListener("submit", onPlaceBid);
   });
 }
 
-async function renderTransporterCard(load) {
-  const v = vehicleMeta(load.bodyType, Number(load.sizeFt));
-  const myBidSnap = await getDoc(doc(db, "bids", `${load.id}_${currentUser.uid}`));
-  const myBid = myBidSnap.exists() ? myBidSnap.data() : null;
+function renderMarketCard(load) {
+  const bidId = `${load.id}_${currentUser.uid}`;
+  const myBid = (bidsByLoad.get(load.id) || []).find((b) => b.id === bidId || b.bidderUid === currentUser.uid) || null;
   const lowest = load.lowestBidAmount;
   const iAmLowest = load.lowestBidderUid === currentUser.uid && myBid;
   let rankHtml = "";
-  if (load.acceptedBidderUid === currentUser.uid) {
-    rankHtml = `<div class="win-banner">Load party has accepted your bid. They will contact you shortly. You will not receive their phone number.</div>`;
-  } else if (myBid && iAmLowest) {
-    rankHtml = `<ol class="bid-rank"><li class="is-you"><span>1</span> Your bid ${formatInr(myBid.amount)} — leading</li></ol>`;
+  if (myBid && iAmLowest) {
+    rankHtml = `<p class="field-hint">Your bid ${formatInr(myBid.amount)} is leading.</p>`;
   } else if (myBid && lowest != null && Number(myBid.amount) > Number(lowest)) {
-    rankHtml = `<ol class="bid-rank">
-      <li><span>1</span> Leading bid ${formatInr(lowest)}</li>
-      <li class="is-you"><span>2</span> Your bid ${formatInr(myBid.amount)}</li>
-    </ol>`;
-  } else if (myBid) {
-    rankHtml = `<ol class="bid-rank"><li class="is-you"><span>1</span> Your bid ${formatInr(myBid.amount)}</li></ol>`;
+    rankHtml = `<p class="field-hint">Leading ${formatInr(lowest)} · yours ${formatInr(myBid.amount)}</p>`;
+  } else if (lowest != null) {
+    rankHtml = `<p class="field-hint">Lowest bid ${formatInr(lowest)}</p>`;
   } else {
-    rankHtml = `<p class="field-hint">Place a bid. If a competitor undercuts you, their amount shows as #1 and yours as #2.</p>`;
+    rankHtml = `<p class="field-hint">No bids yet.</p>`;
   }
 
-  const canBid = load.status === "open" && isLiveLoad(load) && !isOwnLoad(load);
-  const ownNote = isOwnLoad(load)
-    ? `<p class="field-hint">You posted this load. Bid from someone else — you cannot bid on your own load.</p>`
-    : "";
   return `
-    <article class="load-card">
-      <div class="load-card-top">
-        <img src="${v.image}" alt="" />
+    <article class="load-card load-card-simple">
+      <div class="load-card-head">
         <div>
-          <strong>${escapeHtml(load.vehicleName || v.name)}</strong>
-          <p>${escapeHtml(load.loadingLocation)} → ${escapeHtml(load.unloadingLocation)}</p>
-          <p>${escapeHtml(String(load.sizeFt || load.sizeFeet || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage))} T</p>
+          <strong>${loadRoute(load)}</strong>
+          <p>${loadLine(load)}</p>
         </div>
-        <div class="load-timer" data-timer="${load.id}">30:00</div>
+        <div class="load-timer" data-timer="${load.id}" data-ends="${Number(load.timerEndsAt) || 0}">30:00</div>
       </div>
       ${rankHtml}
-      ${ownNote}
-      ${canBid ? bidFormHtml(load, myBid) : ""}
+      ${bidFormHtml(load, myBid)}
     </article>`;
 }
 
