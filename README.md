@@ -3,7 +3,7 @@
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
 Live: https://verifiedtrucks-20.web.app  
 
-Public homepage is a single booking form: **Book truck in Just 10 Minutes**. Customers enter loading location, unloading location, size in feet, open or container, tonnage, and contact details. After submit they see that a truck will be found within 10 minutes. Leads are stored in Firestore `leads`.
+Public homepage is a single booking form: **Book truck in Just 10 Minutes**. Form on the left, matching 2D truck (open or container, by size) on the right. After submit a 10-minute stopwatch counts down. VIP (`/vip.html`, code `Deva@2001`) can mark a request booked — the timer stops on both screens, confetti plays, and the customer sees **Vehicle booked successfully**.
 
 ## Run locally
 

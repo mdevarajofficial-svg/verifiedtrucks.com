@@ -1,32 +1,61 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public marketplace reads; writes allowed for demo (tighten with auth later if needed)
-    match /loads/{loadId} {
-      allow read, write: if true;
-    }
-
-    // User profiles: owner can read/write their own doc; VIP/admin can read all via client gate
     match /users/{userId} {
-      allow read: if true;
+      allow read: if request.auth != null && request.auth.uid == userId;
       allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
     }
 
-    // Lead capture form submissions (truck booking)
+    match /loads/{loadId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.customerUid == request.auth.uid
+        && !('contactPhone' in request.resource.data);
+      allow update: if request.auth != null && (
+        (
+          resource.data.customerUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'acceptedBidId', 'acceptedBidderUid', 'booked', 'contactReleased', 'bookedAt'])
+        ) ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['lowestBidAmount', 'lowestBidderUid', 'lowestBidId', 'bidCount'])
+      );
+      allow delete: if false;
+    }
+
+    match /loadPrivate/{loadId} {
+      allow create: if request.auth != null
+        && request.resource.data.customerUid == request.auth.uid;
+      allow read, update: if request.auth != null
+        && resource.data.customerUid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /bids/{bidId} {
+      allow create: if request.auth != null
+        && request.resource.data.bidderUid == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.bidderUid == request.auth.uid ||
+        (
+          get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerUid == request.auth.uid
+          && get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.contactReleased == true
+          && get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.acceptedBidId == bidId
+        )
+      );
+      allow update: if request.auth != null && resource.data.bidderUid == request.auth.uid;
+      allow delete: if false;
+    }
+
     match /leads/{leadId} {
-      allow create: if request.resource.data.keys().hasAll([
-          'loadingLocation', 'unloadingLocation', 'sizeFeet', 'bodyType',
-          'tonnage', 'contactName', 'contactPhone', 'source'
-        ])
-        && request.resource.data.loadingLocation is string
-        && request.resource.data.unloadingLocation is string
-        && request.resource.data.contactName is string
-        && request.resource.data.contactPhone is string;
-      allow read, update, delete: if false;
+      allow create: if true;
+      allow read: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['booked', 'bookedAt', 'status'])
+        && request.resource.data.booked == true;
+      allow delete: if false;
     }
 
-    // Outbound email queue (Firebase Trigger Email extension reads /mail)
     match /mail/{mailId} {
       allow create: if request.auth != null
         && request.resource.data.uid == request.auth.uid

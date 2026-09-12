@@ -1,14 +1,110 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, sizeClass } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getFirestore(initializeApp(firebaseConfig));
 
 const form = document.getElementById("lead-form");
 const submitBtn = document.getElementById("submit-btn");
 const formMessage = document.getElementById("form-message");
-const successCard = document.getElementById("success-card");
+const statusCard = document.getElementById("status-card");
+const statusTitle = document.getElementById("status-title");
+const statusCopy = document.getElementById("status-copy");
+const truckImage = document.getElementById("truck-image");
+const truckCaption = document.getElementById("truck-caption");
+const stopwatch = document.getElementById("live-timer");
+const sizeInput = document.getElementById("size-feet");
+const bodyInput = document.getElementById("body-type");
+const measureFill = document.getElementById("measure-fill");
+const measureValue = document.getElementById("measure-value");
+const measureSlider = document.getElementById("measure-slider");
+const modelSelect = document.getElementById("vehicle-model");
+const modelPicks = document.getElementById("model-picks");
+const truckPreview = document.getElementById("truck-preview");
+
+const STEPS = [
+  { id: "loading-location", ready: (v) => v.length >= 2 },
+  { id: "unloading-location", ready: (v) => v.length >= 2 },
+  { id: "size-feet", ready: (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 7 && n <= 40;
+  } },
+  { id: "body-type", ready: (v) => v === "open" || v === "container" },
+  { id: "vehicle-model", ready: (v) => Boolean(v) },
+  { id: "tonnage", ready: (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 1 && n <= 100;
+  } },
+  { id: "contact-name", ready: (v) => v.length >= 2 },
+  { id: "contact-phone", ready: (v) => /^\d{10}$/.test(v) },
+];
+
+const stepTimers = new Map();
+
+function stepEl(id) {
+  return document.querySelector(`[data-step="${id}"]`);
+}
+
+function fieldReady(step) {
+  return step.ready(value(step.id));
+}
+
+function openStep(id, focus) {
+  const wrap = stepEl(id);
+  if (!wrap) return;
+  const wasClosed = !wrap.classList.contains("is-open");
+  wrap.classList.add("is-open");
+  if (id === "size-feet" && truckPreview) truckPreview.classList.remove("is-waiting");
+  if (focus && wasClosed) {
+    const field = document.getElementById(id);
+    requestAnimationFrame(() => field?.focus());
+  }
+}
+
+function refreshSteps(focusNext) {
+  let blocked = false;
+  STEPS.forEach((step, index) => {
+    if (index === 0) {
+      openStep(step.id, false);
+      if (!fieldReady(step)) blocked = true;
+      return;
+    }
+    if (blocked) return;
+    openStep(step.id, focusNext);
+    if (!fieldReady(step)) blocked = true;
+  });
+  const allReady = STEPS.every(fieldReady);
+  submitBtn.hidden = !allReady;
+}
+
+function scheduleAdvance(id) {
+  clearTimeout(stepTimers.get(id));
+  const step = STEPS.find((s) => s.id === id);
+  if (!step || !fieldReady(step)) return;
+  const delay = id === "body-type" || id === "vehicle-model" ? 80 : 450;
+  const timer = setTimeout(() => refreshSteps(true), delay);
+  stepTimers.set(id, timer);
+}
+
+function advanceNow(id) {
+  clearTimeout(stepTimers.get(id));
+  refreshSteps(true);
+}
+
+let tickId = null;
+let leadUnsub = null;
+let timerEndsAt = null;
+let booked = false;
+let celebrated = false;
+let frozenRemaining = 0;
 
 function showMessage(text, type) {
   formMessage.textContent = text;
@@ -17,6 +113,154 @@ function showMessage(text, type) {
 
 function value(id) {
   return document.getElementById(id).value.trim();
+}
+
+function selectedVehicle(list) {
+  return list.find((v) => v.id === modelSelect.value) || list[0];
+}
+
+function updateTruckPreview() {
+  const bodyType = bodyInput.value || "open";
+  const typedSize = Number(sizeInput.value);
+  const hasSize = Number.isFinite(typedSize) && typedSize >= 7;
+  const feet = Math.max(7, Math.min(MEASURE_MAX_FT, hasSize ? typedSize : 10));
+  if (hasSize) sizeInput.value = String(feet);
+  if (measureSlider) measureSlider.value = String(feet);
+  const list = vehiclesFor(feet, bodyType);
+  const prev = modelSelect.value;
+  modelSelect.innerHTML = `<option value="" disabled>Select a vehicle</option>` +
+    list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
+  if (list.some((v) => v.id === prev)) modelSelect.value = prev;
+  else modelSelect.value = "";
+  const vehicle = selectedVehicle(list);
+  if (!vehicle) return;
+  truckImage.src = vehicleSrc(vehicle, bodyType);
+  const labelType = bodyType === "open" ? "Open" : "Container";
+  truckCaption.textContent = `${feet} ft · ${vehicle.name} · ${labelType}`;
+  modelPicks.innerHTML = list.map((v) => (
+    `<button type="button" class="model-pick${v.id === vehicle.id ? " is-active" : ""}" data-id="${v.id}">${v.name}</button>`
+  )).join("");
+  if (measureFill) {
+    measureFill.style.width = `${(feet / MEASURE_MAX_FT) * 100}%`;
+  }
+  if (measureValue) {
+    measureValue.textContent = `${feet} ft`;
+  }
+}
+
+function stopTick() {
+  if (tickId) {
+    clearInterval(tickId);
+    tickId = null;
+  }
+}
+
+function paintTimer() {
+  if (!timerEndsAt) return;
+  if (booked) {
+    setStopwatch(stopwatch, frozenRemaining, false, false);
+    const kicker = stopwatch.querySelector("[data-kicker]");
+    if (kicker) kicker.textContent = "Vehicle booked";
+    return;
+  }
+  const { remaining, cycle } = loopRemaining(timerEndsAt);
+  const waiting = cycle >= 1;
+  setStopwatch(stopwatch, remaining, true, waiting);
+  if (waiting) {
+    statusCard.hidden = false;
+    statusCard.classList.add("is-waiting");
+    statusTitle.textContent = "Unable to find — still looking";
+    statusCopy.textContent = "Kindly wait. We are searching again for a matching truck.";
+  }
+}
+
+function celebrateBooked() {
+  if (celebrated) return;
+  celebrated = true;
+  booked = true;
+  frozenRemaining = timerEndsAt ? loopRemaining(timerEndsAt).remaining : 0;
+  stopTick();
+  paintTimer();
+  statusCard.hidden = false;
+  statusCard.classList.remove("is-waiting");
+  statusTitle.textContent = "Vehicle booked successfully";
+  statusCopy.textContent = "Your truck is confirmed. We will share vehicle details on your number.";
+  showerConfetti();
+}
+
+function startCountdown(endsAt) {
+  timerEndsAt = endsAt;
+  booked = false;
+  stopTick();
+  paintTimer();
+  tickId = setInterval(paintTimer, 250);
+}
+
+function watchLead(id) {
+  if (leadUnsub) leadUnsub();
+  leadUnsub = onSnapshot(doc(db, "leads", id), (snap) => {
+    const data = snap.data();
+    if (!data) return;
+    if (data.booked) celebrateBooked();
+  });
+}
+
+sizeInput.addEventListener("input", () => {
+  updateTruckPreview();
+  scheduleAdvance("size-feet");
+});
+sizeInput.addEventListener("blur", () => advanceNow("size-feet"));
+bodyInput.addEventListener("change", () => {
+  updateTruckPreview();
+  advanceNow("body-type");
+});
+modelSelect.addEventListener("change", () => {
+  updateTruckPreview();
+  advanceNow("vehicle-model");
+});
+modelPicks.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-id]");
+  if (!btn) return;
+  modelSelect.value = btn.dataset.id;
+  updateTruckPreview();
+  advanceNow("vehicle-model");
+});
+measureSlider.addEventListener("input", () => {
+  sizeInput.value = measureSlider.value;
+  updateTruckPreview();
+  openStep("size-feet", false);
+  scheduleAdvance("size-feet");
+});
+
+["loading-location", "unloading-location", "tonnage", "contact-name", "contact-phone"].forEach((id) => {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => scheduleAdvance(id));
+  el.addEventListener("blur", () => advanceNow(id));
+});
+
+form.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+  const id = e.target.id;
+  const step = STEPS.find((s) => s.id === id);
+  if (!step) return;
+  if (id !== "contact-phone" || !fieldReady(step)) {
+    e.preventDefault();
+    advanceNow(id);
+  }
+});
+
+updateTruckPreview();
+refreshSteps(false);
+setStopwatch(stopwatch, TEN_MIN, false, false);
+
+const savedId = sessionStorage.getItem("vtLeadId");
+const savedEnds = Number(sessionStorage.getItem("vtTimerEndsAt") || 0);
+if (savedId && savedEnds) {
+  form.hidden = true;
+  document.getElementById("form-heading").hidden = true;
+  statusCard.hidden = false;
+  startCountdown(savedEnds);
+  watchLead(savedId);
 }
 
 form.addEventListener("submit", async (e) => {
@@ -30,8 +274,9 @@ form.addEventListener("submit", async (e) => {
   const tonnage = value("tonnage");
   const contactName = value("contact-name");
   const contactPhone = value("contact-phone");
+  const vehicle = selectedVehicle(vehiclesFor(sizeFeet, bodyType));
 
-  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone) {
+  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone || !vehicle) {
     showMessage("Please fill in all details.", "error");
     return;
   }
@@ -43,9 +288,22 @@ form.addEventListener("submit", async (e) => {
 
   submitBtn.disabled = true;
   submitBtn.textContent = "Booking…";
+  const endsAt = Date.now() + TEN_MIN;
+  const pending = {
+    leadId: null,
+    loadingLocation,
+    unloadingLocation,
+    sizeFt: Number(sizeFeet),
+    bodyType,
+    tonnage,
+    contactName,
+    contactPhone,
+    vehicleName: vehicle.name,
+    timerEndsAt: endsAt,
+  };
 
   try {
-    await addDoc(collection(db, "leads"), {
+    const ref = await addDoc(collection(db, "leads"), {
       loadingLocation,
       unloadingLocation,
       sizeFeet,
@@ -53,18 +311,56 @@ form.addEventListener("submit", async (e) => {
       tonnage,
       contactName,
       contactPhone,
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      vehicleMake: vehicle.make,
+      sizeClass: sizeClass(sizeFeet),
       source: "home-book-truck",
       page: window.location.pathname,
+      booked: false,
+      status: "searching",
+      timerEndsAt: endsAt,
       createdAt: serverTimestamp(),
+      createdAtMs: Date.now(),
     });
-    form.classList.add("is-hidden");
-    form.style.display = "none";
-    document.getElementById("form-heading").style.display = "none";
-    successCard.classList.add("is-visible");
+    pending.leadId = ref.id;
+    sessionStorage.setItem("vtLeadId", ref.id);
   } catch (err) {
     console.error(err);
-    showMessage("Something went wrong. Please try again.", "error");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Book truck";
   }
+
+  sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
+  sessionStorage.setItem("vtPendingCustomer", JSON.stringify(pending));
+  window.location.href = "/profile.html?next=customer";
+});
+
+const kycForm = document.getElementById("kyc-form");
+const kycSubmit = document.getElementById("kyc-submit");
+const kycMessage = document.getElementById("kyc-message");
+
+kycForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = value("kyc-name");
+  const phone = value("kyc-phone");
+  const dlNumber = value("kyc-dl").toUpperCase();
+  const totalVehicles = value("kyc-vehicles");
+  kycMessage.className = "form-message";
+  if (!name || !phone || !dlNumber || !totalVehicles) {
+    kycMessage.textContent = "Please fill in all transporter details.";
+    kycMessage.className = "form-message error";
+    return;
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    kycMessage.textContent = "Please enter a valid 10-digit phone number.";
+    kycMessage.className = "form-message error";
+    return;
+  }
+  kycSubmit.disabled = true;
+  sessionStorage.setItem("vtPendingTransporter", JSON.stringify({
+    name,
+    phone,
+    dlNumber,
+    totalVehicles: Number(totalVehicles),
+  }));
+  window.location.href = "/profile.html?next=transporter";
 });

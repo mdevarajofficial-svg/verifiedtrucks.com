@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /vip.html
+Disallow: /vip
+Disallow: /profile.html
+Disallow: /profile
+
+Sitemap: https://verifiedtrucks.com/sitemap.xml
