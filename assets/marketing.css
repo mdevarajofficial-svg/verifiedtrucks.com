@@ -153,8 +153,12 @@ header {
 @media (prefers-reduced-motion: reduce) {
   .ten-mark.is-running .ten-mark-dial,
   .ten-mark.is-running .ten-mark-num,
-  .load-timer.is-heartbeat {
-    animation: none;
+  .load-timer.is-heartbeat,
+  .truck-image.is-driving,
+  .truck-stage.is-driving::before,
+  .why-card,
+  .booking .lead-form-container {
+    animation: none !important;
   }
 }
 
@@ -421,11 +425,87 @@ header {
   max-width: 560px;
   height: auto;
   display: block;
+  transform-origin: center center;
 }
 
 .truck-stage {
+  position: relative;
   width: 100%;
   max-width: 560px;
+  overflow: hidden;
+}
+
+.truck-stage.is-driving::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 46%;
+  height: 10px;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 14px,
+    rgba(15, 118, 110, 0.22) 14px 18px
+  );
+  opacity: 0;
+  animation: speed-wash 0.95s ease-out both;
+}
+
+.truck-image.is-driving {
+  animation: truck-drive 2.7s cubic-bezier(0.2, 0.84, 0.22, 1) both;
+}
+
+@keyframes truck-drive {
+  0% {
+    transform: translateX(78%);
+    filter: blur(0.6px);
+  }
+  20% {
+    transform: translateX(-42%);
+    filter: blur(1.1px);
+  }
+  36% {
+    transform: translateX(12%);
+    filter: blur(0);
+  }
+  50% {
+    transform: translateX(-5%);
+  }
+  64% {
+    transform: translateX(1.5%);
+  }
+  78%, 100% {
+    transform: translateX(0);
+    filter: none;
+  }
+}
+
+@keyframes speed-wash {
+  0% {
+    opacity: 0;
+    transform: translateX(30%);
+  }
+  25% {
+    opacity: 0.7;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-40%);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .truck-caption {
@@ -702,6 +782,16 @@ header {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   padding: 22px 18px;
   text-align: center;
+  animation: rise-in 0.55s ease both;
+}
+
+.why-features .why-card:nth-child(1) { animation-delay: 0.04s; }
+.why-features .why-card:nth-child(2) { animation-delay: 0.1s; }
+.why-features .why-card:nth-child(3) { animation-delay: 0.16s; }
+.why-features .why-card:nth-child(4) { animation-delay: 0.22s; }
+
+.booking .lead-form-container {
+  animation: rise-in 0.45s ease both;
 }
 
 .why-card img {

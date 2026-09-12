@@ -126,6 +126,26 @@ function value(id) {
   return document.getElementById(id).value.trim();
 }
 
+let lastTruckSrc = truckImage?.getAttribute("src") || "";
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function playTruckDrive() {
+  if (!truckImage || prefersReducedMotion()) return;
+  const stage = truckImage.closest(".truck-stage");
+  truckImage.classList.remove("is-driving");
+  stage?.classList.remove("is-driving");
+  void truckImage.offsetWidth;
+  truckImage.classList.add("is-driving");
+  stage?.classList.add("is-driving");
+  truckImage.addEventListener("animationend", () => {
+    truckImage.classList.remove("is-driving");
+    stage?.classList.remove("is-driving");
+  }, { once: true });
+}
+
 function selectedVehicle(list) {
   return list.find((v) => v.id === modelSelect.value) || list[0];
 }
@@ -146,7 +166,12 @@ function updateTruckPreview() {
   else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
-  truckImage.src = vehicleSrc(vehicle, bodyType);
+  const nextSrc = vehicleSrc(vehicle, bodyType);
+  if (lastTruckSrc !== nextSrc) {
+    lastTruckSrc = nextSrc;
+    truckImage.src = nextSrc;
+    playTruckDrive();
+  }
   truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
   if (vehicle.defaultTonnage != null) {
     const cur = tonnageInput.value.trim();
