@@ -269,7 +269,8 @@ header {
 }
 
 .preview.is-waiting .model-picks,
-.preview.is-waiting .measure {
+.preview.is-waiting .measure,
+.preview.is-waiting .truck-caption {
   display: none;
 }
 
@@ -514,6 +515,11 @@ header {
   font-weight: 600;
   color: #444;
   text-align: center;
+}
+
+.truck-caption:empty,
+.truck-caption[hidden] {
+  display: none;
 }
 
 .measure {

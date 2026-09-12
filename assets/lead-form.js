@@ -172,7 +172,17 @@ function updateTruckPreview() {
     truckImage.src = nextSrc;
     playTruckDrive();
   }
-  truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+  const hasBody = bodyInput.value === "open" || bodyInput.value === "container";
+  const hasModel = Boolean(modelSelect.value);
+  if (truckCaption) {
+    if (hasSize && hasBody && hasModel) {
+      truckCaption.hidden = false;
+      truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+    } else {
+      truckCaption.hidden = true;
+      truckCaption.textContent = "";
+    }
+  }
   if (vehicle.defaultTonnage != null) {
     const cur = tonnageInput.value.trim();
     if (!cur || cur === String(lastAutoTonnage)) {
