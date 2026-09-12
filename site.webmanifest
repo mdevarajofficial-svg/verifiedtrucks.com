@@ -1,11 +1,11 @@
 {
   "name": "Verified Trucks",
   "short_name": "Verified Trucks",
-  "description": "Cloud freight marketplace powered by Firebase Firestore.",
+  "description": "Book a truck in just 10 minutes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/assets/icon-192.png",

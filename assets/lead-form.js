@@ -8,60 +8,63 @@ const db = getFirestore(app);
 const form = document.getElementById("lead-form");
 const submitBtn = document.getElementById("submit-btn");
 const formMessage = document.getElementById("form-message");
-const roleSelect = document.getElementById("role");
-
-if (roleSelect && form?.dataset.defaultRole) {
-  roleSelect.value = form.dataset.defaultRole;
-}
+const successCard = document.getElementById("success-card");
 
 function showMessage(text, type) {
   formMessage.textContent = text;
   formMessage.className = `form-message ${type}`;
 }
 
+function value(id) {
+  return document.getElementById(id).value.trim();
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   formMessage.className = "form-message";
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const role = document.getElementById("role").value;
-  const source = form.dataset.source || "lead-page";
+  const loadingLocation = value("loading-location");
+  const unloadingLocation = value("unloading-location");
+  const sizeFeet = value("size-feet");
+  const bodyType = value("body-type");
+  const tonnage = value("tonnage");
+  const contactName = value("contact-name");
+  const contactPhone = value("contact-phone");
 
-  if (!name || !phone || !role) {
-    showMessage("Please fill in all required fields.", "error");
+  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone) {
+    showMessage("Please fill in all details.", "error");
     return;
   }
 
-  if (!/^\d{10}$/.test(phone)) {
+  if (!/^\d{10}$/.test(contactPhone)) {
     showMessage("Please enter a valid 10-digit phone number.", "error");
     return;
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Submitting…";
+  submitBtn.textContent = "Booking…";
 
   try {
     await addDoc(collection(db, "leads"), {
-      name,
-      phone,
-      email: email || null,
-      role,
-      source,
+      loadingLocation,
+      unloadingLocation,
+      sizeFeet,
+      bodyType,
+      tonnage,
+      contactName,
+      contactPhone,
+      source: "home-book-truck",
       page: window.location.pathname,
       createdAt: serverTimestamp(),
     });
-    form.reset();
-    if (form.dataset.defaultRole) {
-      roleSelect.value = form.dataset.defaultRole;
-    }
-    showMessage("Thanks! We'll be in touch soon.", "success");
+    form.classList.add("is-hidden");
+    form.style.display = "none";
+    document.getElementById("form-heading").style.display = "none";
+    successCard.classList.add("is-visible");
   } catch (err) {
     console.error(err);
     showMessage("Something went wrong. Please try again.", "error");
-  } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "Submit";
+    submitBtn.textContent = "Book truck";
   }
 });

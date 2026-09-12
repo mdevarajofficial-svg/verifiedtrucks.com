@@ -13,12 +13,16 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Lead capture form submissions
+    // Lead capture form submissions (truck booking)
     match /leads/{leadId} {
-      allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'role', 'source'])
-        && request.resource.data.name is string
-        && request.resource.data.phone is string
-        && request.resource.data.role is string;
+      allow create: if request.resource.data.keys().hasAll([
+          'loadingLocation', 'unloadingLocation', 'sizeFeet', 'bodyType',
+          'tonnage', 'contactName', 'contactPhone', 'source'
+        ])
+        && request.resource.data.loadingLocation is string
+        && request.resource.data.unloadingLocation is string
+        && request.resource.data.contactName is string
+        && request.resource.data.contactPhone is string;
       allow read, update, delete: if false;
     }
 

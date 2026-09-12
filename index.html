@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Verified Trucks — India Freight Marketplace</title>
+  <title>Book truck in just 10 minutes — Verified Trucks</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="theme-color" content="#ffffff" />
-  <meta property="og:title" content="Verified Trucks — India Freight Marketplace" />
-  <meta property="og:description" content="Post loads, find trucks, and grow your transport business. Leave your number and we will set you up." />
+  <meta property="og:title" content="Book truck in just 10 minutes — Verified Trucks" />
+  <meta property="og:description" content="Share loading, unloading, size, body type, tonnage and contact. We find a truck within 10 minutes." />
   <meta property="og:image" content="/assets/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,69 +22,80 @@
       <img src="/assets/logo-128.png" alt="" width="36" height="36" decoding="async" />
       Verified Trucks
     </a>
-    <nav class="header-nav" aria-label="Main">
-      <a href="/loads.html" class="header-link">Loads</a>
-      <a href="/find.html" class="header-link">Find Loads</a>
-      <a href="/post.html" class="header-link">Post Load</a>
-      <a href="/profile.html" class="header-link">Profile</a>
-      <a href="/vip.html" class="header-link">VIP</a>
-      <a href="/lead.html" class="header-cta">Get started</a>
-    </nav>
   </header>
 
   <section class="hero">
-    <h1>Join India's freight marketplace</h1>
-    <p>Post loads, place bids, and connect with transporters and fleet owners across India. Free to use.</p>
-    <ul class="hero-points">
-        <li>Share your name and number — we call you back.</li>
-        <li>Transporters post loads. Fleet owners get matching freight.</li>
-        <li>No app download needed to get started.</li>
-    </ul>
+    <h1>Book truck in Just 10 Minutes</h1>
+
+    <div class="attraction" aria-hidden="true">
+      <img class="truck-image" src="/assets/hero-truck.png" alt="" width="840" height="472" decoding="async" />
+      <div class="stopwatch">
+        <svg viewBox="0 0 200 232" role="img">
+          <title>10 minute timer</title>
+          <rect x="88" y="8" width="24" height="18" rx="4" fill="#111" />
+          <rect x="148" y="36" width="22" height="10" rx="3" transform="rotate(40 148 36)" fill="#111" />
+          <circle cx="100" cy="120" r="84" fill="#111" />
+          <circle cx="100" cy="120" r="74" fill="#fff" stroke="#e5e5e5" stroke-width="2" />
+          <g fill="#111">
+            <circle cx="100" cy="54" r="3" />
+            <circle cx="166" cy="120" r="3" />
+            <circle cx="100" cy="186" r="3" />
+            <circle cx="34" cy="120" r="3" />
+          </g>
+          <text x="100" y="116" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#111">10:00</text>
+          <text x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
+          <line class="stopwatch-hand" x1="100" y1="120" x2="100" y2="62" stroke="#c2410c" stroke-width="3" stroke-linecap="round" />
+          <circle cx="100" cy="120" r="6" fill="#c2410c" />
+        </svg>
+      </div>
+    </div>
 
     <div class="lead-form-container">
-      <h2>Get a callback</h2>
-      <p class="form-intro">Tell us how you move freight. We will reach you on WhatsApp or phone.</p>
-      <form id="lead-form" data-source="home" novalidate>
+      <h2 id="form-heading">Book a truck</h2>
+      <form id="lead-form" novalidate>
         <div class="form-field">
-          <label for="name">Full name</label>
-          <input type="text" id="name" name="name" required autocomplete="name" placeholder="Your name" />
+          <label for="loading-location">Loading location</label>
+          <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" placeholder="City or area" />
         </div>
         <div class="form-field">
-          <label for="phone">Phone number</label>
-          <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+          <label for="unloading-location">Unloading location</label>
+          <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" placeholder="City or area" />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="size-feet">Size (feet)</label>
+            <input type="number" id="size-feet" name="sizeFeet" required min="1" max="80" step="1" placeholder="e.g. 20" />
+          </div>
+          <div class="form-field">
+            <label for="tonnage">Tonnage</label>
+            <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" placeholder="e.g. 9" />
+          </div>
         </div>
         <div class="form-field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" />
-        </div>
-        <div class="form-field">
-          <label for="role">I am a</label>
-          <select id="role" name="role" required>
-            <option value="">Select role</option>
-            <option value="transporter">Transporter / Load provider</option>
-            <option value="fleet-owner">Vehicle / Fleet owner</option>
-            <option value="other">Other</option>
+          <label for="body-type">Open or container</label>
+          <select id="body-type" name="bodyType" required>
+            <option value="">Select</option>
+            <option value="open">Open</option>
+            <option value="container">Container</option>
           </select>
         </div>
-        <button type="submit" class="submit-btn" id="submit-btn">Submit</button>
+        <div class="form-field">
+          <label for="contact-name">Contact name</label>
+          <input type="text" id="contact-name" name="contactName" required autocomplete="name" placeholder="Your name" />
+        </div>
+        <div class="form-field">
+          <label for="contact-phone">Contact number</label>
+          <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+        </div>
+        <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
         <p id="form-message" class="form-message" role="status"></p>
       </form>
+      <div id="success-card" class="success-card" role="status">
+        <h2>Truck will be found within 10 minutes</h2>
+        <p>We have your details. Stay on this number — we will call you shortly.</p>
+      </div>
     </div>
   </section>
-
-  <footer>
-    <nav class="footer-nav" aria-label="Footer">
-      <a href="/">Home</a>
-      <a href="/loads.html">Loads</a>
-      <a href="/find.html">Find Loads</a>
-      <a href="/post.html">Post Load</a>
-      <a href="/profile.html">Profile</a>
-      <a href="/vip.html">VIP</a>
-      <a href="/lead.html">Get started</a>
-      <a href="/app.html">Open app</a>
-    </nav>
-    <p>Verified Trucks — India freight marketplace. Leave your number and we will call you.</p>
-  </footer>
 
   <script type="module" src="/assets/lead-form.js"></script>
 </body>
