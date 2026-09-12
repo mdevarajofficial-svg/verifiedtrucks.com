@@ -70,14 +70,20 @@
       </section>
 
       <section id="customer-panel" class="profile-section">
-        <h2>Loads you posted</h2>
-        <p class="section-lead">Live posts only. When the 30-minute timer ends, the card vanishes. Accept the lowest bid, or delete the load to pull it off the market.</p>
+        <div class="section-toolbar">
+          <h2>Loads you posted</h2>
+          <button type="button" class="text-btn delete-btn" id="delete-all-loads" hidden>Delete all posted loads</button>
+        </div>
+        <p class="section-lead">Live posts only. Use Delete all posted loads to remove every load for this Google account from the site and from Firebase, including ended ones.</p>
         <div id="customer-loads" class="load-list"></div>
       </section>
 
       <section id="my-bids-panel" class="profile-section">
-        <h2>Bids you placed</h2>
-        <p class="section-lead">Your live bids. Delete a bid to withdraw it. Cards disappear when that load’s timer ends.</p>
+        <div class="section-toolbar">
+          <h2>Bids you placed</h2>
+          <button type="button" class="text-btn delete-btn" id="delete-all-bids" hidden>Delete all my bids</button>
+        </div>
+        <p class="section-lead">Your live bids. Delete all my bids removes every bid you placed from the site and from Firebase.</p>
         <div id="my-bids" class="load-list"></div>
       </section>
 
@@ -104,6 +110,5 @@
   </main>
 
   <script type="module" src="/assets/profile.js"></script>
-  <script src="/assets/site-nav.js" defer></script>
 </body>
 </html>

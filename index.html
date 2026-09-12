@@ -31,7 +31,6 @@
     <nav class="site-nav" aria-label="Page">
       <a href="#home">Home</a>
       <a href="#book">Book truck</a>
-      <a href="#why">Why us</a>
       <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
       <a href="/vip.html">VIP</a>
@@ -166,8 +165,11 @@
 
       <div class="preview is-waiting" id="truck-preview">
         <div class="truck-stage">
-          <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" />
-          <p id="truck-caption" class="truck-caption">10 ft · Tata Intra V70</p>
+          <div class="truck-parade" id="truck-parade" aria-hidden="true">
+            <div class="truck-parade-track" id="truck-parade-track"></div>
+          </div>
+          <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" hidden />
+          <p id="truck-caption" class="truck-caption" hidden></p>
           <div id="model-picks" class="model-picks" aria-label="Matching vehicles"></div>
           <div class="measure" id="measure" aria-label="Trailer length">
             <div class="measure-scale">
@@ -268,6 +270,5 @@
   }
   </script>
   <script type="module" src="/assets/lead-form.js"></script>
-  <script src="/assets/site-nav.js" defer></script>
 </body>
 </html>

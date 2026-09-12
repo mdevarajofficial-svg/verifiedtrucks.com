@@ -9,7 +9,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { setStopwatch, showerConfetti, TEN_MIN, MARKET_MS, MEASURE_MAX_FT, loopRemaining, remainingUntil, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass } from "/assets/booking-common.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MARKET_MS, MEASURE_MAX_FT, loopRemaining, remainingUntil, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const app = initializeApp(firebaseConfig);
@@ -126,6 +126,43 @@ function value(id) {
   return document.getElementById(id).value.trim();
 }
 
+let lastTruckSrc = truckImage?.getAttribute("src") || "";
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function playTruckDrive() {
+  if (!truckImage || prefersReducedMotion()) return;
+  const stage = truckImage.closest(".truck-stage");
+  truckImage.classList.remove("is-driving");
+  stage?.classList.remove("is-driving");
+  void truckImage.offsetWidth;
+  truckImage.classList.add("is-driving");
+  stage?.classList.add("is-driving");
+  truckImage.addEventListener("animationend", () => {
+    truckImage.classList.remove("is-driving");
+    stage?.classList.remove("is-driving");
+  }, { once: true });
+}
+
+function mountVehicleParade() {
+  const track = document.getElementById("truck-parade-track");
+  if (!track || track.childElementCount) return;
+  const items = paradeVehicles();
+  const slide = items.map((it) => (
+    `<figure class="truck-parade-item">
+      <img src="${it.src}" alt="" width="320" height="180" decoding="async" />
+    </figure>`
+  )).join("");
+  track.innerHTML = slide + slide;
+}
+
+function setPreviewPicked(picked) {
+  truckPreview?.classList.toggle("has-pick", picked);
+  if (truckImage) truckImage.hidden = !picked;
+}
+
 function selectedVehicle(list) {
   return list.find((v) => v.id === modelSelect.value) || list[0];
 }
@@ -146,8 +183,27 @@ function updateTruckPreview() {
   else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
-  truckImage.src = vehicleSrc(vehicle, bodyType);
-  truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+  const hasBody = bodyInput.value === "open" || bodyInput.value === "container";
+  const hasModel = Boolean(modelSelect.value);
+  const picked = hasSize && hasBody && hasModel;
+  setPreviewPicked(picked);
+  if (picked) {
+    const nextSrc = vehicleSrc(vehicle, bodyType);
+    if (lastTruckSrc !== nextSrc) {
+      lastTruckSrc = nextSrc;
+      truckImage.src = nextSrc;
+      playTruckDrive();
+    }
+  }
+  if (truckCaption) {
+    if (picked) {
+      truckCaption.hidden = false;
+      truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+    } else {
+      truckCaption.hidden = true;
+      truckCaption.textContent = "";
+    }
+  }
   if (vehicle.defaultTonnage != null) {
     const cur = tonnageInput.value.trim();
     if (!cur || cur === String(lastAutoTonnage)) {
@@ -297,6 +353,7 @@ function postedParams() {
   return { leadId: q.get("posted"), loadId: q.get("load") };
 }
 
+mountVehicleParade();
 updateTruckPreview();
 refreshSteps(false);
 startCountdown(Date.now() + TEN_MIN);
