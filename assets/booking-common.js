@@ -4,22 +4,35 @@ export const MEASURE_MAX_FT = 40;
 export const VEHICLES = [
   { id: "tata-ace", name: "Tata Ace", make: "Tata", feet: [7], bodies: ["open", "container"], image: "ace" },
   { id: "tata-intra", name: "Tata Intra", make: "Tata", feet: [8, 9], bodies: ["open", "container"], image: "intra" },
-  { id: "bolero", name: "Mahindra Bolero Pickup", make: "Mahindra", feet: [8, 9], bodies: ["open"], image: "bolero" },
-  { id: "dost", name: "Ashok Leyland Dost", make: "Ashok Leyland", feet: [8, 9], bodies: ["open", "container"], image: "dost" },
-  { id: "intra-v70", name: "Tata Intra V70", make: "Tata", feet: [10], bodies: ["open", "container"], image: "v70" },
-  { id: "bada-dost", name: "Ashok Leyland Bada Dost", make: "Ashok Leyland", feet: [10], bodies: ["open", "container"], image: "bada-dost" },
+  { id: "bolero-17", name: "Mahindra Bolero 1.7 Pickup", make: "Mahindra", feet: [8, 9], bodies: ["open"], image: "bolero-17" },
+  { id: "intra-v70", name: "Tata Intra V70", make: "Tata", feet: [10, 11, 12], bodies: ["open", "container"], image: "v70" },
+  { id: "bolero-maxx", name: "Mahindra Bolero Maxx Pickup", make: "Mahindra", feet: [10], bodies: ["open"], image: "bolero-maxx" },
+  { id: "bada-dost", name: "Ashok Leyland Bada Dost", make: "Ashok Leyland", feet: [11, 12], bodies: ["open", "container"], image: "bada-dost" },
   { id: "tata-407", name: "Tata 407", make: "Tata", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
   { id: "eicher-2049", name: "Eicher Pro 2049", make: "Eicher", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
-  { id: "al-partner", name: "Ashok Leyland Partner", make: "Ashok Leyland", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
   { id: "tata-1109", name: "Tata 1109", make: "Tata", feet: [17], bodies: ["open", "container"], image: "lcv-mid" },
   { id: "eicher-3015", name: "Eicher Pro 3015", make: "Eicher", feet: [17, 19], bodies: ["open", "container"], image: "lcv-mid" },
   { id: "tata-lpt", name: "Tata LPT 1613", make: "Tata", feet: [19, 20], bodies: ["open", "container"], image: "lcv-mid" },
-  { id: "al-1616", name: "Ashok Leyland 1616", make: "Ashok Leyland", feet: [20, 22], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "al-1616", name: "Ashok Leyland 1616", make: "Ashok Leyland", feet: [20, 22, 24], bodies: ["open", "container"], image: "lcv-mid" },
   { id: "tata-22", name: "Tata LPT 22 ft", make: "Tata", feet: [22, 24], bodies: ["open", "container"], image: "lcv-mid" },
   { id: "tata-32-open", name: "Tata 32 ft open", make: "Tata", feet: [32], bodies: ["open"], image: "lcv-large" },
   { id: "tata-32-box", name: "Tata 32 ft container", make: "Tata", feet: [32], bodies: ["container"], image: "lcv-large" },
   { id: "al-32", name: "Ashok Leyland 32 ft", make: "Ashok Leyland", feet: [32], bodies: ["open", "container"], image: "lcv-large" },
 ];
+
+function makeRank(make) {
+  if (make === "Tata") return 0;
+  if (make === "Mahindra") return 1;
+  if (make === "Eicher") return 2;
+  return 3;
+}
+
+function topTwo(list) {
+  return list
+    .slice()
+    .sort((a, b) => makeRank(a.make) - makeRank(b.make) || a.name.localeCompare(b.name))
+    .slice(0, 2);
+}
 
 export function sizeClass(feet) {
   const n = Number(feet);
@@ -33,9 +46,9 @@ export function vehiclesFor(feet, bodyType) {
   const n = Number(feet);
   const body = bodyType === "open" ? "open" : "container";
   const match = VEHICLES.filter((v) => v.feet.includes(n) && v.bodies.includes(body));
-  if (match.length) return match;
+  if (match.length) return topTwo(match);
   const anyAtSize = VEHICLES.filter((v) => v.feet.includes(n));
-  if (anyAtSize.length) return anyAtSize;
+  if (anyAtSize.length) return topTwo(anyAtSize);
   let nearest = 20;
   let best = 99;
   VEHICLES.forEach((v) => {
@@ -47,7 +60,7 @@ export function vehiclesFor(feet, bodyType) {
       }
     });
   });
-  return VEHICLES.filter((v) => v.feet.includes(nearest) && v.bodies.includes(body));
+  return topTwo(VEHICLES.filter((v) => v.feet.includes(nearest) && v.bodies.includes(body)));
 }
 
 export function vehicleSrc(vehicle, bodyType) {
