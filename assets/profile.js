@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
   where,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { isAdminUser } from "./admin.js";
@@ -260,6 +261,9 @@ googleBtn.addEventListener("click", async () => {
 
 signOutBtn.addEventListener("click", () => signOutUser());
 
+document.getElementById("delete-all-loads")?.addEventListener("click", () => deleteAllLoads());
+document.getElementById("delete-all-bids")?.addEventListener("click", () => deleteAllBids());
+
 sizeFilter.addEventListener("change", () => {
   renderBoard();
 });
@@ -355,10 +359,12 @@ function listenLoads() {
     paintMyLoads(list);
     paintMyBids();
     renderBoard();
+    syncClearButtons();
   }, () => {
     paintMyLoads(list);
     paintMyBids();
     renderBoard();
+    syncClearButtons();
   });
 }
 
@@ -384,7 +390,8 @@ function paintMyLoads(list) {
     .filter(isLiveLoad)
     .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
   if (!docs.length) {
-    list.innerHTML = `<p class="empty-note">No live loads on this Google account. Login, then book a truck on Home. Expired posts leave this list when the 30 minutes end.</p>`;
+    list.innerHTML = `<p class="empty-note">No live loads on this Google account. Ended posts still count toward Delete all posted loads until you clear them from Firebase.</p>`;
+    syncClearButtons();
     return;
   }
   list.innerHTML = docs.map((d) => customerLoadCard(d.id, d)).join("");
@@ -398,6 +405,7 @@ function paintMyLoads(list) {
   list.querySelectorAll("[data-delete-load]").forEach((btn) => {
     btn.addEventListener("click", () => deleteLoad(btn.getAttribute("data-delete-load")));
   });
+  syncClearButtons();
 }
 
 function listenMyBids() {
@@ -413,6 +421,7 @@ function listenMyBids() {
       .filter((b) => b.status !== "rejected")
       .sort((a, b) => (b.updatedAt?.seconds || b.createdAt?.seconds || 0) - (a.updatedAt?.seconds || a.createdAt?.seconds || 0));
     paintMyBids();
+    syncClearButtons();
   }, (err) => {
     list.innerHTML = `<p class="empty-note">Could not load your bids. ${escapeHtml(err.message || "")}</p>`;
   });
@@ -425,7 +434,8 @@ function paintMyBids() {
     .map((bid) => ({ bid, load: loadsById.get(bid.loadId) }))
     .filter(({ load }) => isLiveLoad(load));
   if (!rows.length) {
-    list.innerHTML = `<p class="empty-note">No live bids. Place a bid from the market below, or wait — ended loads leave this list.</p>`;
+    list.innerHTML = `<p class="empty-note">No live bids. Ended bids still count toward Delete all my bids until you clear them from Firebase.</p>`;
+    syncClearButtons();
     return;
   }
   list.innerHTML = rows.map(({ bid, load }) => myBidCard(bid, load)).join("");
@@ -433,6 +443,7 @@ function paintMyBids() {
   list.querySelectorAll("[data-delete-bid]").forEach((btn) => {
     btn.addEventListener("click", () => deleteBid(btn.getAttribute("data-delete-bid"), btn.getAttribute("data-load")));
   });
+  syncClearButtons();
 }
 
 function myBidStatus(bid, load) {
@@ -579,10 +590,40 @@ async function deleteBid(bidId, loadId) {
     window.alert(err.message || "Could not delete this bid.");
     return;
   }
-  const rest = (bidsByLoad.get(loadId) || []).filter((b) => b.id !== bidId && b.status !== "rejected");
+  await refreshLoadBidStats(loadId, [bidId]);
+}
+
+function syncClearButtons() {
+  const loadBtn = document.getElementById("delete-all-loads");
+  const bidBtn = document.getElementById("delete-all-bids");
+  if (loadBtn) {
+    loadBtn.hidden = myLoads.size === 0;
+    loadBtn.textContent = myLoads.size
+      ? `Delete all posted loads (${myLoads.size})`
+      : "Delete all posted loads";
+  }
+  if (bidBtn) {
+    bidBtn.hidden = myBids.length === 0;
+    bidBtn.textContent = myBids.length
+      ? `Delete all my bids (${myBids.length})`
+      : "Delete all my bids";
+  }
+}
+
+async function commitDeletes(refs) {
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = writeBatch(db);
+    refs.slice(i, i + 400).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+}
+
+async function refreshLoadBidStats(loadId, removedIds) {
+  const gone = new Set(removedIds);
+  const rest = (bidsByLoad.get(loadId) || []).filter((b) => !gone.has(b.id) && b.status !== "rejected");
   const next = rest[0];
   const load = loadsById.get(loadId);
-  if (!load || !isLiveLoad(load)) return;
+  if (!load) return;
   try {
     await updateDoc(doc(db, "loads", loadId), {
       lowestBidAmount: next ? Number(next.amount) : null,
@@ -592,6 +633,47 @@ async function deleteBid(bidId, loadId) {
     });
   } catch {
     /* load may already be gone */
+  }
+}
+
+async function deleteAllLoads() {
+  const ids = [...myLoads.keys()];
+  if (!ids.length || !currentUser) return;
+  if (!window.confirm(`Delete ${ids.length} posted load(s) from Firebase? They leave the market for everyone immediately.`)) return;
+  const btn = document.getElementById("delete-all-loads");
+  if (btn) btn.disabled = true;
+  try {
+    const refs = [];
+    ids.forEach((id) => {
+      (bidsByLoad.get(id) || []).forEach((bid) => refs.push(doc(db, "bids", bid.id)));
+      refs.push(doc(db, "loadPrivate", id));
+      refs.push(doc(db, "loads", id));
+    });
+    await commitDeletes(refs);
+  } catch (err) {
+    window.alert(err.message || "Could not delete all posted loads.");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function deleteAllBids() {
+  const list = [...myBids];
+  if (!list.length || !currentUser) return;
+  if (!window.confirm(`Delete ${list.length} bid(s) from Firebase? They leave the market immediately.`)) return;
+  const btn = document.getElementById("delete-all-bids");
+  if (btn) btn.disabled = true;
+  try {
+    await commitDeletes(list.map((bid) => doc(db, "bids", bid.id)));
+    const loadIds = [...new Set(list.map((bid) => bid.loadId))];
+    for (const loadId of loadIds) {
+      const removed = list.filter((bid) => bid.loadId === loadId).map((bid) => bid.id);
+      await refreshLoadBidStats(loadId, removed);
+    }
+  } catch (err) {
+    window.alert(err.message || "Could not delete all bids.");
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 

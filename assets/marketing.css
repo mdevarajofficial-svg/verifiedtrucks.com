@@ -1345,10 +1345,23 @@ header {
   font-size: 0.9rem;
 }
 
-.delete-btn {
-  color: #b91c1c;
-  padding: 0;
-  margin-top: 8px;
+.section-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.section-toolbar h2 {
+  margin: 0;
+}
+
+.section-toolbar .delete-btn {
+  margin-top: 0;
+  min-height: 44px;
+  padding: 8px 4px;
 }
 
 .delete-btn:hover,

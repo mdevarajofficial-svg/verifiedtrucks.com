@@ -93,9 +93,16 @@ service cloud.firestore {
         )
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
       );
-      allow delete: if isAdmin() || (
-        signedIn() && resource.data.bidderUid == request.auth.uid
-      );
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.bidderUid == request.auth.uid)
+        || (
+          signedIn()
+          && exists(/databases/$(database)/documents/loads/$(resource.data.loadId))
+          && (
+            get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.posterUid == request.auth.uid
+            || get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerUid == request.auth.uid
+          )
+        );
     }
 
     match /leads/{leadId} {
