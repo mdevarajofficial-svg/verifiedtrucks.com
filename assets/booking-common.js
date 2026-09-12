@@ -79,16 +79,19 @@ export function loopRemaining(timerEndsAt, now = Date.now()) {
 }
 
 export function setStopwatch(root, remainingMs, running, waiting = false) {
+  if (!root) return;
   const text = root.querySelector("[data-time]");
-  const hand = root.querySelector("[data-hand]");
-  const sub = root.querySelector("[data-sub]");
+  const kicker = root.querySelector("[data-kicker]");
+  const ring = root.querySelector("[data-ring]");
   if (text) text.textContent = formatMmSs(remainingMs);
-  if (sub) sub.textContent = waiting ? "STILL LOOKING" : "MINUTES";
-  if (hand) {
+  if (kicker) {
+    kicker.textContent = waiting ? "Still looking" : running ? "Finding your truck" : "Verified Trucks";
+  }
+  if (ring) {
+    const length = 2 * Math.PI * 42;
     const elapsed = Math.min(TEN_MIN, Math.max(0, TEN_MIN - remainingMs));
-    const deg = (elapsed / TEN_MIN) * 360;
-    hand.style.transform = `rotate(${deg}deg)`;
-    hand.style.animation = "none";
+    ring.style.strokeDasharray = String(length);
+    ring.style.strokeDashoffset = String(length * (elapsed / TEN_MIN));
   }
   root.classList.toggle("is-running", Boolean(running) && remainingMs > 0);
   root.classList.toggle("is-stopped", !running);

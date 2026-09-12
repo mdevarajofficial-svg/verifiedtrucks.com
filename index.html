@@ -19,29 +19,37 @@
 <body>
   <canvas id="confetti"></canvas>
   <header>
-    <a href="/" class="header-brand" aria-label="Verified Trucks home">
+    <a href="#home" class="header-brand" aria-label="Verified Trucks home">
       <img src="/assets/logo-128.png" alt="" width="36" height="36" decoding="async" />
       Verified Trucks
     </a>
-    <a href="/vip.html" class="header-link">VIP</a>
+    <nav class="site-nav" aria-label="Page">
+      <a href="#home">Home</a>
+      <a href="#book">Book truck</a>
+      <a href="#verify">Verify truck</a>
+      <a href="#about">About</a>
+    </nav>
   </header>
 
   <main class="page">
-    <h1 class="hero-title">
-      <span class="ten-mark">
+    <h1 class="hero-title" id="home">
+      <span class="ten-mark" id="live-timer">
         <span class="ten-mark-dial" aria-hidden="true">
-          <span class="ten-mark-tick"></span>
-          <span class="ten-mark-num">10</span>
+          <svg class="ten-mark-ring" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#ccfbf1" stroke-width="7" />
+            <circle data-ring cx="50" cy="50" r="42" fill="none" stroke="#0f766e" stroke-width="7" stroke-linecap="round" transform="rotate(-90 50 50)" />
+          </svg>
+          <span class="ten-mark-num" data-time>10:00</span>
         </span>
         <span class="ten-mark-copy">
-          <span class="ten-mark-kicker">Verified Trucks</span>
+          <span class="ten-mark-kicker" data-kicker>Verified Trucks</span>
           <span class="ten-mark-line">Book trucks in 10 minutes</span>
         </span>
       </span>
     </h1>
 
     <div class="booking">
-      <div class="lead-form-container">
+      <div class="lead-form-container" id="book">
         <h2 id="form-heading">Book a truck</h2>
         <form id="lead-form" novalidate>
           <div class="form-field">
@@ -161,39 +169,10 @@
             <input class="measure-slider" id="measure-slider" type="range" min="7" max="40" value="10" aria-label="Measure trailer length in feet" />
           </div>
         </div>
-        <div class="stopwatch" id="stopwatch">
-          <svg viewBox="0 0 200 232" role="img">
-            <title>10 minute timer</title>
-            <rect x="88" y="8" width="24" height="18" rx="4" fill="#111" />
-            <rect x="148" y="36" width="22" height="10" rx="3" transform="rotate(40 148 36)" fill="#111" />
-            <circle cx="100" cy="120" r="84" fill="#111" />
-            <circle cx="100" cy="120" r="74" fill="#fff" stroke="#e5e5e5" stroke-width="2" />
-            <g fill="#111">
-              <circle cx="100" cy="54" r="3" />
-              <circle cx="166" cy="120" r="3" />
-              <circle cx="100" cy="186" r="3" />
-              <circle cx="34" cy="120" r="3" />
-            </g>
-            <text data-time x="100" y="116" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#111">10:00</text>
-            <text data-sub x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
-            <line data-hand class="stopwatch-hand" x1="100" y1="120" x2="100" y2="62" stroke="#c2410c" stroke-width="3" stroke-linecap="round" />
-            <circle cx="100" cy="120" r="6" fill="#c2410c" />
-          </svg>
-        </div>
       </div>
     </div>
 
-    <section class="why" id="why-choose-us">
-      <div class="ten-mark ten-mark-lg" aria-hidden="true">
-        <span class="ten-mark-dial">
-          <span class="ten-mark-tick"></span>
-          <span class="ten-mark-num">10</span>
-        </span>
-        <span class="ten-mark-copy">
-          <span class="ten-mark-kicker">Guarantee</span>
-          <span class="ten-mark-line">Book trucks in 10 minutes</span>
-        </span>
-      </div>
+    <section class="why" id="verify">
       <h2>Why choose us</h2>
       <div class="compare-wrap">
         <table class="compare">

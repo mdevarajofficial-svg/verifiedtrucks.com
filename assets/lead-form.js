@@ -20,7 +20,7 @@ const statusTitle = document.getElementById("status-title");
 const statusCopy = document.getElementById("status-copy");
 const truckImage = document.getElementById("truck-image");
 const truckCaption = document.getElementById("truck-caption");
-const stopwatch = document.getElementById("stopwatch");
+const stopwatch = document.getElementById("live-timer");
 const sizeInput = document.getElementById("size-feet");
 const bodyInput = document.getElementById("body-type");
 const measureFill = document.getElementById("measure-fill");
@@ -85,6 +85,8 @@ function paintTimer() {
   if (!timerEndsAt) return;
   if (booked) {
     setStopwatch(stopwatch, frozenRemaining, false, false);
+    const kicker = stopwatch.querySelector("[data-kicker]");
+    if (kicker) kicker.textContent = "Vehicle booked";
     return;
   }
   const { remaining, cycle } = loopRemaining(timerEndsAt);
@@ -143,6 +145,7 @@ measureSlider.addEventListener("input", () => {
   updateTruckPreview();
 });
 updateTruckPreview();
+setStopwatch(stopwatch, TEN_MIN, false, false);
 
 const savedId = sessionStorage.getItem("vtLeadId");
 const savedEnds = Number(sessionStorage.getItem("vtTimerEndsAt") || 0);
