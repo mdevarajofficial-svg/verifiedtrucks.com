@@ -13,6 +13,15 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Lead capture form submissions
+    match /leads/{leadId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'role', 'source'])
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.role is string;
+      allow read, update, delete: if false;
+    }
+
     // Outbound email queue (Firebase Trigger Email extension reads /mail)
     match /mail/{mailId} {
       allow create: if request.auth != null
