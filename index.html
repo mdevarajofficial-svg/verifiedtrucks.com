@@ -61,7 +61,7 @@
                 </svg>
                 Size (feet)
               </label>
-              <input type="number" id="size-feet" name="sizeFeet" required min="10" max="40" step="1" value="20" placeholder="e.g. 20" />
+              <input type="number" id="size-feet" name="sizeFeet" required min="7" max="40" step="1" value="10" placeholder="e.g. 10" />
             </div>
             <div class="form-field">
               <label for="tonnage">
@@ -85,9 +85,21 @@
               Open or container
             </label>
             <select id="body-type" name="bodyType" required>
-              <option value="container">Container</option>
               <option value="open">Open</option>
+              <option value="container">Container</option>
             </select>
+          </div>
+          <div class="form-field">
+            <label for="vehicle-model">
+              <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
+                <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
+                <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
+              </svg>
+              Vehicle model
+            </label>
+            <select id="vehicle-model" name="vehicleModel" required></select>
           </div>
           <div class="form-field">
             <label for="contact-name">
@@ -119,8 +131,9 @@
 
       <div class="preview">
         <div class="truck-stage">
-          <img id="truck-image" class="truck-image" src="/assets/truck-container-medium.png" alt="Selected truck" width="840" height="472" decoding="async" />
-          <p id="truck-caption" class="truck-caption">20 ft · Container</p>
+          <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" />
+          <p id="truck-caption" class="truck-caption">10 ft · Tata Intra V70</p>
+          <div id="model-picks" class="model-picks" aria-label="Matching vehicles"></div>
           <div class="measure" id="measure" aria-label="Trailer length">
             <div class="measure-scale">
               <div class="measure-fill" id="measure-fill">
@@ -134,7 +147,7 @@
               <span>30</span>
               <span>40 ft</span>
             </div>
-            <input class="measure-slider" id="measure-slider" type="range" min="10" max="40" value="20" aria-label="Measure trailer length in feet" />
+            <input class="measure-slider" id="measure-slider" type="range" min="7" max="40" value="10" aria-label="Measure trailer length in feet" />
           </div>
         </div>
         <div class="stopwatch" id="stopwatch">

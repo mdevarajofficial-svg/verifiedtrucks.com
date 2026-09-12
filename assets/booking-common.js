@@ -1,6 +1,27 @@
 export const TEN_MIN = 10 * 60 * 1000;
 export const MEASURE_MAX_FT = 40;
 
+export const VEHICLES = [
+  { id: "tata-ace", name: "Tata Ace", make: "Tata", feet: [7], bodies: ["open", "container"], image: "ace" },
+  { id: "tata-intra", name: "Tata Intra", make: "Tata", feet: [8, 9], bodies: ["open", "container"], image: "intra" },
+  { id: "bolero", name: "Mahindra Bolero Pickup", make: "Mahindra", feet: [8, 9], bodies: ["open"], image: "bolero" },
+  { id: "dost", name: "Ashok Leyland Dost", make: "Ashok Leyland", feet: [8, 9], bodies: ["open", "container"], image: "dost" },
+  { id: "intra-v70", name: "Tata Intra V70", make: "Tata", feet: [10], bodies: ["open", "container"], image: "v70" },
+  { id: "bada-dost", name: "Ashok Leyland Bada Dost", make: "Ashok Leyland", feet: [10], bodies: ["open", "container"], image: "bada-dost" },
+  { id: "bolero-20", name: "Mahindra Bolero 2.0", make: "Mahindra", feet: [10], bodies: ["open"], image: "bolero-20" },
+  { id: "tata-407", name: "Tata 407", make: "Tata", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
+  { id: "eicher-2049", name: "Eicher Pro 2049", make: "Eicher", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
+  { id: "al-partner", name: "Ashok Leyland Partner", make: "Ashok Leyland", feet: [14], bodies: ["open", "container"], image: "lcv-small" },
+  { id: "tata-1109", name: "Tata 1109", make: "Tata", feet: [17], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "eicher-3015", name: "Eicher Pro 3015", make: "Eicher", feet: [17, 19], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "tata-lpt", name: "Tata LPT 1613", make: "Tata", feet: [19, 20], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "al-1616", name: "Ashok Leyland 1616", make: "Ashok Leyland", feet: [20, 22], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "tata-22", name: "Tata LPT 22 ft", make: "Tata", feet: [22, 24], bodies: ["open", "container"], image: "lcv-mid" },
+  { id: "tata-32-open", name: "Tata 32 ft open", make: "Tata", feet: [32], bodies: ["open"], image: "lcv-large" },
+  { id: "tata-32-box", name: "Tata 32 ft container", make: "Tata", feet: [32], bodies: ["container"], image: "lcv-large" },
+  { id: "al-32", name: "Ashok Leyland 32 ft", make: "Ashok Leyland", feet: [32], bodies: ["open", "container"], image: "lcv-large" },
+];
+
 export function sizeClass(feet) {
   const n = Number(feet);
   if (!n || Number.isNaN(n)) return "medium";
@@ -9,9 +30,38 @@ export function sizeClass(feet) {
   return "large";
 }
 
+export function vehiclesFor(feet, bodyType) {
+  const n = Number(feet);
+  const body = bodyType === "open" ? "open" : "container";
+  const match = VEHICLES.filter((v) => v.feet.includes(n) && v.bodies.includes(body));
+  if (match.length) return match;
+  const anyAtSize = VEHICLES.filter((v) => v.feet.includes(n));
+  if (anyAtSize.length) return anyAtSize;
+  let nearest = 20;
+  let best = 99;
+  VEHICLES.forEach((v) => {
+    v.feet.forEach((f) => {
+      const d = Math.abs(f - n);
+      if (d < best) {
+        best = d;
+        nearest = f;
+      }
+    });
+  });
+  return VEHICLES.filter((v) => v.feet.includes(nearest) && v.bodies.includes(body));
+}
+
+export function vehicleSrc(vehicle, bodyType) {
+  const type = vehicle.bodies.includes(bodyType) ? bodyType : vehicle.bodies[0];
+  if (vehicle.image === "lcv-small") return `/assets/truck-${type}-small.png`;
+  if (vehicle.image === "lcv-mid") return `/assets/truck-${type}-medium.png`;
+  if (vehicle.image === "lcv-large") return `/assets/truck-${type}-large.png`;
+  return `/assets/vehicles/${vehicle.image}-${type}.png`;
+}
+
 export function truckSrc(bodyType, feet) {
-  const type = bodyType === "open" ? "open" : "container";
-  return `/assets/truck-${type}-${sizeClass(feet)}.png`;
+  const list = vehiclesFor(feet, bodyType);
+  return vehicleSrc(list[0] || VEHICLES[0], bodyType);
 }
 
 export function formatMmSs(ms) {

@@ -7,7 +7,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { formatMmSs, showerConfetti, truckSrc, TEN_MIN, loopRemaining } from "/assets/booking-common.js";
+import { formatMmSs, showerConfetti, truckSrc, loopRemaining, vehicleSrc, VEHICLES } from "/assets/booking-common.js";
 
 const VIP_CODE = "Deva@2001";
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
@@ -42,6 +42,11 @@ gateForm.addEventListener("submit", (e) => {
   showApp();
 });
 
+function leadImage(lead) {
+  const v = VEHICLES.find((x) => x.id === lead.vehicleId);
+  return v ? vehicleSrc(v, lead.bodyType || "open") : truckSrc(lead.bodyType, lead.sizeFeet);
+}
+
 function remaining(lead) {
   if (!lead.timerEndsAt) return 0;
   return loopRemaining(lead.timerEndsAt).remaining;
@@ -64,12 +69,12 @@ function renderLead(id, lead) {
   const ms = remaining(lead);
   card.classList.toggle("is-booked", booked);
   card.innerHTML = `
-    <img src="${truckSrc(lead.bodyType, lead.sizeFeet)}" alt="" class="vip-truck" />
+    <img src="${leadImage(lead)}" alt="" class="vip-truck" />
     <div class="vip-card-body">
       <p class="vip-timer" data-timer>${booked ? "Stopped" : formatMmSs(ms)}</p>
       ${looking(lead) && !booked ? `<p class="vip-wait">Unable to find — still looking, kindly wait</p>` : ""}
       <p><strong>${lead.loadingLocation || "—"}</strong> → <strong>${lead.unloadingLocation || "—"}</strong></p>
-      <p>${lead.sizeFeet || "—"} ft · ${lead.bodyType || "—"} · ${lead.tonnage || "—"} T</p>
+      <p>${lead.vehicleName || "Truck"} · ${lead.sizeFeet || "—"} ft · ${lead.bodyType || "—"} · ${lead.tonnage || "—"} T</p>
       <p>${lead.contactName || ""} · ${lead.contactPhone || ""}</p>
       ${booked
         ? `<p class="vip-ok">Vehicle booked successfully</p>`

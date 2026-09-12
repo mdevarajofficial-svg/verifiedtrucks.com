@@ -7,7 +7,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { truckSrc, sizeClass, setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining } from "/assets/booking-common.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, sizeClass } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const db = getFirestore(initializeApp(firebaseConfig));
@@ -26,6 +26,8 @@ const bodyInput = document.getElementById("body-type");
 const measureFill = document.getElementById("measure-fill");
 const measureValue = document.getElementById("measure-value");
 const measureSlider = document.getElementById("measure-slider");
+const modelSelect = document.getElementById("vehicle-model");
+const modelPicks = document.getElementById("model-picks");
 
 let tickId = null;
 let leadUnsub = null;
@@ -43,20 +45,32 @@ function value(id) {
   return document.getElementById(id).value.trim();
 }
 
+function selectedVehicle(list) {
+  return list.find((v) => v.id === modelSelect.value) || list[0];
+}
+
 function updateTruckPreview() {
-  const bodyType = bodyInput.value || "container";
-  const feet = Math.max(10, Math.min(MEASURE_MAX_FT, Number(sizeInput.value) || 20));
+  const bodyType = bodyInput.value || "open";
+  const feet = Math.max(7, Math.min(MEASURE_MAX_FT, Number(sizeInput.value) || 10));
   sizeInput.value = String(feet);
   if (measureSlider) measureSlider.value = String(feet);
-  truckImage.src = truckSrc(bodyType, feet);
+  const list = vehiclesFor(feet, bodyType);
+  const prev = modelSelect.value;
+  modelSelect.innerHTML = list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
+  if (list.some((v) => v.id === prev)) modelSelect.value = prev;
+  const vehicle = selectedVehicle(list);
+  if (!vehicle) return;
+  truckImage.src = vehicleSrc(vehicle, bodyType);
   const labelType = bodyType === "open" ? "Open" : "Container";
-  truckCaption.textContent = `${feet} ft loading trailer · ${labelType}`;
+  truckCaption.textContent = `${feet} ft · ${vehicle.name} · ${labelType}`;
+  modelPicks.innerHTML = list.map((v) => (
+    `<button type="button" class="model-pick${v.id === vehicle.id ? " is-active" : ""}" data-id="${v.id}">${v.name}</button>`
+  )).join("");
   if (measureFill) {
     measureFill.style.width = `${(feet / MEASURE_MAX_FT) * 100}%`;
   }
   if (measureValue) {
     measureValue.textContent = `${feet} ft`;
-    measureValue.style.left = "50%";
   }
 }
 
@@ -117,6 +131,13 @@ function watchLead(id) {
 
 sizeInput.addEventListener("input", updateTruckPreview);
 bodyInput.addEventListener("change", updateTruckPreview);
+modelSelect.addEventListener("change", updateTruckPreview);
+modelPicks.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-id]");
+  if (!btn) return;
+  modelSelect.value = btn.dataset.id;
+  updateTruckPreview();
+});
 measureSlider.addEventListener("input", () => {
   sizeInput.value = measureSlider.value;
   updateTruckPreview();
@@ -144,8 +165,9 @@ form.addEventListener("submit", async (e) => {
   const tonnage = value("tonnage");
   const contactName = value("contact-name");
   const contactPhone = value("contact-phone");
+  const vehicle = selectedVehicle(vehiclesFor(sizeFeet, bodyType));
 
-  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone) {
+  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone || !vehicle) {
     showMessage("Please fill in all details.", "error");
     return;
   }
@@ -168,6 +190,9 @@ form.addEventListener("submit", async (e) => {
       tonnage,
       contactName,
       contactPhone,
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      vehicleMake: vehicle.make,
       sizeClass: sizeClass(sizeFeet),
       source: "home-book-truck",
       page: window.location.pathname,

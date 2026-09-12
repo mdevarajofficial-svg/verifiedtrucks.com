@@ -248,6 +248,7 @@ header {
 .measure-value {
   position: absolute;
   top: -2px;
+  left: 100%;
   transform: translate(-50%, -100%);
   background: #0f766e;
   color: #fff;
@@ -310,7 +311,31 @@ header {
   display: block;
 }
 
-.vip-list {
+.model-picks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.model-pick {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #111;
+}
+
+.model-pick.is-active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
   display: grid;
   gap: 16px;
 }
