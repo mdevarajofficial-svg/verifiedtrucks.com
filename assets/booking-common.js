@@ -1,4 +1,5 @@
 export const TEN_MIN = 10 * 60 * 1000;
+export const MARKET_MS = 30 * 60 * 1000;
 export const MEASURE_MAX_FT = 40;
 
 export const VEHICLES = [
@@ -104,11 +105,15 @@ export function formatMmSs(ms) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function loopRemaining(timerEndsAt, now = Date.now()) {
-  const start = timerEndsAt - TEN_MIN;
+export function remainingUntil(timerEndsAt, now = Date.now()) {
+  return Math.max(0, Number(timerEndsAt || 0) - now);
+}
+
+export function loopRemaining(timerEndsAt, now = Date.now(), windowMs = TEN_MIN) {
+  const start = timerEndsAt - windowMs;
   const elapsed = Math.max(0, now - start);
-  const cycle = Math.floor(elapsed / TEN_MIN);
-  const remaining = TEN_MIN - (elapsed % TEN_MIN);
+  const cycle = Math.floor(elapsed / windowMs);
+  const remaining = windowMs - (elapsed % windowMs);
   return { remaining, cycle, elapsed };
 }
 

@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -8,10 +9,16 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass } from "/assets/booking-common.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MARKET_MS, MEASURE_MAX_FT, loopRemaining, remainingUntil, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
-const db = getFirestore(initializeApp(firebaseConfig));
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+let signedInUser = null;
+onAuthStateChanged(auth, (user) => {
+  signedInUser = user;
+});
 
 const form = document.getElementById("lead-form");
 const submitBtn = document.getElementById("submit-btn");
@@ -177,8 +184,17 @@ function paintTimer() {
     if (kicker) kicker.textContent = "Vehicle booked";
     return;
   }
+  if (postedLive) {
+    const rem = remainingUntil(timerEndsAt);
+    setStopwatch(stopwatch, rem, rem > 0, rem <= 0);
+    if (rem <= 0) {
+      statusCard.hidden = false;
+      statusCopy.textContent = "The 30-minute bid window has ended.";
+    }
+    return;
+  }
   const { remaining, cycle } = loopRemaining(timerEndsAt);
-  const waiting = postedLive && cycle >= 1;
+  const waiting = false;
   setStopwatch(stopwatch, remaining, true, waiting);
   if (waiting) {
     statusCard.hidden = false;
@@ -192,7 +208,7 @@ function celebrateBooked() {
   if (celebrated) return;
   celebrated = true;
   booked = true;
-  frozenRemaining = timerEndsAt ? loopRemaining(timerEndsAt).remaining : 0;
+  frozenRemaining = timerEndsAt ? remainingUntil(timerEndsAt) : 0;
   stopTick();
   paintTimer();
   statusCard.hidden = false;
@@ -271,7 +287,7 @@ function showPosted(endsAt, leadId) {
   statusCard.classList.remove("is-waiting");
   statusCard.classList.add("is-premium");
   statusTitle.textContent = "Load Posted";
-  statusCopy.textContent = "Best Possible Quote will be Given within 10 Min";
+  statusCopy.textContent = "Best Possible Quote will be Given within 30 Min";
   startCountdown(endsAt);
   if (leadId) watchLead(leadId);
 }
@@ -290,7 +306,7 @@ if (existing.leadId) {
   getDoc(doc(db, "leads", existing.leadId)).then((snap) => {
     if (!snap.exists()) return;
     const data = snap.data();
-    showPosted(Number(data.timerEndsAt) || Date.now() + TEN_MIN, snap.id);
+    showPosted(Number(data.timerEndsAt) || Date.now() + MARKET_MS, snap.id);
     if (data.booked) celebrateBooked();
   }).catch((err) => console.error(err));
 }
@@ -319,7 +335,7 @@ form.addEventListener("submit", async (e) => {
 
   submitBtn.disabled = true;
   submitBtn.textContent = "Posting…";
-  const endsAt = Date.now() + TEN_MIN;
+  const endsAt = Date.now() + MARKET_MS;
 
   try {
     const loadRef = await addDoc(collection(db, "loads"), {
@@ -339,11 +355,14 @@ form.addEventListener("submit", async (e) => {
       lowestBidAmount: null,
       lowestBidderUid: null,
       lowestBidId: null,
+      posterUid: signedInUser?.uid || null,
+      customerUid: signedInUser?.uid || null,
       createdAt: serverTimestamp(),
       createdAtMs: Date.now(),
     });
     const leadRef = await addDoc(collection(db, "leads"), {
       loadId: loadRef.id,
+      posterUid: signedInUser?.uid || null,
       loadingLocation,
       unloadingLocation,
       sizeFeet,

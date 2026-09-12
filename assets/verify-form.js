@@ -49,7 +49,7 @@ function loadImage(load) {
 function renderBoard() {
   const live = loads.filter(isLive).sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
   if (!live.length) {
-    board.innerHTML = `<p class="empty-note">No live loads in this 10-minute window. New bookings from Home appear here immediately.</p>`;
+    board.innerHTML = `<p class="empty-note">No live loads in this 30-minute window. New bookings from Home appear here immediately.</p>`;
     return;
   }
   board.innerHTML = live.map((load) => `
@@ -66,7 +66,7 @@ function renderBoard() {
       <dl class="bid-stats">
         <div><dt>Bids</dt><dd>${escapeHtml(String(load.bidCount || 0))}</dd></div>
         <div><dt>Lowest</dt><dd>${load.lowestBidAmount == null ? "None yet" : `₹${Number(load.lowestBidAmount).toLocaleString("en-IN")}`}</dd></div>
-        <div><dt>Window</dt><dd>10 min</dd></div>
+        <div><dt>Window</dt><dd>30 min</dd></div>
       </dl>
       <form class="bid-form" data-bid="${escapeHtml(load.id)}">
         <label>

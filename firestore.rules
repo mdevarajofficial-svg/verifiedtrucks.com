@@ -30,6 +30,20 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['lowestBidAmount', 'lowestBidderUid', 'lowestBidId', 'bidCount']);
     }
+    function isPoster() {
+      return signedIn() && (
+        resource.data.posterUid == request.auth.uid ||
+        resource.data.customerUid == request.auth.uid
+      );
+    }
+    function posterAcceptKeys() {
+      return isPoster() && request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['status', 'acceptedBidId', 'acceptedBidderUid', 'booked', 'contactReleased', 'bookedAt', 'lowestBidAmount', 'lowestBidderUid', 'lowestBidId', 'bidCount']);
+    }
+    function validBidPhone(data) {
+      return (data.keys().hasAny(['phone']) && data.phone is string && data.phone.matches('^[0-9]{10}$'))
+        || (data.keys().hasAny(['bidderPhone']) && data.bidderPhone is string && data.bidderPhone.matches('^[0-9]{10}$'));
+    }
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
@@ -44,7 +58,7 @@ service cloud.firestore {
         && request.resource.data.timerEndsAt is number
         && request.resource.data.status == 'open'
         && !('contactPhone' in request.resource.data);
-      allow update: if isAdmin() || bookedKeys() || bidStatKeys();
+      allow update: if isAdmin() || bookedKeys() || bidStatKeys() || posterAcceptKeys();
       allow delete: if false;
     }
 
@@ -62,12 +76,20 @@ service cloud.firestore {
       allow create: if request.resource.data.loadId is string
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
-        && request.resource.data.phone is string
-        && request.resource.data.phone.matches('^[0-9]{10}$')
+        && validBidPhone(request.resource.data)
         && request.resource.data.vehicleNumber is string
-        && request.resource.data.vehicleNumber.size() >= 4;
+        && request.resource.data.vehicleNumber.size() >= 4
+        && (!('bidderUid' in request.resource.data) || request.resource.data.bidderUid == request.auth.uid);
       allow update: if isAdmin() || (
         signedIn() && resource.data.bidderUid == request.auth.uid
+      ) || (
+        signedIn()
+        && exists(/databases/$(database)/documents/loads/$(resource.data.loadId))
+        && (
+          get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.posterUid == request.auth.uid
+          || get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerUid == request.auth.uid
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
       );
       allow delete: if false;
     }

@@ -16,7 +16,7 @@ import { auth, db, signInGoogle, signOutUser, completeGoogleRedirect, explainAut
 import {
   VEHICLES,
   formatMmSs,
-  loopRemaining,
+  remainingUntil,
   vehicleSrc,
   vehiclesFor,
 } from "./booking-common.js";
@@ -37,11 +37,15 @@ const sizeFilter = document.getElementById("size-filter");
 let currentUser = null;
 let profile = null;
 let customerUnsub = null;
+let customerUnsub2 = null;
 let myBidsUnsub = null;
+let allBidsUnsub = null;
 let openLoadsUnsub = null;
 let wonLoadsUnsub = null;
 let openLoads = [];
 let wonLoads = [];
+let myLoads = new Map();
+let bidsByLoad = new Map();
 const loadTimers = new Map();
 let adminUnsubs = [];
 let adminLoads = [];
@@ -109,8 +113,9 @@ function startLoadTimer(el, endsAt, booked) {
       el.classList.add("is-booked");
       return;
     }
-    el.textContent = formatMmSs(loopRemaining(endsAt).remaining);
-    el.classList.remove("is-booked");
+    const rem = remainingUntil(endsAt);
+    el.textContent = rem > 0 ? formatMmSs(rem) : "Ended";
+    el.classList.toggle("is-booked", rem <= 0);
   };
   tick();
   loadTimers.set(el, setInterval(tick, 250));
@@ -211,34 +216,10 @@ async function publishPendingTransporter(user) {
 }
 
 function paintLoggedOutGate() {
-  const hasC = !!pendingCustomer();
-  const hasT = !!pendingTransporter();
-  if (params.get("next") === "transporter" && hasT) {
-    showGate(
-      "Complete Verify truck with Google",
-      "Your KYC details are ready. Continue with Google to save them and start seeing loads."
-    );
-  } else if (hasC || params.get("next") === "customer") {
-    showGate(
-      "Save this booking to your profile",
-      "Continue with Google to store your load. Track bids, accept the lowest amount, and confirm the vehicle from this profile."
-    );
-  } else if (hasT) {
-    showGate(
-      "Complete Verify truck with Google",
-      "Your KYC details are ready. Continue with Google to save them and start seeing loads."
-    );
-  } else if (params.get("next") === "transporter") {
-    showGate(
-      "Complete Verify truck first",
-      "Fill name, contact, DL number and vehicles owned on Verify truck, then return here to sign in with Google."
-    );
-  } else {
-    showGate(
-      "Sign in to open your profile",
-      "Book a truck or complete Verify truck first, then continue with Google. Details you filled stay on this profile."
-    );
-  }
+  showGate(
+    "Login with Google",
+    "Sign in to see loads you posted, the lowest bid on each, accept or reject, and to bid on the live 30-minute market. You cannot bid on a load you posted."
+  );
 }
 
 function showGateError(err) {
@@ -270,7 +251,9 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
     if (customerUnsub) customerUnsub();
+    if (customerUnsub2) customerUnsub2();
     if (myBidsUnsub) myBidsUnsub();
+    if (allBidsUnsub) allBidsUnsub();
     if (openLoadsUnsub) openLoadsUnsub();
     if (wonLoadsUnsub) wonLoadsUnsub();
     stopAdmin();
@@ -291,13 +274,6 @@ onAuthStateChanged(auth, async (user) => {
       });
     }
     profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
-    if (params.get("next") === "transporter" && !profile.kycComplete && !isAdminUser(user, profile)) {
-      showGate(
-        "Complete Verify truck first",
-        "Fill your transporter details on Verify truck before Google login. Sign out and complete KYC, then return."
-      );
-      return;
-    }
     renderShell();
     showApp();
   } catch (err) {
@@ -308,87 +284,96 @@ onAuthStateChanged(auth, async (user) => {
 
 function renderShell() {
   const admin = isAdminUser(currentUser, profile);
-  const kyc = Boolean(profile.kycComplete || profile.role === "transporter");
   document.getElementById("profile-name").textContent =
     profile.name || currentUser.displayName || "Member";
-  document.getElementById("profile-role").textContent = admin
-    ? "Admin"
-    : kyc
-      ? "Verified transporter"
-      : "Load party";
+  document.getElementById("profile-role").textContent = admin ? "Admin" : "Member";
   document.getElementById("profile-email").textContent = currentUser.email || "";
   document.getElementById("customer-panel").hidden = false;
   document.getElementById("my-bids-panel").hidden = false;
-  document.getElementById("transporter-panel").hidden = !kyc;
+  document.getElementById("transporter-panel").hidden = false;
   document.getElementById("admin-panel").hidden = !admin;
-  renderDetails(kyc);
+  const phoneInput = document.getElementById("profile-phone");
+  if (phoneInput) phoneInput.value = profile.phone || "";
+  renderDetails();
   listenCustomerLoads();
+  listenAllBids();
   listenMyBids();
-  if (kyc) {
-    fillSizeFilter();
-    listenBoard();
-  } else if (openLoadsUnsub) {
-    openLoadsUnsub();
-    openLoadsUnsub = null;
-    if (wonLoadsUnsub) wonLoadsUnsub();
-    wonLoadsUnsub = null;
-  }
+  fillSizeFilter();
+  listenBoard();
   if (admin) listenAdmin();
   else stopAdmin();
 }
 
-function renderDetails(kyc) {
+function renderDetails() {
   const box = document.getElementById("profile-details");
-  if (kyc) {
-    box.innerHTML = `
+  box.innerHTML = `
       <div class="detail-grid">
-        <div><span>Name</span><strong>${escapeHtml(profile.name || "")}</strong></div>
-        <div><span>Contact</span><strong>${escapeHtml(profile.phone || "")}</strong></div>
-        <div><span>DL number</span><strong>${escapeHtml(profile.dlNumber || "")}</strong></div>
-        <div><span>Vehicles owned</span><strong>${escapeHtml(String(profile.totalVehicles ?? ""))}</strong></div>
-      </div>`;
-  } else {
-    box.innerHTML = `
-      <div class="detail-grid">
-        <div><span>Name</span><strong>${escapeHtml(profile.name || "")}</strong></div>
+        <div><span>Name</span><strong>${escapeHtml(profile.name || currentUser.displayName || "")}</strong></div>
         <div><span>Contact</span><strong>${escapeHtml(profile.phone || "")}</strong></div>
         <div><span>Email</span><strong>${escapeHtml(profile.email || currentUser.email || "")}</strong></div>
       </div>`;
-  }
 }
 
 function listenCustomerLoads() {
   const list = document.getElementById("customer-loads");
   const panel = document.getElementById("customer-panel");
   panel.hidden = false;
-  const q = query(collection(db, "loads"), where("customerUid", "==", currentUser.uid));
+  myLoads = new Map();
+  const paint = () => paintMyLoads(list);
   if (customerUnsub) customerUnsub();
-  customerUnsub = onSnapshot(q, (snap) => {
-    if (snap.empty) {
-      list.innerHTML = `<p class="empty-note">No loads yet. Book a truck on the home page to post one.</p>`;
-      return;
-    }
-    const docs = snap.docs.sort(
-      (a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0)
-    );
-    list.innerHTML = docs.map((d) => customerLoadCard(d.id, d.data())).join("");
-    docs.forEach((d) => {
-      const data = d.data();
-      const timerEl = list.querySelector(`[data-timer="${d.id}"]`);
-      if (timerEl) startLoadTimer(timerEl, data.timerEndsAt, data.booked || data.status === "confirmed");
+  if (customerUnsub2) customerUnsub2();
+  const apply = (snap) => {
+    snap.docs.forEach((d) => myLoads.set(d.id, { id: d.id, ...d.data() }));
+    paint();
+  };
+  customerUnsub = onSnapshot(
+    query(collection(db, "loads"), where("posterUid", "==", currentUser.uid)),
+    apply,
+    () => paint()
+  );
+  customerUnsub2 = onSnapshot(
+    query(collection(db, "loads"), where("customerUid", "==", currentUser.uid)),
+    apply,
+    () => paint()
+  );
+}
+
+function listenAllBids() {
+  if (allBidsUnsub) allBidsUnsub();
+  allBidsUnsub = onSnapshot(collection(db, "bids"), (snap) => {
+    bidsByLoad = new Map();
+    snap.docs.forEach((d) => {
+      const b = { id: d.id, ...d.data() };
+      if (b.status === "rejected") return;
+      const arr = bidsByLoad.get(b.loadId) || [];
+      arr.push(b);
+      bidsByLoad.set(b.loadId, arr);
     });
-    list.querySelectorAll("[data-accept]").forEach((btn) => {
-      btn.addEventListener("click", () => acceptBid(btn.getAttribute("data-accept")));
-    });
-    list.querySelectorAll("[data-confirm]").forEach((btn) => {
-      btn.addEventListener("click", () => confirmVehicle(btn.getAttribute("data-confirm")));
-    });
-    docs.forEach((d) => {
-      const data = d.data();
-      if (data.contactReleased && data.acceptedBidId) {
-        loadReleasedContact(d.id, data.acceptedBidId);
-      }
-    });
+    bidsByLoad.forEach((arr) => arr.sort((a, b) => Number(a.amount) - Number(b.amount)));
+    paintMyLoads(document.getElementById("customer-loads"));
+    renderBoard();
+  });
+}
+
+function paintMyLoads(list) {
+  if (!list) return;
+  const docs = [...myLoads.values()].sort(
+    (a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0)
+  );
+  if (!docs.length) {
+    list.innerHTML = `<p class="empty-note">No loads on this Google account yet. Login, then book a truck on Home so the load is saved here.</p>`;
+    return;
+  }
+  list.innerHTML = docs.map((d) => customerLoadCard(d.id, d)).join("");
+  docs.forEach((d) => {
+    const timerEl = list.querySelector(`[data-timer="${d.id}"]`);
+    if (timerEl) startLoadTimer(timerEl, d.timerEndsAt, d.booked || d.status === "confirmed" || d.status === "accepted");
+  });
+  list.querySelectorAll("[data-accept]").forEach((btn) => {
+    btn.addEventListener("click", () => acceptBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
+  });
+  list.querySelectorAll("[data-reject]").forEach((btn) => {
+    btn.addEventListener("click", () => rejectBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
   });
 }
 
@@ -401,9 +386,7 @@ function listenMyBids() {
   if (myBidsUnsub) myBidsUnsub();
   myBidsUnsub = onSnapshot(q, async (snap) => {
     if (snap.empty) {
-      list.innerHTML = profile.kycComplete || profile.role === "transporter"
-        ? `<p class="empty-note">No bids yet. Place a bid from Open loads below.</p>`
-        : `<p class="empty-note">No bids yet. Complete Verify truck to bid on open loads.</p>`;
+      list.innerHTML = `<p class="empty-note">No bids yet. Place a bid from the live market below.</p>`;
       return;
     }
     const bids = snap.docs
@@ -467,19 +450,26 @@ function myBidCard(bid, load) {
 }
 
 function customerLoadCard(id, data) {
-  const v = vehicleMeta(data.bodyType, Number(data.sizeFt));
-  const lowest = data.lowestBidAmount;
-  const bids = data.bidCount || 0;
+  const v = vehicleMeta(data.bodyType, Number(data.sizeFt || data.sizeFeet));
+  const liveBids = (bidsByLoad.get(id) || []).filter((b) => b.status !== "rejected");
+  const best = liveBids[0] || null;
+  const lowest = best ? best.amount : data.lowestBidAmount;
   let actions = "";
-  if (data.status === "open" && lowest != null) {
-    actions = `<button class="submit-btn" type="button" data-accept="${id}">Accept lowest bid</button>`;
-  } else if (data.status === "accepted" && !data.contactReleased) {
-    actions = `<button class="submit-btn" type="button" data-confirm="${id}">Confirm vehicle</button>
-      <p class="field-hint">Confirm to reveal the transporter’s contact. They will not receive your number.</p>`;
-  } else if (data.contactReleased) {
-    actions = `<div class="contact-reveal" data-contact-box="${id}">Loading transporter contact…</div>`;
+  if (data.contactReleased && data.acceptedBidId) {
+    const won = liveBids.find((b) => b.id === data.acceptedBidId) || best;
+    const phone = won?.bidderPhone || won?.phone || "";
+    actions = `<div class="contact-reveal">
+      <p class="success-copy">Bid accepted — bidder contact</p>
+      <p><strong>${escapeHtml(won?.bidderName || "Bidder")}</strong><br>${escapeHtml(phone)}<br>Vehicle ${escapeHtml(won?.vehicleNumber || "—")}</p>
+    </div>`;
+  } else if (best && data.status === "open") {
+    actions = `<p class="field-hint">Best bid (lowest): ${formatInr(best.amount)} · ${escapeHtml(best.vehicleNumber || "")}</p>
+      <div class="cta-row">
+        <button class="submit-btn" type="button" data-accept="${id}" data-bid="${best.id}">Accept lowest bid</button>
+        <button class="text-btn" type="button" data-accept="${id}" data-bid="${best.id}" data-reject>Reject lowest bid</button>
+      </div>`;
   } else {
-    actions = `<p class="field-hint">Waiting for bids. Only the lowest amount will be shown.</p>`;
+    actions = `<p class="field-hint">Waiting for bids.</p>`;
   }
   return `
     <article class="load-card">
@@ -488,13 +478,13 @@ function customerLoadCard(id, data) {
         <div>
           <strong>${escapeHtml(data.vehicleName || v.name)}</strong>
           <p>${escapeHtml(data.loadingLocation)} → ${escapeHtml(data.unloadingLocation)}</p>
-          <p>${escapeHtml(String(data.sizeFt))} ft · ${bodyLabel(data.bodyType)} · ${escapeHtml(String(data.tonnage))} T</p>
+          <p>${escapeHtml(String(data.sizeFt || data.sizeFeet || "—"))} ft · ${bodyLabel(data.bodyType)} · ${escapeHtml(String(data.tonnage))} T</p>
         </div>
-        <div class="load-timer" data-timer="${id}">10:00</div>
+        <div class="load-timer" data-timer="${id}">30:00</div>
       </div>
       <dl class="bid-stats">
-        <div><dt>Total bids</dt><dd>${bids}</dd></div>
-        <div><dt>Lowest bid</dt><dd>${lowest == null ? "None yet" : formatInr(lowest)}</dd></div>
+        <div><dt>Total bids</dt><dd>${liveBids.length || data.bidCount || 0}</dd></div>
+        <div><dt>Best bid</dt><dd>${lowest == null ? "None yet" : formatInr(lowest)}</dd></div>
         <div><dt>Status</dt><dd>${escapeHtml(statusLabel(data))}</dd></div>
       </dl>
       ${actions}
@@ -502,43 +492,24 @@ function customerLoadCard(id, data) {
 }
 
 function statusLabel(data) {
-  if (data.contactReleased || data.status === "confirmed") return "Vehicle confirmed";
-  if (data.status === "accepted") return "Bid accepted — confirm vehicle";
+  if (data.contactReleased || data.status === "confirmed" || data.status === "accepted") return "Bid accepted";
   if (data.booked) return "Booked";
-  return "Finding truck";
+  return "Open";
 }
 
-async function loadReleasedContact(loadId, bidId) {
-  if (!bidId) return;
-  try {
-    const bid = await getDoc(doc(db, "bids", bidId));
-    const box = document.querySelector(`[data-contact-box="${loadId}"]`);
-    if (!box || !bid.exists()) return;
-    const b = bid.data();
-    box.innerHTML = `<p class="success-copy">Transporter contact</p>
-      <p><strong>${escapeHtml(b.bidderName)}</strong><br>${escapeHtml(b.bidderPhone)}<br>Vehicle ${escapeHtml(b.vehicleNumber)}</p>`;
-  } catch {
-    /* still locked until confirm */
-  }
-}
-
-async function acceptBid(loadId) {
-  const load = (await getDoc(doc(db, "loads", loadId))).data();
-  if (!load?.lowestBidId) return;
+async function acceptBid(loadId, bidId) {
+  const load = myLoads.get(loadId) || (await getDoc(doc(db, "loads", loadId))).data();
+  const chosenId = bidId || load?.lowestBidId;
+  if (!chosenId) return;
+  const bidSnap = await getDoc(doc(db, "bids", chosenId));
+  const bid = bidSnap.exists() ? bidSnap.data() : {};
   await updateDoc(doc(db, "loads", loadId), {
     status: "accepted",
-    acceptedBidId: load.lowestBidId,
-    acceptedBidderUid: load.lowestBidderUid,
-  });
-}
-
-async function confirmVehicle(loadId) {
-  const loadSnap = await getDoc(doc(db, "loads", loadId));
-  const load = loadSnap.data();
-  await updateDoc(doc(db, "loads", loadId), {
-    status: "confirmed",
+    acceptedBidId: chosenId,
+    acceptedBidderUid: bid.bidderUid || load.lowestBidderUid || null,
     booked: true,
     contactReleased: true,
+    bookedAt: serverTimestamp(),
   });
   if (load?.leadId) {
     try {
@@ -548,9 +519,22 @@ async function confirmVehicle(loadId) {
         bookedAt: serverTimestamp(),
       });
     } catch {
-      /* VIP lead may already be booked */
+      /* VIP may already have marked it */
     }
   }
+}
+
+async function rejectBid(loadId, bidId) {
+  if (!bidId) return;
+  await updateDoc(doc(db, "bids", bidId), { status: "rejected" });
+  const rest = (bidsByLoad.get(loadId) || []).filter((b) => b.id !== bidId && b.status !== "rejected");
+  const next = rest[0];
+  await updateDoc(doc(db, "loads", loadId), {
+    lowestBidAmount: next ? Number(next.amount) : null,
+    lowestBidderUid: next?.bidderUid || null,
+    lowestBidId: next ? next.id : null,
+    bidCount: rest.length,
+  });
 }
 
 function listenBoard() {
@@ -568,23 +552,35 @@ function listenBoard() {
   });
 }
 
+function isOwnLoad(load) {
+  return Boolean(currentUser && (
+    load.posterUid === currentUser.uid || load.customerUid === currentUser.uid
+  ));
+}
+
+function isLiveLoad(load) {
+  return load.status === "open" && !load.booked && remainingUntil(load.timerEndsAt) > 0;
+}
+
 function renderBoard() {
   const list = document.getElementById("load-board");
+  if (!list || !sizeFilter) return;
   const size = sizeFilter.value;
   const byId = new Map();
   [...openLoads, ...wonLoads].forEach((d) => byId.set(d.id, d));
   const docs = [...byId.values()]
-    .filter((d) => size === "all" || Number(d.sizeFt) === Number(size))
-    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    .filter((d) => isLiveLoad(d) || d.acceptedBidderUid === currentUser?.uid)
+    .filter((d) => size === "all" || Number(d.sizeFt || d.sizeFeet) === Number(size))
+    .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
   if (!docs.length) {
-    list.innerHTML = `<p class="empty-note">No matching loads right now. Try another size.</p>`;
+    list.innerHTML = `<p class="empty-note">No live loads in this 30-minute window.</p>`;
     return;
   }
   Promise.all(docs.map((d) => renderTransporterCard(d))).then((html) => {
     list.innerHTML = html.join("");
     docs.forEach((d) => {
       const timerEl = list.querySelector(`[data-timer="${d.id}"]`);
-      if (timerEl) startLoadTimer(timerEl, d.timerEndsAt, d.booked || d.status === "confirmed");
+      if (timerEl) startLoadTimer(timerEl, d.timerEndsAt, d.booked || d.status === "confirmed" || d.status === "accepted");
     });
     list.querySelectorAll(".bid-form").forEach((form) => {
       form.addEventListener("submit", onPlaceBid);
@@ -614,7 +610,10 @@ async function renderTransporterCard(load) {
     rankHtml = `<p class="field-hint">Place a bid. If a competitor undercuts you, their amount shows as #1 and yours as #2.</p>`;
   }
 
-  const canBid = load.status === "open";
+  const canBid = load.status === "open" && isLiveLoad(load) && !isOwnLoad(load);
+  const ownNote = isOwnLoad(load)
+    ? `<p class="field-hint">You posted this load. Bid from someone else — you cannot bid on your own load.</p>`
+    : "";
   return `
     <article class="load-card">
       <div class="load-card-top">
@@ -622,11 +621,12 @@ async function renderTransporterCard(load) {
         <div>
           <strong>${escapeHtml(load.vehicleName || v.name)}</strong>
           <p>${escapeHtml(load.loadingLocation)} → ${escapeHtml(load.unloadingLocation)}</p>
-          <p>${escapeHtml(String(load.sizeFt))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage))} T</p>
+          <p>${escapeHtml(String(load.sizeFt || load.sizeFeet || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage))} T</p>
         </div>
-        <div class="load-timer" data-timer="${load.id}">10:00</div>
+        <div class="load-timer" data-timer="${load.id}">30:00</div>
       </div>
       ${rankHtml}
+      ${ownNote}
       ${canBid ? bidFormHtml(load, myBid) : ""}
     </article>`;
 }
@@ -668,14 +668,17 @@ async function onPlaceBid(e) {
   const loadSnap = await getDoc(loadRef);
   const load = loadSnap.data();
   if (!load || load.status !== "open") return;
+  if (isOwnLoad(load)) return;
   const bidId = `${loadId}_${currentUser.uid}`;
   const bidRef = doc(db, "bids", bidId);
   const prev = await getDoc(bidRef);
+  const phone = String(fd.get("bidderPhone")).trim();
   const payload = {
     loadId,
     bidderUid: currentUser.uid,
     bidderName: String(fd.get("bidderName")).trim(),
-    bidderPhone: String(fd.get("bidderPhone")).trim(),
+    bidderPhone: phone,
+    phone,
     vehicleNumber: String(fd.get("vehicleNumber")).trim().toUpperCase(),
     amount,
     updatedAt: serverTimestamp(),
@@ -776,7 +779,7 @@ function renderAdminBoard() {
               <p>Load party phone: <strong>${escapeHtml(phone)}</strong></p>
               <p class="admin-stamp">Posted ${formatStamp(load.createdAt)}${load.bookedAt ? ` · Booked ${formatStamp(load.bookedAt)}` : ""}</p>
             </div>
-            <div class="load-timer${booked ? " is-booked" : ""}">${booked ? "Booked" : formatMmSs(loopRemaining(load.timerEndsAt || Date.now()).remaining)}</div>
+            <div class="load-timer${booked ? " is-booked" : ""}">${booked ? "Booked" : formatMmSs(remainingUntil(load.timerEndsAt))}</div>
           </div>
           <ul class="admin-bids">${bidHtml}</ul>
         </article>`;
@@ -796,7 +799,7 @@ function renderAdminBoard() {
             <p>Phone: <strong>${escapeHtml(lead.contactPhone || "—")}</strong></p>
             <p class="admin-stamp">Posted ${formatStamp(lead.createdAt || lead.createdAtMs)}${lead.bookedAt ? ` · Booked ${formatStamp(lead.bookedAt)}` : ""}</p>
           </div>
-          <div class="load-timer${lead.booked ? " is-booked" : ""}">${lead.booked ? "Booked" : formatMmSs(loopRemaining(lead.timerEndsAt || Date.now()).remaining)}</div>
+          <div class="load-timer${lead.booked ? " is-booked" : ""}">${lead.booked ? "Booked" : formatMmSs(remainingUntil(lead.timerEndsAt))}</div>
         </div>
         ${lead.booked ? `<p class="admin-ok">Vehicle booked</p>` : `<button type="button" class="submit-btn" data-admin-lead="${lead.id}">Mark booked</button>`}
       </article>`).join("");
@@ -839,6 +842,16 @@ async function adminMarkLead(leadId) {
     /* already booked */
   }
 }
+
+document.getElementById("phone-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const phone = document.getElementById("profile-phone").value.trim();
+  if (!currentUser) return;
+  if (phone && !/^\d{10}$/.test(phone)) return;
+  await mergeProfile(currentUser.uid, { phone });
+  profile = { ...profile, phone };
+  renderDetails();
+});
 
 completeGoogleRedirect().catch((err) => {
   paintLoggedOutGate();

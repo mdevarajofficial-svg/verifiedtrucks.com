@@ -3,7 +3,7 @@
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
 Live: https://verifiedtrucks-20.web.app  
 
-Public homepage posts loads straight to Firestore (no Google, no browser storage). Verify truck shows live loads for 10 minutes so transporters can bid with phone and vehicle number. VIP (`/vip.html`, code `Deva@2001`) marks a request booked.
+Each Google account sees posted loads, the lowest bid (accept/reject), a 30-minute live market, and can bid on any load except their own.
 
 ## Run locally
 
