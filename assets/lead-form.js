@@ -28,6 +28,76 @@ const measureValue = document.getElementById("measure-value");
 const measureSlider = document.getElementById("measure-slider");
 const modelSelect = document.getElementById("vehicle-model");
 const modelPicks = document.getElementById("model-picks");
+const truckPreview = document.getElementById("truck-preview");
+
+const STEPS = [
+  { id: "loading-location", ready: (v) => v.length >= 2 },
+  { id: "unloading-location", ready: (v) => v.length >= 2 },
+  { id: "size-feet", ready: (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 7 && n <= 40;
+  } },
+  { id: "body-type", ready: (v) => v === "open" || v === "container" },
+  { id: "vehicle-model", ready: (v) => Boolean(v) },
+  { id: "tonnage", ready: (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 1 && n <= 100;
+  } },
+  { id: "contact-name", ready: (v) => v.length >= 2 },
+  { id: "contact-phone", ready: (v) => /^\d{10}$/.test(v) },
+];
+
+const stepTimers = new Map();
+
+function stepEl(id) {
+  return document.querySelector(`[data-step="${id}"]`);
+}
+
+function fieldReady(step) {
+  return step.ready(value(step.id));
+}
+
+function openStep(id, focus) {
+  const wrap = stepEl(id);
+  if (!wrap) return;
+  const wasClosed = !wrap.classList.contains("is-open");
+  wrap.classList.add("is-open");
+  if (id === "size-feet" && truckPreview) truckPreview.classList.remove("is-waiting");
+  if (focus && wasClosed) {
+    const field = document.getElementById(id);
+    requestAnimationFrame(() => field?.focus());
+  }
+}
+
+function refreshSteps(focusNext) {
+  let blocked = false;
+  STEPS.forEach((step, index) => {
+    if (index === 0) {
+      openStep(step.id, false);
+      if (!fieldReady(step)) blocked = true;
+      return;
+    }
+    if (blocked) return;
+    openStep(step.id, focusNext);
+    if (!fieldReady(step)) blocked = true;
+  });
+  const allReady = STEPS.every(fieldReady);
+  submitBtn.hidden = !allReady;
+}
+
+function scheduleAdvance(id) {
+  clearTimeout(stepTimers.get(id));
+  const step = STEPS.find((s) => s.id === id);
+  if (!step || !fieldReady(step)) return;
+  const delay = id === "body-type" || id === "vehicle-model" ? 80 : 450;
+  const timer = setTimeout(() => refreshSteps(true), delay);
+  stepTimers.set(id, timer);
+}
+
+function advanceNow(id) {
+  clearTimeout(stepTimers.get(id));
+  refreshSteps(true);
+}
 
 let tickId = null;
 let leadUnsub = null;
@@ -51,13 +121,17 @@ function selectedVehicle(list) {
 
 function updateTruckPreview() {
   const bodyType = bodyInput.value || "open";
-  const feet = Math.max(7, Math.min(MEASURE_MAX_FT, Number(sizeInput.value) || 10));
-  sizeInput.value = String(feet);
+  const typedSize = Number(sizeInput.value);
+  const hasSize = Number.isFinite(typedSize) && typedSize >= 7;
+  const feet = Math.max(7, Math.min(MEASURE_MAX_FT, hasSize ? typedSize : 10));
+  if (hasSize) sizeInput.value = String(feet);
   if (measureSlider) measureSlider.value = String(feet);
   const list = vehiclesFor(feet, bodyType);
   const prev = modelSelect.value;
-  modelSelect.innerHTML = list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
+  modelSelect.innerHTML = `<option value="" disabled>Select a vehicle</option>` +
+    list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
   if (list.some((v) => v.id === prev)) modelSelect.value = prev;
+  else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
   truckImage.src = vehicleSrc(vehicle, bodyType);
@@ -131,20 +205,48 @@ function watchLead(id) {
   });
 }
 
-sizeInput.addEventListener("input", updateTruckPreview);
-bodyInput.addEventListener("change", updateTruckPreview);
-modelSelect.addEventListener("change", updateTruckPreview);
+sizeInput.addEventListener("blur", () => advanceNow("size-feet"));
+bodyInput.addEventListener("change", () => {
+  updateTruckPreview();
+  advanceNow("body-type");
+});
+modelSelect.addEventListener("change", () => {
+  updateTruckPreview();
+  advanceNow("vehicle-model");
+});
 modelPicks.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-id]");
   if (!btn) return;
   modelSelect.value = btn.dataset.id;
   updateTruckPreview();
+  advanceNow("vehicle-model");
 });
 measureSlider.addEventListener("input", () => {
   sizeInput.value = measureSlider.value;
   updateTruckPreview();
+  openStep("size-feet", false);
+  scheduleAdvance("size-feet");
 });
+
+["loading-location", "unloading-location", "tonnage", "contact-name", "contact-phone"].forEach((id) => {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => scheduleAdvance(id));
+  el.addEventListener("blur", () => advanceNow(id));
+});
+
+form.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+  const id = e.target.id;
+  const step = STEPS.find((s) => s.id === id);
+  if (!step) return;
+  if (id !== "contact-phone" || !fieldReady(step)) {
+    e.preventDefault();
+    advanceNow(id);
+  }
+});
+
 updateTruckPreview();
+refreshSteps(false);
 setStopwatch(stopwatch, TEN_MIN, false, false);
 
 const savedId = sessionStorage.getItem("vtLeadId");

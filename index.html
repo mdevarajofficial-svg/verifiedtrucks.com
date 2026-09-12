@@ -53,27 +53,31 @@
       <div class="lead-form-container" id="book">
         <h2 id="form-heading">Book a truck</h2>
         <form id="lead-form" novalidate>
-          <div class="form-field">
-            <label for="loading-location">
-              <svg class="field-icon icon-load" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 20V6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-                <path d="M6 11l6-6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Loading location
-            </label>
-            <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
+          <div class="form-step is-open" data-step="loading-location">
+            <div class="form-field">
+              <label for="loading-location">
+                <svg class="field-icon icon-load" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 20V6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M6 11l6-6 6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Loading location
+              </label>
+              <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
+            </div>
           </div>
-          <div class="form-field">
-            <label for="unloading-location">
-              <svg class="field-icon icon-unload" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 4v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-                <path d="M18 13l-6 6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Unloading location
-            </label>
-            <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
+          <div class="form-step" data-step="unloading-location">
+            <div class="form-field">
+              <label for="unloading-location">
+                <svg class="field-icon icon-unload" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 4v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M18 13l-6 6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Unloading location
+              </label>
+              <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" enterkeyhint="next" placeholder="City or area" />
+            </div>
           </div>
-          <div class="form-row">
+          <div class="form-step" data-step="size-feet">
             <div class="form-field">
               <label for="size-feet">
                 <svg class="field-icon icon-size" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -81,8 +85,44 @@
                 </svg>
                 Size (feet)
               </label>
-              <input type="number" id="size-feet" name="sizeFeet" required min="7" max="40" step="1" value="10" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 10" />
+              <input type="number" id="size-feet" name="sizeFeet" required min="7" max="40" step="1" inputmode="numeric" enterkeyhint="next" placeholder="e.g. 10" />
             </div>
+          </div>
+          <div class="form-step" data-step="body-type">
+            <div class="form-field">
+              <label for="body-type">
+                <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
+                  <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
+                </svg>
+                Open or container
+              </label>
+              <select id="body-type" name="bodyType" required>
+                <option value="" selected disabled>Select body type</option>
+                <option value="open">Open</option>
+                <option value="container">Container</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-step" data-step="vehicle-model">
+            <div class="form-field">
+              <label for="vehicle-model">
+                <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
+                  <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
+                </svg>
+                Vehicle model
+              </label>
+              <select id="vehicle-model" name="vehicleModel" required>
+                <option value="" selected disabled>Select a vehicle</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-step" data-step="tonnage">
             <div class="form-field">
               <label for="tonnage">
                 <svg class="field-icon icon-weight" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -94,53 +134,30 @@
               <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 9" />
             </div>
           </div>
-          <div class="form-field">
-            <label for="body-type">
-              <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
-                <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
-                <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
-              </svg>
-              Open or container
-            </label>
-            <select id="body-type" name="bodyType" required>
-              <option value="open">Open</option>
-              <option value="container">Container</option>
-            </select>
+          <div class="form-step" data-step="contact-name">
+            <div class="form-field">
+              <label for="contact-name">
+                <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Contact name
+              </label>
+              <input type="text" id="contact-name" name="contactName" required autocomplete="name" enterkeyhint="next" placeholder="Your name" />
+            </div>
           </div>
-          <div class="form-field">
-            <label for="vehicle-model">
-              <svg class="field-icon icon-body" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="8" width="13" height="8" rx="1.2" stroke="currentColor" stroke-width="2"/>
-                <path d="M16 11h3.5L21 14v2h-5v-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                <circle cx="7.5" cy="17.5" r="1.6" fill="currentColor"/>
-                <circle cx="17.5" cy="17.5" r="1.6" fill="currentColor"/>
-              </svg>
-              Vehicle model
-            </label>
-            <select id="vehicle-model" name="vehicleModel" required></select>
+          <div class="form-step" data-step="contact-phone">
+            <div class="form-field">
+              <label for="contact-phone">
+                <svg class="field-icon icon-phone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 3.8h3.2l1 3.2-2 1.4a12 12 0 006.4 6.4l1.4-2 3.2 1V17c0 1.2-1 2.2-2.2 2.2C9.6 19.2 4.8 14.4 4.8 8 4.8 6.8 5.8 5.8 7 5.8V3.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                Contact number
+              </label>
+              <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+            </div>
           </div>
-          <div class="form-field">
-            <label for="contact-name">
-              <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
-                <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              Contact name
-            </label>
-            <input type="text" id="contact-name" name="contactName" required autocomplete="name" enterkeyhint="next" placeholder="Your name" />
-          </div>
-          <div class="form-field">
-            <label for="contact-phone">
-              <svg class="field-icon icon-phone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M7 3.8h3.2l1 3.2-2 1.4a12 12 0 006.4 6.4l1.4-2 3.2 1V17c0 1.2-1 2.2-2.2 2.2C9.6 19.2 4.8 14.4 4.8 8 4.8 6.8 5.8 5.8 7 5.8V3.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              </svg>
-              Contact number
-            </label>
-            <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
-          </div>
-          <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
+          <button type="submit" class="submit-btn" id="submit-btn" hidden>Book truck</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
         <div id="status-card" class="status-card" hidden>
@@ -149,7 +166,7 @@
         </div>
       </div>
 
-      <div class="preview">
+      <div class="preview is-waiting" id="truck-preview">
         <div class="truck-stage">
           <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" />
           <p id="truck-caption" class="truck-caption">10 ft · Tata Intra V70</p>

@@ -201,6 +201,35 @@ header {
   gap: 12px;
 }
 
+.form-step {
+  display: none;
+}
+
+.form-step.is-open {
+  display: block;
+  animation: step-in 0.28s ease;
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.preview.is-waiting .model-picks,
+.preview.is-waiting .measure {
+  display: none;
+}
+
+.preview.is-waiting .truck-image {
+  opacity: 0.55;
+}
+
 .form-field {
   margin-bottom: 16px;
 }
@@ -254,6 +283,12 @@ header {
 .form-field select:focus {
   outline: none;
   border-color: #000;
+}
+
+#submit-btn[hidden] {
+  display: none !important;
+  position: static;
+  box-shadow: none;
 }
 
 .submit-btn {
