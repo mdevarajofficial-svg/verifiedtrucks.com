@@ -207,17 +207,54 @@ form.addEventListener("submit", async (e) => {
     });
     sessionStorage.setItem("vtLeadId", ref.id);
     sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
-    form.hidden = true;
-    document.getElementById("form-heading").hidden = true;
-    statusCard.hidden = false;
-    statusTitle.textContent = "Truck will be found within 10 minutes";
-    statusCopy.textContent = "Stay on this number. The timer is counting down while we assign a vehicle.";
-    startCountdown(endsAt);
-    watchLead(ref.id);
+    sessionStorage.setItem("vtPendingCustomer", JSON.stringify({
+      leadId: ref.id,
+      loadingLocation,
+      unloadingLocation,
+      sizeFt: Number(sizeFeet),
+      bodyType,
+      tonnage,
+      contactName,
+      contactPhone,
+      vehicleName: vehicle.name,
+      timerEndsAt: endsAt,
+    }));
+    window.location.href = "/profile.html?next=customer";
   } catch (err) {
     console.error(err);
     showMessage("Something went wrong. Please try again.", "error");
     submitBtn.disabled = false;
     submitBtn.textContent = "Book truck";
   }
+});
+
+const kycForm = document.getElementById("kyc-form");
+const kycSubmit = document.getElementById("kyc-submit");
+const kycMessage = document.getElementById("kyc-message");
+
+kycForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = value("kyc-name");
+  const phone = value("kyc-phone");
+  const dlNumber = value("kyc-dl").toUpperCase();
+  const totalVehicles = value("kyc-vehicles");
+  kycMessage.className = "form-message";
+  if (!name || !phone || !dlNumber || !totalVehicles) {
+    kycMessage.textContent = "Please fill in all transporter details.";
+    kycMessage.className = "form-message error";
+    return;
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    kycMessage.textContent = "Please enter a valid 10-digit phone number.";
+    kycMessage.className = "form-message error";
+    return;
+  }
+  kycSubmit.disabled = true;
+  sessionStorage.setItem("vtPendingTransporter", JSON.stringify({
+    name,
+    phone,
+    dlNumber,
+    totalVehicles: Number(totalVehicles),
+  }));
+  window.location.href = "/profile.html?next=transporter";
 });

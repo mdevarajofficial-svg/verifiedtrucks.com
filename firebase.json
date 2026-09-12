@@ -8,6 +8,14 @@
     ],
     "rewrites": [
       {
+        "source": "/profile",
+        "destination": "/profile.html"
+      },
+      {
+        "source": "/vip",
+        "destination": "/vip.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

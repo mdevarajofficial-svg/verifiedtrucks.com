@@ -735,7 +735,8 @@ header {
     font-size: 0.875rem;
   }
 
-  .submit-btn {
+  #lead-form .submit-btn,
+  #kyc-form .submit-btn {
     position: sticky;
     bottom: max(12px, env(safe-area-inset-bottom));
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
@@ -754,5 +755,265 @@ header {
 @media (max-width: 400px) {
   .ten-mark-line {
     font-size: 1.28rem;
+  }
+}
+
+.verify-kyc {
+  margin: 48px 0 8px;
+}
+
+.verify-kyc .lead-form-container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.section-lead {
+  margin: 0 0 20px;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.google-btn {
+  width: 100%;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f1f1f;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.google-btn:hover {
+  background: #f8f9fa;
+}
+
+.google-icon {
+  display: inline-flex;
+}
+
+.text-btn {
+  border: 0;
+  background: none;
+  color: #0f766e;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.profile-page h1,
+.profile-page h2 {
+  font-family: Outfit, sans-serif;
+}
+
+.profile-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.profile-role {
+  margin: 0;
+  color: #0f766e;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-email {
+  margin: 4px 0 0;
+  color: #555;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.detail-grid span {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.profile-section {
+  margin: 28px 0;
+}
+
+.filter-bar {
+  margin: 0 0 16px;
+  max-width: 240px;
+}
+
+.filter-bar select,
+.bid-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.field-hint {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.empty-note {
+  color: #555;
+}
+
+.load-list {
+  display: grid;
+  gap: 16px;
+}
+
+.load-card {
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.load-card-top {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.load-card-top img {
+  width: 96px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.load-card-top p {
+  margin: 4px 0 0;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.load-timer {
+  font-family: Outfit, sans-serif;
+  font-weight: 800;
+  color: #0f766e;
+  min-width: 64px;
+  text-align: right;
+}
+
+.load-timer.is-booked {
+  color: #16a34a;
+}
+
+.bid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.bid-stats dt {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.bid-stats dd {
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+
+.bid-rank {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.bid-rank li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.bid-rank li span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.bid-rank li.is-you {
+  font-weight: 700;
+}
+
+.bid-rank li.is-you span {
+  background: #0f766e;
+}
+
+.win-banner {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.success-copy {
+  color: #065f46;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.bid-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.contact-reveal {
+  padding: 12px;
+  background: #f0fdfa;
+  border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+  .detail-grid,
+  .bid-form .form-row,
+  .bid-stats,
+  .load-card-top {
+    grid-template-columns: 1fr;
+  }
+
+  .load-timer {
+    text-align: left;
   }
 }
