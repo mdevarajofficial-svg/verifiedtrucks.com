@@ -15,8 +15,17 @@ body {
   overflow-x: clip;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 body.nav-lock {
   overflow: hidden;
+}
+
+.nav-scrim {
+  display: none;
 }
 
 header {
@@ -50,6 +59,7 @@ header {
   height: 36px;
   object-fit: contain;
   flex-shrink: 0;
+  max-width: 36px;
 }
 
 .site-nav {
@@ -986,35 +996,74 @@ header {
 
   .site-nav {
     display: none;
+    position: fixed;
+    top: var(--header-h, 64px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1001;
     flex-direction: column;
     align-items: stretch;
     width: 100%;
-    margin: 8px 0 0;
-    padding: 4px 0 8px;
-    gap: 4px;
-    overflow: visible;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 14px calc(28px + env(safe-area-inset-bottom));
+    gap: 6px;
+    box-sizing: border-box;
+    background: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
   }
 
   header.is-nav-open .site-nav {
     display: flex;
   }
 
+  .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: rgba(15, 23, 42, 0.42);
+    cursor: pointer;
+  }
+
+  .nav-scrim[hidden] {
+    display: none;
+  }
+
   .site-nav a {
     width: 100%;
     min-height: 48px;
     padding: 12px 14px;
-    font-size: 1rem;
+    font-size: 1.05rem;
     border-radius: 10px;
     background: #f8fafa;
+    box-sizing: border-box;
+    white-space: normal;
   }
 
   .nav-toggle {
     display: inline-flex;
+    flex-shrink: 0;
+    z-index: 1002;
   }
 
   header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
+    gap: 8px;
+  }
+
+  .header-brand {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .model-picks {
@@ -1069,15 +1118,49 @@ header {
     font-size: 1rem;
   }
 
+  .site-footer {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .site-footer nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
   .site-footer a {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: 8px 10px;
   }
 
   .vip-card {
     padding: 12px;
+  }
+
+  .profile-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-bar {
+    max-width: none;
+  }
+
+  .load-card,
+  .admin-card,
+  .contact-reveal {
+    overflow-wrap: anywhere;
+  }
+
+  .bid-rank li {
+    flex-wrap: wrap;
+  }
+
+  .text-btn {
+    align-self: flex-start;
   }
 }
 
