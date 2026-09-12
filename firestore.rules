@@ -23,7 +23,12 @@ service cloud.firestore {
         && request.resource.data.unloadingLocation is string
         && request.resource.data.contactName is string
         && request.resource.data.contactPhone is string;
-      allow read, update, delete: if false;
+      allow read: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['booked', 'bookedAt', 'status'])
+        && request.resource.data.booked == true
+        && request.resource.data.status == 'booked';
+      allow delete: if false;
     }
 
     // Outbound email queue (Firebase Trigger Email extension reads /mail)

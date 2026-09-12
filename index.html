@@ -17,85 +17,89 @@
   <link rel="stylesheet" href="/assets/marketing.css" />
 </head>
 <body>
+  <canvas id="confetti"></canvas>
   <header>
     <a href="/" class="header-brand" aria-label="Verified Trucks home">
       <img src="/assets/logo-128.png" alt="" width="36" height="36" decoding="async" />
       Verified Trucks
     </a>
+    <a href="/vip.html" class="header-link">VIP</a>
   </header>
 
-  <section class="hero">
-    <h1>Book truck in Just 10 Minutes</h1>
+  <main class="page">
+    <h1 class="hero-title">Book truck in Just 10 Minutes</h1>
 
-    <div class="attraction" aria-hidden="true">
-      <img class="truck-image" src="/assets/hero-truck.png" alt="" width="840" height="472" decoding="async" />
-      <div class="stopwatch">
-        <svg viewBox="0 0 200 232" role="img">
-          <title>10 minute timer</title>
-          <rect x="88" y="8" width="24" height="18" rx="4" fill="#111" />
-          <rect x="148" y="36" width="22" height="10" rx="3" transform="rotate(40 148 36)" fill="#111" />
-          <circle cx="100" cy="120" r="84" fill="#111" />
-          <circle cx="100" cy="120" r="74" fill="#fff" stroke="#e5e5e5" stroke-width="2" />
-          <g fill="#111">
-            <circle cx="100" cy="54" r="3" />
-            <circle cx="166" cy="120" r="3" />
-            <circle cx="100" cy="186" r="3" />
-            <circle cx="34" cy="120" r="3" />
-          </g>
-          <text x="100" y="116" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#111">10:00</text>
-          <text x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
-          <line class="stopwatch-hand" x1="100" y1="120" x2="100" y2="62" stroke="#c2410c" stroke-width="3" stroke-linecap="round" />
-          <circle cx="100" cy="120" r="6" fill="#c2410c" />
-        </svg>
-      </div>
-    </div>
-
-    <div class="lead-form-container">
-      <h2 id="form-heading">Book a truck</h2>
-      <form id="lead-form" novalidate>
-        <div class="form-field">
-          <label for="loading-location">Loading location</label>
-          <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" placeholder="City or area" />
-        </div>
-        <div class="form-field">
-          <label for="unloading-location">Unloading location</label>
-          <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" placeholder="City or area" />
-        </div>
-        <div class="form-row">
+    <div class="booking">
+      <div class="lead-form-container">
+        <h2 id="form-heading">Book a truck</h2>
+        <form id="lead-form" novalidate>
           <div class="form-field">
-            <label for="size-feet">Size (feet)</label>
-            <input type="number" id="size-feet" name="sizeFeet" required min="1" max="80" step="1" placeholder="e.g. 20" />
+            <label for="loading-location">Loading location</label>
+            <input type="text" id="loading-location" name="loadingLocation" required autocomplete="address-level2" placeholder="City or area" />
           </div>
           <div class="form-field">
-            <label for="tonnage">Tonnage</label>
-            <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" placeholder="e.g. 9" />
+            <label for="unloading-location">Unloading location</label>
+            <input type="text" id="unloading-location" name="unloadingLocation" required autocomplete="address-level2" placeholder="City or area" />
           </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="size-feet">Size (feet)</label>
+              <input type="number" id="size-feet" name="sizeFeet" required min="1" max="80" step="1" value="20" placeholder="e.g. 20" />
+            </div>
+            <div class="form-field">
+              <label for="tonnage">Tonnage</label>
+              <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" placeholder="e.g. 9" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="body-type">Open or container</label>
+            <select id="body-type" name="bodyType" required>
+              <option value="container">Container</option>
+              <option value="open">Open</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="contact-name">Contact name</label>
+            <input type="text" id="contact-name" name="contactName" required autocomplete="name" placeholder="Your name" />
+          </div>
+          <div class="form-field">
+            <label for="contact-phone">Contact number</label>
+            <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
+          </div>
+          <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
+          <p id="form-message" class="form-message" role="status"></p>
+        </form>
+        <div id="status-card" class="status-card" hidden>
+          <h2 id="status-title">Truck will be found within 10 minutes</h2>
+          <p id="status-copy">Stay on this number. The timer is counting down while we assign a vehicle.</p>
         </div>
-        <div class="form-field">
-          <label for="body-type">Open or container</label>
-          <select id="body-type" name="bodyType" required>
-            <option value="">Select</option>
-            <option value="open">Open</option>
-            <option value="container">Container</option>
-          </select>
+      </div>
+
+      <div class="preview">
+        <img id="truck-image" class="truck-image" src="/assets/truck-container-medium.png" alt="Selected truck" width="840" height="472" decoding="async" />
+        <p id="truck-caption" class="truck-caption">20 ft · Container</p>
+        <div class="stopwatch" id="stopwatch">
+          <svg viewBox="0 0 200 232" role="img">
+            <title>10 minute timer</title>
+            <rect x="88" y="8" width="24" height="18" rx="4" fill="#111" />
+            <rect x="148" y="36" width="22" height="10" rx="3" transform="rotate(40 148 36)" fill="#111" />
+            <circle cx="100" cy="120" r="84" fill="#111" />
+            <circle cx="100" cy="120" r="74" fill="#fff" stroke="#e5e5e5" stroke-width="2" />
+            <g fill="#111">
+              <circle cx="100" cy="54" r="3" />
+              <circle cx="166" cy="120" r="3" />
+              <circle cx="100" cy="186" r="3" />
+              <circle cx="34" cy="120" r="3" />
+            </g>
+            <text data-time x="100" y="116" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="28" font-weight="700" fill="#111">10:00</text>
+            <text x="100" y="140" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#666">MINUTES</text>
+            <line data-hand class="stopwatch-hand" x1="100" y1="120" x2="100" y2="62" stroke="#c2410c" stroke-width="3" stroke-linecap="round" />
+            <circle cx="100" cy="120" r="6" fill="#c2410c" />
+          </svg>
         </div>
-        <div class="form-field">
-          <label for="contact-name">Contact name</label>
-          <input type="text" id="contact-name" name="contactName" required autocomplete="name" placeholder="Your name" />
-        </div>
-        <div class="form-field">
-          <label for="contact-phone">Contact number</label>
-          <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9]{10}" />
-        </div>
-        <button type="submit" class="submit-btn" id="submit-btn">Book truck</button>
-        <p id="form-message" class="form-message" role="status"></p>
-      </form>
-      <div id="success-card" class="success-card" role="status">
-        <h2>Truck will be found within 10 minutes</h2>
-        <p>We have your details. Stay on this number — we will call you shortly.</p>
       </div>
     </div>
-  </section>
+  </main>
 
   <script type="module" src="/assets/lead-form.js"></script>
 </body>

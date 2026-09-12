@@ -34,69 +34,36 @@ header {
   object-fit: contain;
 }
 
-.hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px 64px;
+.header-link {
+  color: #000;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
-.hero h1 {
-  margin: 0 0 28px;
+.header-link:hover {
+  text-decoration: underline;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 20px 72px;
+}
+
+.hero-title {
+  margin: 0 0 32px;
   font-size: clamp(1.75rem, 5vw, 2.6rem);
   font-weight: 700;
   text-align: center;
-  max-width: 640px;
   letter-spacing: -0.02em;
 }
 
-.attraction {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  flex-wrap: wrap;
-  margin-bottom: 36px;
-  width: 100%;
-  max-width: 720px;
-}
-
-.truck-image {
-  width: min(420px, 100%);
-  height: auto;
-  display: block;
-}
-
-.stopwatch {
-  width: 168px;
-  flex-shrink: 0;
-  text-align: center;
-}
-
-.stopwatch svg {
-  width: 168px;
-  height: 196px;
-  display: block;
-}
-
-.stopwatch-hand {
-  transform-box: view-box;
-  transform-origin: 100px 120px;
-  animation: sweep 60s linear infinite;
-}
-
-@keyframes sweep {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.stopwatch-label {
-  margin: 8px 0 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #444;
+.booking {
+  display: grid;
+  grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
+  gap: 40px 48px;
+  align-items: start;
 }
 
 .lead-form-container {
@@ -105,7 +72,6 @@ header {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 24px;
   width: 100%;
-  max-width: 400px;
 }
 
 .lead-form-container h2 {
@@ -194,31 +160,125 @@ header {
   color: #991b1b;
 }
 
-.success-card {
-  display: none;
-  text-align: center;
-}
-
-.success-card.is-visible {
-  display: block;
-}
-
-.success-card h2 {
+.status-card h2 {
   margin: 0 0 8px;
 }
 
-.success-card p {
+.status-card p {
   margin: 0;
   color: #333;
-  font-size: 1rem;
 }
 
-@media (max-width: 640px) {
-  .form-row {
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: sticky;
+  top: 88px;
+}
+
+.truck-image {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  display: block;
+}
+
+.truck-caption {
+  margin: 4px 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.stopwatch {
+  width: 168px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.stopwatch svg {
+  width: 168px;
+  height: 196px;
+  display: block;
+}
+
+.stopwatch-hand {
+  transform-box: view-box;
+  transform-origin: 100px 120px;
+}
+
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2000;
+  display: none;
+}
+
+#confetti.is-on {
+  display: block;
+}
+
+.vip-list {
+  display: grid;
+  gap: 16px;
+}
+
+.vip-card {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+.vip-truck {
+  width: 100%;
+  height: auto;
+}
+
+.vip-card-body p {
+  margin: 0 0 6px;
+}
+
+.vip-timer {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.vip-ok {
+  color: #065f46;
+  font-weight: 600;
+}
+
+.vip-card.is-booked {
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.vip-gate {
+  max-width: 400px;
+  margin: 48px auto 0;
+}
+
+@media (max-width: 860px) {
+  .booking {
     grid-template-columns: 1fr;
   }
 
-  .hero {
-    padding: 28px 16px 48px;
+  .preview {
+    position: static;
+  }
+
+  .form-row,
+  .vip-card {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 16px 16px 48px;
   }
 }
