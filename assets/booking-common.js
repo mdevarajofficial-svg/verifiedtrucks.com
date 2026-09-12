@@ -24,7 +24,8 @@ export const VEHICLES = [
   { id: "tata-22", name: "Tata LPT 22 ft", make: "Tata", feet: [22, 24], bodies: ["open", "container"], image: "lcv-mid" },
   { id: "eicher-3015", name: "Eicher Pro 3015", make: "Eicher", feet: [22], bodies: ["open", "container"], image: "eicher-mid" },
   { id: "eicher-3016", name: "Eicher Pro 3016", make: "Eicher", feet: [24], bodies: ["open", "container"], image: "eicher-mid" },
-  { id: "bb-1923", name: "BharatBenz 1923", make: "Bharat Benz", feet: [22, 24, 32], bodies: ["open", "container"], image: "bharat-benz" },
+  { id: "bb-1923", name: "BharatBenz 1923", make: "Bharat Benz", feet: [22, 24], bodies: ["open", "container"], image: "bharat-benz" },
+  { id: "bb-3526", name: "BharatBenz 3526R", make: "Bharat Benz", feet: [25, 26, 27, 28, 32], bodies: ["open", "container"], image: "bb-3526", defaultTonnage: 20.5, payloadT: 20.6, gvwT: 35 },
   { id: "tata-32-open", name: "Tata 32 ft open", make: "Tata", feet: [32], bodies: ["open"], image: "lcv-large" },
   { id: "tata-32-box", name: "Tata 32 ft container", make: "Tata", feet: [32], bodies: ["container"], image: "lcv-large" },
   { id: "al-32", name: "Ashok Leyland 32 ft", make: "Ashok Leyland", feet: [32], bodies: ["open", "container"], image: "lcv-large" },
@@ -72,6 +73,15 @@ export function vehiclesFor(feet, bodyType) {
     });
   });
   return topChoices(VEHICLES.filter((v) => v.feet.includes(nearest) && v.bodies.includes(body)));
+}
+
+export function vehicleCaption(vehicle, feet, bodyType) {
+  const labelType = bodyType === "open" ? "Open" : "Container";
+  const size = `${feet} ft`;
+  if (vehicle.payloadT && vehicle.gvwT) {
+    return `${size} · ${vehicle.name} · ${labelType} · ~${vehicle.payloadT} T payload (${vehicle.gvwT} T GVW)`;
+  }
+  return `${size} · ${vehicle.name} · ${labelType}`;
 }
 
 export function vehicleSrc(vehicle, bodyType) {

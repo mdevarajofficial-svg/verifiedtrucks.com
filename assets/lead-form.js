@@ -7,7 +7,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, sizeClass } from "/assets/booking-common.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const db = getFirestore(initializeApp(firebaseConfig));
@@ -29,6 +29,8 @@ const measureSlider = document.getElementById("measure-slider");
 const modelSelect = document.getElementById("vehicle-model");
 const modelPicks = document.getElementById("model-picks");
 const truckPreview = document.getElementById("truck-preview");
+const tonnageInput = document.getElementById("tonnage");
+let lastAutoTonnage = null;
 
 const STEPS = [
   { id: "loading-location", ready: (v) => v.length >= 2 },
@@ -134,8 +136,17 @@ function updateTruckPreview() {
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
   truckImage.src = vehicleSrc(vehicle, bodyType);
-  const labelType = bodyType === "open" ? "Open" : "Container";
-  truckCaption.textContent = `${feet} ft · ${vehicle.name} · ${labelType}`;
+  truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+  if (vehicle.defaultTonnage != null) {
+    const cur = tonnageInput.value.trim();
+    if (!cur || cur === String(lastAutoTonnage)) {
+      tonnageInput.value = String(vehicle.defaultTonnage);
+      lastAutoTonnage = vehicle.defaultTonnage;
+    }
+  } else if (tonnageInput.value.trim() === String(lastAutoTonnage)) {
+    tonnageInput.value = "";
+    lastAutoTonnage = null;
+  }
   modelPicks.innerHTML = list.map((v) => (
     `<button type="button" class="model-pick${v.id === vehicle.id ? " is-active" : ""}" data-id="${v.id}">${v.name}</button>`
   )).join("");
