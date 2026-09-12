@@ -61,15 +61,21 @@
         <div id="profile-details"></div>
       </section>
 
-      <section id="customer-panel" class="profile-section" hidden>
+      <section id="customer-panel" class="profile-section">
         <h2>Loads you posted</h2>
-        <p class="section-lead">Only the lowest bid amount is shown. Accept it, then confirm the vehicle to get the transporter’s contact. They will not get your number.</p>
+        <p class="section-lead">Bids on your loads. Accept the lowest amount, then confirm the vehicle to get the transporter’s contact. They will not get your number.</p>
         <div id="customer-loads" class="load-list"></div>
       </section>
 
+      <section id="my-bids-panel" class="profile-section">
+        <h2>Bids you placed</h2>
+        <p class="section-lead">Every quote you placed, with the load, your amount, and whether you are leading or booked.</p>
+        <div id="my-bids" class="load-list"></div>
+      </section>
+
       <section id="transporter-panel" class="profile-section" hidden>
-        <h2>Loads to bid</h2>
-        <p class="section-lead">Filter by trailer size. Place or edit your bid. If a competitor is cheaper, they show as #1 and you as #2. Underbid to take #1. The countdown matches the load party’s timer.</p>
+        <h2>Open loads to bid</h2>
+        <p class="section-lead">Filter by trailer size. Place or edit a bid. If a competitor is cheaper, they show as #1 and you as #2.</p>
         <div class="filter-bar">
           <label for="size-filter">
             <span class="field-label">Filter by size</span>

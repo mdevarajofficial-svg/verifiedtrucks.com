@@ -37,6 +37,7 @@ const sizeFilter = document.getElementById("size-filter");
 let currentUser = null;
 let profile = null;
 let customerUnsub = null;
+let myBidsUnsub = null;
 let openLoadsUnsub = null;
 let wonLoadsUnsub = null;
 let openLoads = [];
@@ -269,6 +270,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
     if (customerUnsub) customerUnsub();
+    if (myBidsUnsub) myBidsUnsub();
     if (openLoadsUnsub) openLoadsUnsub();
     if (wonLoadsUnsub) wonLoadsUnsub();
     stopAdmin();
@@ -315,15 +317,13 @@ function renderShell() {
       ? "Verified transporter"
       : "Load party";
   document.getElementById("profile-email").textContent = currentUser.email || "";
-  document.getElementById("customer-panel").hidden = admin || (kyc && !pendingCustomer());
-  document.getElementById("transporter-panel").hidden = admin || !kyc;
+  document.getElementById("customer-panel").hidden = false;
+  document.getElementById("my-bids-panel").hidden = false;
+  document.getElementById("transporter-panel").hidden = !kyc;
   document.getElementById("admin-panel").hidden = !admin;
   renderDetails(kyc);
-  if (admin) {
-    listenAdmin();
-    return;
-  }
   listenCustomerLoads();
+  listenMyBids();
   if (kyc) {
     fillSizeFilter();
     listenBoard();
@@ -333,6 +333,8 @@ function renderShell() {
     if (wonLoadsUnsub) wonLoadsUnsub();
     wonLoadsUnsub = null;
   }
+  if (admin) listenAdmin();
+  else stopAdmin();
 }
 
 function renderDetails(kyc) {
@@ -358,16 +360,12 @@ function renderDetails(kyc) {
 function listenCustomerLoads() {
   const list = document.getElementById("customer-loads");
   const panel = document.getElementById("customer-panel");
+  panel.hidden = false;
   const q = query(collection(db, "loads"), where("customerUid", "==", currentUser.uid));
   if (customerUnsub) customerUnsub();
   customerUnsub = onSnapshot(q, (snap) => {
-    if (!snap.empty) panel.hidden = false;
     if (snap.empty) {
-      if (!panel.hidden && profile.kycComplete) panel.hidden = true;
-      else list.innerHTML = `<p class="empty-note">No loads yet. Book a truck on the home page to post one.</p>`;
-      if (snap.empty && !profile.kycComplete) {
-        panel.hidden = false;
-      }
+      list.innerHTML = `<p class="empty-note">No loads yet. Book a truck on the home page to post one.</p>`;
       return;
     }
     const docs = snap.docs.sort(
@@ -392,6 +390,80 @@ function listenCustomerLoads() {
       }
     });
   });
+}
+
+function listenMyBids() {
+  const list = document.getElementById("my-bids");
+  const panel = document.getElementById("my-bids-panel");
+  if (!list || !panel) return;
+  panel.hidden = false;
+  const q = query(collection(db, "bids"), where("bidderUid", "==", currentUser.uid));
+  if (myBidsUnsub) myBidsUnsub();
+  myBidsUnsub = onSnapshot(q, async (snap) => {
+    if (snap.empty) {
+      list.innerHTML = profile.kycComplete || profile.role === "transporter"
+        ? `<p class="empty-note">No bids yet. Place a bid from Open loads below.</p>`
+        : `<p class="empty-note">No bids yet. Complete Verify truck to bid on open loads.</p>`;
+      return;
+    }
+    const bids = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.updatedAt?.seconds || b.createdAt?.seconds || 0) - (a.updatedAt?.seconds || a.createdAt?.seconds || 0));
+    const cards = await Promise.all(bids.map(async (bid) => {
+      let load = null;
+      try {
+        const loadSnap = await getDoc(doc(db, "loads", bid.loadId));
+        if (loadSnap.exists()) load = { id: loadSnap.id, ...loadSnap.data() };
+      } catch {
+        load = null;
+      }
+      return myBidCard(bid, load);
+    }));
+    list.innerHTML = cards.join("");
+  }, (err) => {
+    list.innerHTML = `<p class="empty-note">Could not load your bids. ${escapeHtml(err.message || "")}</p>`;
+  });
+}
+
+function myBidStatus(bid, load) {
+  if (!load) return "Load unavailable";
+  if (load.acceptedBidderUid === currentUser.uid && (load.booked || load.contactReleased || load.status === "confirmed")) {
+    return "Your bid was booked";
+  }
+  if (load.acceptedBidderUid === currentUser.uid) return "Load party accepted your bid";
+  if (load.booked || load.status === "confirmed") return "Another vehicle was booked";
+  if (load.lowestBidderUid === currentUser.uid) return "Leading";
+  if (load.lowestBidAmount != null && Number(bid.amount) > Number(load.lowestBidAmount)) {
+    return `Behind lowest ${formatInr(load.lowestBidAmount)}`;
+  }
+  return "Waiting";
+}
+
+function myBidCard(bid, load) {
+  const v = load ? vehicleMeta(load.bodyType, Number(load.sizeFt)) : { name: "Load", image: "/assets/truck-open-medium.png" };
+  const route = load
+    ? `${escapeHtml(load.loadingLocation || "—")} → ${escapeHtml(load.unloadingLocation || "—")}`
+    : "Load details unavailable";
+  const meta = load
+    ? `${escapeHtml(String(load.sizeFt || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage || "—"))} T`
+    : "";
+  return `
+    <article class="load-card">
+      <div class="load-card-top">
+        <img src="${v.image}" alt="" />
+        <div>
+          <strong>${escapeHtml(load?.vehicleName || v.name)}</strong>
+          <p>${route}</p>
+          <p>${meta}</p>
+        </div>
+      </div>
+      <dl class="bid-stats">
+        <div><dt>Your bid</dt><dd>${formatInr(bid.amount)}</dd></div>
+        <div><dt>Vehicle</dt><dd>${escapeHtml(bid.vehicleNumber || "—")}</dd></div>
+        <div><dt>Status</dt><dd>${escapeHtml(myBidStatus(bid, load))}</dd></div>
+      </dl>
+      <p class="admin-stamp">Placed ${formatStamp(bid.createdAt)} · Updated ${formatStamp(bid.updatedAt)}</p>
+    </article>`;
 }
 
 function customerLoadCard(id, data) {
