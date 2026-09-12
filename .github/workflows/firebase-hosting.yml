@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 
 on:
   push:
-    branches: [main]
+    branches: [main, cursor/add-lead-page-43b0]
   workflow_dispatch:
 
 jobs:
@@ -12,10 +12,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 

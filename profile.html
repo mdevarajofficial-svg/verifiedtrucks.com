@@ -22,7 +22,7 @@
     <nav class="site-nav" aria-label="Page">
       <a href="/#home">Home</a>
       <a href="/#book">Book truck</a>
-      <a href="/#verify">Verify truck</a>
+      <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
       <a href="/profile.html" aria-current="page">Profile</a>
     </nav>
@@ -61,15 +61,21 @@
         <div id="profile-details"></div>
       </section>
 
-      <section id="customer-panel" class="profile-section" hidden>
+      <section id="customer-panel" class="profile-section">
         <h2>Loads you posted</h2>
-        <p class="section-lead">Only the lowest bid amount is shown. Accept it, then confirm the vehicle to get the transporter’s contact. They will not get your number.</p>
+        <p class="section-lead">Bids on your loads. Accept the lowest amount, then confirm the vehicle to get the transporter’s contact. They will not get your number.</p>
         <div id="customer-loads" class="load-list"></div>
       </section>
 
+      <section id="my-bids-panel" class="profile-section">
+        <h2>Bids you placed</h2>
+        <p class="section-lead">Every quote you placed, with the load, your amount, and whether you are leading or booked.</p>
+        <div id="my-bids" class="load-list"></div>
+      </section>
+
       <section id="transporter-panel" class="profile-section" hidden>
-        <h2>Loads to bid</h2>
-        <p class="section-lead">Filter by trailer size. Place or edit your bid. If a competitor is cheaper, they show as #1 and you as #2. Underbid to take #1. The countdown matches the load party’s timer.</p>
+        <h2>Open loads to bid</h2>
+        <p class="section-lead">Filter by trailer size. Place or edit a bid. If a competitor is cheaper, they show as #1 and you as #2.</p>
         <div class="filter-bar">
           <label for="size-filter">
             <span class="field-label">Filter by size</span>
@@ -79,6 +85,12 @@
           </label>
         </div>
         <div id="load-board" class="load-list"></div>
+      </section>
+
+      <section id="admin-panel" class="profile-section admin-panel" hidden>
+        <h2>Admin dashboard</h2>
+        <p class="section-lead">All bookings and bids with phone numbers and timestamps. Mark a bid booked to stop the timer and confirm that vehicle.</p>
+        <div id="admin-board" class="admin-board"></div>
       </section>
     </div>
   </main>

@@ -1,18 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function adminEmail() {
+      return signedIn() && request.auth.token.email in [
+        'mdevaraj159@gmail.com',
+        'mdevarajofficial@gmail.com'
+      ];
+    }
+    function adminPhone() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.phone in [
+          '6363655596',
+          '9113265599'
+        ];
+    }
+    function isAdmin() {
+      return adminEmail() || adminPhone();
+    }
+
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == userId;
       allow delete: if false;
     }
 
     match /loads/{loadId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
+      allow read: if signedIn();
+      allow create: if signedIn()
         && request.resource.data.customerUid == request.auth.uid
         && !('contactPhone' in request.resource.data);
-      allow update: if request.auth != null && (
+      allow update: if signedIn() && (
+        isAdmin() ||
         (
           resource.data.customerUid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys()
@@ -25,17 +47,19 @@ service cloud.firestore {
     }
 
     match /loadPrivate/{loadId} {
-      allow create: if request.auth != null
+      allow create: if signedIn()
         && request.resource.data.customerUid == request.auth.uid;
-      allow read, update: if request.auth != null
-        && resource.data.customerUid == request.auth.uid;
+      allow read, update: if signedIn() && (
+        isAdmin() || resource.data.customerUid == request.auth.uid
+      );
       allow delete: if false;
     }
 
     match /bids/{bidId} {
-      allow create: if request.auth != null
+      allow create: if signedIn()
         && request.resource.data.bidderUid == request.auth.uid;
-      allow read: if request.auth != null && (
+      allow read: if signedIn() && (
+        isAdmin() ||
         resource.data.bidderUid == request.auth.uid ||
         (
           get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerUid == request.auth.uid
@@ -43,21 +67,25 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.acceptedBidId == bidId
         )
       );
-      allow update: if request.auth != null && resource.data.bidderUid == request.auth.uid;
+      allow update: if signedIn() && (
+        isAdmin() || resource.data.bidderUid == request.auth.uid
+      );
       allow delete: if false;
     }
 
     match /leads/{leadId} {
       allow create: if true;
       allow read: if true;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['booked', 'bookedAt', 'status'])
-        && request.resource.data.booked == true;
+        && request.resource.data.booked == true
+      );
       allow delete: if false;
     }
 
     match /mail/{mailId} {
-      allow create: if request.auth != null
+      allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.to.size() == 1
         && request.resource.data.to[0] == request.auth.token.email;

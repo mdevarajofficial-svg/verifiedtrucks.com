@@ -31,7 +31,7 @@
     <nav class="site-nav" aria-label="Page">
       <a href="#home">Home</a>
       <a href="#book">Book truck</a>
-      <a href="#verify">Verify truck</a>
+      <a href="/verify-truck.html">Verify truck</a>
       <a href="/about.html">About</a>
       <a href="/profile.html">Profile</a>
     </nav>
@@ -139,18 +139,6 @@
               <input type="number" id="tonnage" name="tonnage" required min="1" max="100" step="0.5" inputmode="decimal" enterkeyhint="next" placeholder="e.g. 9" />
             </div>
           </div>
-          <div class="form-step" data-step="contact-name">
-            <div class="form-field">
-              <label for="contact-name">
-                <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
-                  <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                Contact name
-              </label>
-              <input type="text" id="contact-name" name="contactName" required autocomplete="name" enterkeyhint="next" placeholder="Your name" />
-            </div>
-          </div>
           <div class="form-step" data-step="contact-phone">
             <div class="form-field">
               <label for="contact-phone">
@@ -162,7 +150,7 @@
               <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
             </div>
           </div>
-          <button type="submit" class="submit-btn" id="submit-btn" hidden>Book truck</button>
+          <button type="submit" class="submit-btn" id="submit-btn" hidden>Book now</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
         <div id="status-card" class="status-card" hidden>
@@ -195,85 +183,7 @@
       </div>
     </div>
 
-    <section class="verify-kyc" id="verify">
-      <div class="lead-form-container">
-        <h2>Verify truck</h2>
-        <p class="section-lead">Transporters: fill your details first. Google login is enabled only after this KYC. We save what you entered to your profile, then you can see loads and bid.</p>
-        <form id="kyc-form" novalidate>
-          <div class="form-field">
-            <label for="kyc-name">
-              <svg class="field-icon icon-person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/>
-                <path d="M5 19c1.2-3.2 3.4-4.8 7-4.8s5.8 1.6 7 4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              Full name
-            </label>
-            <input type="text" id="kyc-name" name="name" required autocomplete="name" placeholder="Name as on driving licence" />
-          </div>
-          <div class="form-field">
-            <label for="kyc-phone">
-              <svg class="field-icon icon-phone" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M7 3.8h3.2l1 3.2-2 1.4a12 12 0 006.4 6.4l1.4-2 3.2 1V17c0 1.2-1 2.2-2.2 2.2C9.6 19.2 4.8 14.4 4.8 8 4.8 6.8 5.8 5.8 7 5.8V3.8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              </svg>
-              Contact number
-            </label>
-            <input type="tel" id="kyc-phone" name="phone" required autocomplete="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
-          </div>
-          <div class="form-field">
-            <label for="kyc-dl">DL number</label>
-            <input type="text" id="kyc-dl" name="dlNumber" required autocomplete="off" placeholder="Driving licence number" />
-          </div>
-          <div class="form-field">
-            <label for="kyc-vehicles">Total vehicles owned</label>
-            <input type="number" id="kyc-vehicles" name="totalVehicles" required min="1" max="999" step="1" inputmode="numeric" placeholder="e.g. 3" />
-          </div>
-          <button type="submit" class="submit-btn" id="kyc-submit">Save details &amp; continue</button>
-          <p id="kyc-message" class="form-message" role="status"></p>
-        </form>
-      </div>
-    </section>
-
-    <section class="why">
-      <h2>Why choose us</h2>
-      <div class="compare-wrap">
-        <table class="compare">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Verified Trucks</th>
-              <th>Others</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>10-minute search target (not a guarantee)</td>
-              <td><span class="mark mark-yes" aria-label="Yes">✓</span></td>
-              <td><span class="mark mark-no" aria-label="No">✕</span></td>
-            </tr>
-            <tr>
-              <td>Mini truck to 32 ft, open or container</td>
-              <td><span class="mark mark-yes" aria-label="Yes">✓</span></td>
-              <td><span class="mark mark-no" aria-label="No">✕</span></td>
-            </tr>
-            <tr>
-              <td>Post any pickup and drop in India</td>
-              <td><span class="mark mark-yes" aria-label="Yes">✓</span></td>
-              <td><span class="mark mark-no" aria-label="No">✕</span></td>
-            </tr>
-            <tr>
-              <td>See the lowest bid on your load</td>
-              <td><span class="mark mark-yes" aria-label="Yes">✓</span></td>
-              <td><span class="mark mark-no" aria-label="No">✕</span></td>
-            </tr>
-            <tr>
-              <td>Confirm vehicle to get transporter contact</td>
-              <td><span class="mark mark-yes" aria-label="Yes">✓</span></td>
-              <td><span class="mark mark-no" aria-label="No">✕</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
+    <section class="why" id="why">
       <div class="why-features">
         <article class="why-card">
           <img src="/assets/icons/bilty.png" alt="" width="72" height="72" />
@@ -292,17 +202,7 @@
           <p>Use the number on your booking if you need help. Coverage is not a dedicated night desk in every city.</p>
         </article>
       </div>
-
       <p class="why-savings">When more than one transporter bids, you see the <strong>lowest bid amount</strong> and can accept it. What you pay depends on the route, vehicle, and who is free — not a fixed discount.</p>
-    </section>
-
-    <section class="about" id="about">
-      <h2>About Verified Trucks</h2>
-      <p>Verified Trucks is an online marketplace to <strong>book a truck</strong> or <strong>hire a tempo / mini truck / lorry</strong> for goods movement in India. Load parties post pickup, drop, size and tonnage. Transporters who complete Verify truck can bid. We aim to match a vehicle in about 10 minutes; that is a search target, not a guarantee.</p>
-      <div class="cta-row">
-        <a class="cta-btn" href="/about.html">Read the full about page</a>
-        <a class="cta-btn cta-btn-secondary" href="#book">Book a truck</a>
-      </div>
     </section>
   </main>
 
@@ -311,6 +211,7 @@
     <nav aria-label="Footer">
       <a href="/">Home</a>
       <a href="/#book">Book truck</a>
+      <a href="/verify-truck.html">Verify truck</a>
       <a href="/book-truck-online.html">Book truck online</a>
       <a href="/truck-types.html">Truck types</a>
       <a href="/transporters.html">For transporters</a>

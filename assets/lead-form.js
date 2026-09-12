@@ -7,7 +7,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, sizeClass } from "/assets/booking-common.js";
+import { setStopwatch, showerConfetti, TEN_MIN, MEASURE_MAX_FT, loopRemaining, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const db = getFirestore(initializeApp(firebaseConfig));
@@ -29,6 +29,8 @@ const measureSlider = document.getElementById("measure-slider");
 const modelSelect = document.getElementById("vehicle-model");
 const modelPicks = document.getElementById("model-picks");
 const truckPreview = document.getElementById("truck-preview");
+const tonnageInput = document.getElementById("tonnage");
+let lastAutoTonnage = null;
 
 const STEPS = [
   { id: "loading-location", ready: (v) => v.length >= 2 },
@@ -43,7 +45,6 @@ const STEPS = [
     const n = Number(v);
     return Number.isFinite(n) && n >= 1 && n <= 100;
   } },
-  { id: "contact-name", ready: (v) => v.length >= 2 },
   { id: "contact-phone", ready: (v) => /^\d{10}$/.test(v) },
 ];
 
@@ -89,7 +90,7 @@ function scheduleAdvance(id) {
   clearTimeout(stepTimers.get(id));
   const step = STEPS.find((s) => s.id === id);
   if (!step || !fieldReady(step)) return;
-  const delay = id === "body-type" || id === "vehicle-model" ? 80 : 450;
+  const delay = id === "body-type" || id === "vehicle-model" || id === "contact-phone" ? 80 : 450;
   const timer = setTimeout(() => refreshSteps(true), delay);
   stepTimers.set(id, timer);
 }
@@ -131,12 +132,22 @@ function updateTruckPreview() {
   modelSelect.innerHTML = `<option value="" disabled>Select a vehicle</option>` +
     list.map((v) => `<option value="${v.id}">${v.name}</option>`).join("");
   if (list.some((v) => v.id === prev)) modelSelect.value = prev;
+  else if (list.length === 1) modelSelect.value = list[0].id;
   else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
   if (!vehicle) return;
   truckImage.src = vehicleSrc(vehicle, bodyType);
-  const labelType = bodyType === "open" ? "Open" : "Container";
-  truckCaption.textContent = `${feet} ft · ${vehicle.name} · ${labelType}`;
+  truckCaption.textContent = vehicleCaption(vehicle, feet, bodyType);
+  if (vehicle.defaultTonnage != null) {
+    const cur = tonnageInput.value.trim();
+    if (!cur || cur === String(lastAutoTonnage)) {
+      tonnageInput.value = String(vehicle.defaultTonnage);
+      lastAutoTonnage = vehicle.defaultTonnage;
+    }
+  } else if (tonnageInput.value.trim() === String(lastAutoTonnage)) {
+    tonnageInput.value = "";
+    lastAutoTonnage = null;
+  }
   modelPicks.innerHTML = list.map((v) => (
     `<button type="button" class="model-pick${v.id === vehicle.id ? " is-active" : ""}" data-id="${v.id}">${v.name}</button>`
   )).join("");
@@ -232,7 +243,7 @@ measureSlider.addEventListener("input", () => {
   scheduleAdvance("size-feet");
 });
 
-["loading-location", "unloading-location", "tonnage", "contact-name", "contact-phone"].forEach((id) => {
+["loading-location", "unloading-location", "tonnage", "contact-phone"].forEach((id) => {
   const el = document.getElementById(id);
   el.addEventListener("input", () => scheduleAdvance(id));
   el.addEventListener("blur", () => advanceNow(id));
@@ -272,11 +283,10 @@ form.addEventListener("submit", async (e) => {
   const sizeFeet = value("size-feet");
   const bodyType = value("body-type");
   const tonnage = value("tonnage");
-  const contactName = value("contact-name");
   const contactPhone = value("contact-phone");
   const vehicle = selectedVehicle(vehiclesFor(sizeFeet, bodyType));
 
-  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactName || !contactPhone || !vehicle) {
+  if (!loadingLocation || !unloadingLocation || !sizeFeet || !bodyType || !tonnage || !contactPhone || !vehicle) {
     showMessage("Please fill in all details.", "error");
     return;
   }
@@ -296,7 +306,7 @@ form.addEventListener("submit", async (e) => {
     sizeFt: Number(sizeFeet),
     bodyType,
     tonnage,
-    contactName,
+    contactName: "",
     contactPhone,
     vehicleName: vehicle.name,
     timerEndsAt: endsAt,
@@ -309,7 +319,6 @@ form.addEventListener("submit", async (e) => {
       sizeFeet,
       bodyType,
       tonnage,
-      contactName,
       contactPhone,
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
@@ -332,35 +341,4 @@ form.addEventListener("submit", async (e) => {
   sessionStorage.setItem("vtTimerEndsAt", String(endsAt));
   sessionStorage.setItem("vtPendingCustomer", JSON.stringify(pending));
   window.location.href = "/profile.html?next=customer";
-});
-
-const kycForm = document.getElementById("kyc-form");
-const kycSubmit = document.getElementById("kyc-submit");
-const kycMessage = document.getElementById("kyc-message");
-
-kycForm?.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = value("kyc-name");
-  const phone = value("kyc-phone");
-  const dlNumber = value("kyc-dl").toUpperCase();
-  const totalVehicles = value("kyc-vehicles");
-  kycMessage.className = "form-message";
-  if (!name || !phone || !dlNumber || !totalVehicles) {
-    kycMessage.textContent = "Please fill in all transporter details.";
-    kycMessage.className = "form-message error";
-    return;
-  }
-  if (!/^\d{10}$/.test(phone)) {
-    kycMessage.textContent = "Please enter a valid 10-digit phone number.";
-    kycMessage.className = "form-message error";
-    return;
-  }
-  kycSubmit.disabled = true;
-  sessionStorage.setItem("vtPendingTransporter", JSON.stringify({
-    name,
-    phone,
-    dlNumber,
-    totalVehicles: Number(totalVehicles),
-  }));
-  window.location.href = "/profile.html?next=transporter";
 });

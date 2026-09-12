@@ -11,7 +11,8 @@ import {
   updateDoc,
   where,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { auth, db, signInGoogle, signOutUser } from "./firebase.js";
+import { isAdminUser } from "./admin.js";
+import { auth, db, signInGoogle, signOutUser, completeGoogleRedirect, explainAuthError } from "./firebase.js";
 import {
   VEHICLES,
   formatMmSs,
@@ -36,11 +37,17 @@ const sizeFilter = document.getElementById("size-filter");
 let currentUser = null;
 let profile = null;
 let customerUnsub = null;
+let myBidsUnsub = null;
 let openLoadsUnsub = null;
 let wonLoadsUnsub = null;
 let openLoads = [];
 let wonLoads = [];
 const loadTimers = new Map();
+let adminUnsubs = [];
+let adminLoads = [];
+let adminBids = [];
+let adminPrivate = {};
+let adminLeads = [];
 
 function readPending(key) {
   try {
@@ -224,7 +231,7 @@ function paintLoggedOutGate() {
   } else if (params.get("next") === "transporter") {
     showGate(
       "Complete Verify truck first",
-      "Fill name, contact, DL number and vehicles owned on the home page, then return here to sign in with Google."
+      "Fill name, contact, DL number and vehicles owned on Verify truck, then return here to sign in with Google."
     );
   } else {
     showGate(
@@ -234,13 +241,22 @@ function paintLoggedOutGate() {
   }
 }
 
+function showGateError(err) {
+  gateErr.hidden = false;
+  gateErr.className = "form-message error";
+  gateErr.textContent = err?.friendlyMessage || explainAuthError(err) || "Google sign-in failed.";
+}
+
 googleBtn.addEventListener("click", async () => {
   gateErr.hidden = true;
+  gateErr.className = "form-message";
+  googleBtn.disabled = true;
   try {
     await signInGoogle();
   } catch (err) {
-    gateErr.hidden = false;
-    gateErr.textContent = err.message || "Google sign-in failed.";
+    showGateError(err);
+  } finally {
+    googleBtn.disabled = false;
   }
 });
 
@@ -254,8 +270,10 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
     if (customerUnsub) customerUnsub();
+    if (myBidsUnsub) myBidsUnsub();
     if (openLoadsUnsub) openLoadsUnsub();
     if (wonLoadsUnsub) wonLoadsUnsub();
+    stopAdmin();
     paintLoggedOutGate();
     return;
   }
@@ -273,32 +291,39 @@ onAuthStateChanged(auth, async (user) => {
       });
     }
     profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
-    if (params.get("next") === "transporter" && !profile.kycComplete) {
+    if (params.get("next") === "transporter" && !profile.kycComplete && !isAdminUser(user, profile)) {
       showGate(
         "Complete Verify truck first",
-        "Fill your transporter details on the home page before Google login. Sign out and complete KYC, then return."
+        "Fill your transporter details on Verify truck before Google login. Sign out and complete KYC, then return."
       );
       return;
     }
     renderShell();
     showApp();
   } catch (err) {
-    showGate("Could not open profile", err.message || "Try again.");
+    showGate("Could not open profile", explainAuthError(err));
+    showGateError(err);
   }
 });
 
 function renderShell() {
+  const admin = isAdminUser(currentUser, profile);
   const kyc = Boolean(profile.kycComplete || profile.role === "transporter");
   document.getElementById("profile-name").textContent =
     profile.name || currentUser.displayName || "Member";
-  document.getElementById("profile-role").textContent = kyc
-    ? "Verified transporter"
-    : "Load party";
+  document.getElementById("profile-role").textContent = admin
+    ? "Admin"
+    : kyc
+      ? "Verified transporter"
+      : "Load party";
   document.getElementById("profile-email").textContent = currentUser.email || "";
-  document.getElementById("customer-panel").hidden = kyc && !pendingCustomer();
+  document.getElementById("customer-panel").hidden = false;
+  document.getElementById("my-bids-panel").hidden = false;
   document.getElementById("transporter-panel").hidden = !kyc;
+  document.getElementById("admin-panel").hidden = !admin;
   renderDetails(kyc);
   listenCustomerLoads();
+  listenMyBids();
   if (kyc) {
     fillSizeFilter();
     listenBoard();
@@ -308,6 +333,8 @@ function renderShell() {
     if (wonLoadsUnsub) wonLoadsUnsub();
     wonLoadsUnsub = null;
   }
+  if (admin) listenAdmin();
+  else stopAdmin();
 }
 
 function renderDetails(kyc) {
@@ -333,16 +360,12 @@ function renderDetails(kyc) {
 function listenCustomerLoads() {
   const list = document.getElementById("customer-loads");
   const panel = document.getElementById("customer-panel");
+  panel.hidden = false;
   const q = query(collection(db, "loads"), where("customerUid", "==", currentUser.uid));
   if (customerUnsub) customerUnsub();
   customerUnsub = onSnapshot(q, (snap) => {
-    if (!snap.empty) panel.hidden = false;
     if (snap.empty) {
-      if (!panel.hidden && profile.kycComplete) panel.hidden = true;
-      else list.innerHTML = `<p class="empty-note">No loads yet. Book a truck on the home page to post one.</p>`;
-      if (snap.empty && !profile.kycComplete) {
-        panel.hidden = false;
-      }
+      list.innerHTML = `<p class="empty-note">No loads yet. Book a truck on the home page to post one.</p>`;
       return;
     }
     const docs = snap.docs.sort(
@@ -367,6 +390,80 @@ function listenCustomerLoads() {
       }
     });
   });
+}
+
+function listenMyBids() {
+  const list = document.getElementById("my-bids");
+  const panel = document.getElementById("my-bids-panel");
+  if (!list || !panel) return;
+  panel.hidden = false;
+  const q = query(collection(db, "bids"), where("bidderUid", "==", currentUser.uid));
+  if (myBidsUnsub) myBidsUnsub();
+  myBidsUnsub = onSnapshot(q, async (snap) => {
+    if (snap.empty) {
+      list.innerHTML = profile.kycComplete || profile.role === "transporter"
+        ? `<p class="empty-note">No bids yet. Place a bid from Open loads below.</p>`
+        : `<p class="empty-note">No bids yet. Complete Verify truck to bid on open loads.</p>`;
+      return;
+    }
+    const bids = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.updatedAt?.seconds || b.createdAt?.seconds || 0) - (a.updatedAt?.seconds || a.createdAt?.seconds || 0));
+    const cards = await Promise.all(bids.map(async (bid) => {
+      let load = null;
+      try {
+        const loadSnap = await getDoc(doc(db, "loads", bid.loadId));
+        if (loadSnap.exists()) load = { id: loadSnap.id, ...loadSnap.data() };
+      } catch {
+        load = null;
+      }
+      return myBidCard(bid, load);
+    }));
+    list.innerHTML = cards.join("");
+  }, (err) => {
+    list.innerHTML = `<p class="empty-note">Could not load your bids. ${escapeHtml(err.message || "")}</p>`;
+  });
+}
+
+function myBidStatus(bid, load) {
+  if (!load) return "Load unavailable";
+  if (load.acceptedBidderUid === currentUser.uid && (load.booked || load.contactReleased || load.status === "confirmed")) {
+    return "Your bid was booked";
+  }
+  if (load.acceptedBidderUid === currentUser.uid) return "Load party accepted your bid";
+  if (load.booked || load.status === "confirmed") return "Another vehicle was booked";
+  if (load.lowestBidderUid === currentUser.uid) return "Leading";
+  if (load.lowestBidAmount != null && Number(bid.amount) > Number(load.lowestBidAmount)) {
+    return `Behind lowest ${formatInr(load.lowestBidAmount)}`;
+  }
+  return "Waiting";
+}
+
+function myBidCard(bid, load) {
+  const v = load ? vehicleMeta(load.bodyType, Number(load.sizeFt)) : { name: "Load", image: "/assets/truck-open-medium.png" };
+  const route = load
+    ? `${escapeHtml(load.loadingLocation || "—")} → ${escapeHtml(load.unloadingLocation || "—")}`
+    : "Load details unavailable";
+  const meta = load
+    ? `${escapeHtml(String(load.sizeFt || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage || "—"))} T`
+    : "";
+  return `
+    <article class="load-card">
+      <div class="load-card-top">
+        <img src="${v.image}" alt="" />
+        <div>
+          <strong>${escapeHtml(load?.vehicleName || v.name)}</strong>
+          <p>${route}</p>
+          <p>${meta}</p>
+        </div>
+      </div>
+      <dl class="bid-stats">
+        <div><dt>Your bid</dt><dd>${formatInr(bid.amount)}</dd></div>
+        <div><dt>Vehicle</dt><dd>${escapeHtml(bid.vehicleNumber || "—")}</dd></div>
+        <div><dt>Status</dt><dd>${escapeHtml(myBidStatus(bid, load))}</dd></div>
+      </dl>
+      <p class="admin-stamp">Placed ${formatStamp(bid.createdAt)} · Updated ${formatStamp(bid.updatedAt)}</p>
+    </article>`;
 }
 
 function customerLoadCard(id, data) {
@@ -598,5 +695,154 @@ async function onPlaceBid(e) {
   }
   if (Object.keys(update).length) await updateDoc(loadRef, update);
 }
+
+function formatStamp(value) {
+  if (!value) return "—";
+  const date = value.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function stopAdmin() {
+  adminUnsubs.forEach((unsub) => unsub());
+  adminUnsubs = [];
+}
+
+function listenAdmin() {
+  stopAdmin();
+  const board = document.getElementById("admin-board");
+  const paint = () => renderAdminBoard();
+  adminUnsubs.push(onSnapshot(collection(db, "loads"), (snap) => {
+    adminLoads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    paint();
+  }, (err) => { board.innerHTML = `<p class="form-message error">${escapeHtml(err.message)}</p>`; }));
+  adminUnsubs.push(onSnapshot(collection(db, "bids"), (snap) => {
+    adminBids = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    paint();
+  }));
+  adminUnsubs.push(onSnapshot(collection(db, "loadPrivate"), (snap) => {
+    adminPrivate = {};
+    snap.docs.forEach((d) => { adminPrivate[d.id] = d.data(); });
+    paint();
+  }));
+  adminUnsubs.push(onSnapshot(collection(db, "leads"), (snap) => {
+    adminLeads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    paint();
+  }));
+}
+
+function renderAdminBoard() {
+  const board = document.getElementById("admin-board");
+  if (!board) return;
+  const byLoad = new Map();
+  adminBids.forEach((bid) => {
+    const list = byLoad.get(bid.loadId) || [];
+    list.push(bid);
+    byLoad.set(bid.loadId, list);
+  });
+  const loadCards = adminLoads
+    .slice()
+    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+    .map((load) => {
+      const bids = (byLoad.get(load.id) || []).sort((a, b) => (b.createdAt?.seconds || a.updatedAt?.seconds || 0) - (a.createdAt?.seconds || a.updatedAt?.seconds || 0));
+      const phone = adminPrivate[load.id]?.contactPhone || "—";
+      const booked = load.booked || load.status === "confirmed";
+      const bidHtml = bids.length
+        ? bids.map((bid) => `
+            <li class="admin-bid">
+              <div>
+                <strong>${escapeHtml(bid.bidderName || "Bidder")}</strong>
+                <p>${escapeHtml(bid.bidderPhone || "—")} · ${escapeHtml(bid.vehicleNumber || "—")} · ${formatInr(bid.amount)}</p>
+                <p class="admin-stamp">Bid ${formatStamp(bid.createdAt)} · Updated ${formatStamp(bid.updatedAt)}</p>
+              </div>
+              ${booked
+                ? (load.acceptedBidId === bid.id ? `<span class="admin-ok">Booked</span>` : "")
+                : `<button type="button" class="submit-btn" data-admin-book="${load.id}" data-bid="${bid.id}" data-bidder="${escapeHtml(bid.bidderUid || "")}">Mark booked</button>`}
+            </li>`).join("")
+        : `<li class="admin-bid"><p>No bids yet.</p>${booked ? "" : `<button type="button" class="submit-btn" data-admin-book="${load.id}">Mark booked</button>`}</li>`;
+      return `
+        <article class="admin-card">
+          <div class="admin-card-top">
+            <div>
+              <strong>${escapeHtml(load.vehicleName || "Load")}</strong>
+              <p>${escapeHtml(load.loadingLocation || "—")} → ${escapeHtml(load.unloadingLocation || "—")}</p>
+              <p>${escapeHtml(String(load.sizeFt || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage || "—"))} T</p>
+              <p>Load party phone: <strong>${escapeHtml(phone)}</strong></p>
+              <p class="admin-stamp">Posted ${formatStamp(load.createdAt)}${load.bookedAt ? ` · Booked ${formatStamp(load.bookedAt)}` : ""}</p>
+            </div>
+            <div class="load-timer${booked ? " is-booked" : ""}">${booked ? "Booked" : formatMmSs(loopRemaining(load.timerEndsAt || Date.now()).remaining)}</div>
+          </div>
+          <ul class="admin-bids">${bidHtml}</ul>
+        </article>`;
+    }).join("");
+
+  const linkedLeadIds = new Set(adminLoads.map((l) => l.leadId).filter(Boolean));
+  const looseLeads = adminLeads.filter((lead) => !linkedLeadIds.has(lead.id));
+  const leadCards = looseLeads
+    .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0))
+    .map((lead) => `
+      <article class="admin-card">
+        <div class="admin-card-top">
+          <div>
+            <strong>${escapeHtml(lead.vehicleName || "Home booking")}</strong>
+            <p>${escapeHtml(lead.loadingLocation || "—")} → ${escapeHtml(lead.unloadingLocation || "—")}</p>
+            <p>${escapeHtml(String(lead.sizeFeet || "—"))} ft · ${escapeHtml(lead.bodyType || "—")} · ${escapeHtml(String(lead.tonnage || "—"))} T</p>
+            <p>Phone: <strong>${escapeHtml(lead.contactPhone || "—")}</strong></p>
+            <p class="admin-stamp">Posted ${formatStamp(lead.createdAt || lead.createdAtMs)}${lead.bookedAt ? ` · Booked ${formatStamp(lead.bookedAt)}` : ""}</p>
+          </div>
+          <div class="load-timer${lead.booked ? " is-booked" : ""}">${lead.booked ? "Booked" : formatMmSs(loopRemaining(lead.timerEndsAt || Date.now()).remaining)}</div>
+        </div>
+        ${lead.booked ? `<p class="admin-ok">Vehicle booked</p>` : `<button type="button" class="submit-btn" data-admin-lead="${lead.id}">Mark booked</button>`}
+      </article>`).join("");
+
+  board.innerHTML = (loadCards || "") + (leadCards || "") || `<p class="empty-note">No bookings yet.</p>`;
+  board.querySelectorAll("[data-admin-book]").forEach((btn) => {
+    btn.addEventListener("click", () => adminMarkLoad(btn.getAttribute("data-admin-book"), btn.getAttribute("data-bid"), btn.getAttribute("data-bidder")));
+  });
+  board.querySelectorAll("[data-admin-lead]").forEach((btn) => {
+    btn.addEventListener("click", () => adminMarkLead(btn.getAttribute("data-admin-lead")));
+  });
+}
+
+async function adminMarkLoad(loadId, bidId, bidderUid) {
+  const loadSnap = await getDoc(doc(db, "loads", loadId));
+  const load = loadSnap.data() || {};
+  const payload = {
+    booked: true,
+    status: "confirmed",
+    contactReleased: true,
+    bookedAt: serverTimestamp(),
+  };
+  if (bidId) {
+    payload.acceptedBidId = bidId;
+    payload.acceptedBidderUid = bidderUid || load.lowestBidderUid || null;
+  }
+  await updateDoc(doc(db, "loads", loadId), payload);
+  if (load.leadId) await adminMarkLead(load.leadId);
+}
+
+async function adminMarkLead(leadId) {
+  if (!leadId) return;
+  try {
+    await updateDoc(doc(db, "leads", leadId), {
+      booked: true,
+      status: "booked",
+      bookedAt: serverTimestamp(),
+    });
+  } catch {
+    /* already booked */
+  }
+}
+
+completeGoogleRedirect().catch((err) => {
+  paintLoggedOutGate();
+  showGateError(err);
+});
 
 paintLoggedOutGate();
