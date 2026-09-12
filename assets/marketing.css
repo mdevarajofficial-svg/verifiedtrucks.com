@@ -2,6 +2,7 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -11,6 +12,11 @@ body {
   margin: 0;
   padding: 0;
   background-color: #fff;
+  overflow-x: clip;
+}
+
+body.nav-lock {
+  overflow: hidden;
 }
 
 header {
@@ -36,26 +42,21 @@ header {
   color: #000;
   font-weight: 700;
   font-size: 1.125rem;
+  min-width: 0;
 }
 
 .header-brand img {
   width: 36px;
   height: 36px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .site-nav {
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
   margin-left: auto;
-}
-
-.site-nav::-webkit-scrollbar {
-  display: none;
 }
 
 .site-nav a {
@@ -75,6 +76,45 @@ header {
 .site-nav a:focus {
   color: #0f766e;
   background: #f0fdfa;
+}
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.nav-toggle-bars {
+  width: 18px;
+  height: 12px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.nav-toggle-bars::before,
+.nav-toggle-bars::after,
+.nav-toggle-bars {
+  box-sizing: border-box;
+}
+
+.nav-toggle-bars {
+  background:
+    linear-gradient(#111, #111) 0 0 / 100% 2px no-repeat,
+    linear-gradient(#111, #111) 0 50% / 100% 2px no-repeat,
+    linear-gradient(#111, #111) 0 100% / 100% 2px no-repeat;
 }
 
 #home,
@@ -945,8 +985,36 @@ header {
   }
 
   .site-nav {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
-    margin-left: 0;
+    margin: 8px 0 0;
+    padding: 4px 0 8px;
+    gap: 4px;
+    overflow: visible;
+  }
+
+  header.is-nav-open .site-nav {
+    display: flex;
+  }
+
+  .site-nav a {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border-radius: 10px;
+    background: #f8fafa;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  header {
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .model-picks {
@@ -982,6 +1050,10 @@ header {
     text-align: left;
   }
 
+  .cta-row {
+    flex-direction: column;
+  }
+
   .cta-btn {
     width: 100%;
   }
@@ -995,6 +1067,13 @@ header {
 
   .header-brand {
     font-size: 1rem;
+  }
+
+  .site-footer a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 10px;
   }
 
   .vip-card {
