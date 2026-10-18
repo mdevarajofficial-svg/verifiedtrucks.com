@@ -31,6 +31,7 @@ const routeEmpty = document.getElementById("route-empty");
 const routeStats = document.getElementById("route-stats");
 const routeKmEl = document.getElementById("route-km");
 const routeTimeEl = document.getElementById("route-time");
+const routeBufferNote = document.getElementById("route-buffer-note");
 let lastAutoTonnage = null;
 let pickupPlace = null;
 let dropPlace = null;
@@ -256,6 +257,7 @@ function paintRouteFacts() {
     }
   }
   if (routeStats) routeStats.hidden = !hasTrip;
+  if (routeBufferNote) routeBufferNote.hidden = !hasTrip;
   if (routeKmEl) routeKmEl.textContent = hasTrip ? `${routeKm.km} km` : "—";
   if (routeTimeEl) {
     const time = formatTravelTime(routeKm?.durationSec);

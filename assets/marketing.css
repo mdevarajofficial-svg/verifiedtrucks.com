@@ -528,6 +528,16 @@ header {
   color: #0b1220;
 }
 
+.route-buffer-note {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.route-buffer-note[hidden] {
+  display: none !important;
+}
+
 .route-pin {
   background: none;
   border: 0;
