@@ -9,7 +9,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { setStopwatch, showerConfetti, TEN_MIN, MARKET_MS, MEASURE_MAX_FT, loopRemaining, remainingUntil, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
+import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const app = initializeApp(firebaseConfig);
@@ -28,7 +28,6 @@ const statusTitle = document.getElementById("status-title");
 const statusCopy = document.getElementById("status-copy");
 const truckImage = document.getElementById("truck-image");
 const truckCaption = document.getElementById("truck-caption");
-const stopwatch = document.getElementById("live-timer");
 const sizeInput = document.getElementById("size-feet");
 const bodyInput = document.getElementById("body-type");
 const measureFill = document.getElementById("measure-fill");
@@ -214,9 +213,7 @@ function updateTruckPreview() {
     tonnageInput.value = "";
     lastAutoTonnage = null;
   }
-  modelPicks.innerHTML = list.map((v) => (
-    `<button type="button" class="model-pick${v.id === vehicle.id ? " is-active" : ""}" data-id="${v.id}">${v.name}</button>`
-  )).join("");
+  modelPicks.innerHTML = "";
   if (measureFill) {
     measureFill.style.width = `${(feet / MEASURE_MAX_FT) * 100}%`;
   }
@@ -232,43 +229,14 @@ function stopTick() {
   }
 }
 
-function paintTimer() {
-  if (!timerEndsAt) return;
-  if (booked) {
-    setStopwatch(stopwatch, frozenRemaining, false, false);
-    const kicker = stopwatch.querySelector("[data-kicker]");
-    if (kicker) kicker.textContent = "Vehicle booked";
-    return;
-  }
-  if (postedLive) {
-    const rem = remainingUntil(timerEndsAt);
-    setStopwatch(stopwatch, rem, rem > 0, rem <= 0);
-    if (rem <= 0) {
-      statusCard.hidden = false;
-      statusCopy.textContent = "The 30-minute bid window has ended.";
-    }
-    return;
-  }
-  const { remaining, cycle } = loopRemaining(timerEndsAt);
-  const waiting = false;
-  setStopwatch(stopwatch, remaining, true, waiting);
-  if (waiting) {
-    statusCard.hidden = false;
-    statusCard.classList.add("is-waiting");
-    statusTitle.textContent = "Unable to find — still looking";
-    statusCopy.textContent = "Kindly wait. We are searching again for a matching truck.";
-  }
-}
-
 function celebrateBooked() {
   if (celebrated) return;
   celebrated = true;
   booked = true;
-  frozenRemaining = timerEndsAt ? remainingUntil(timerEndsAt) : 0;
   stopTick();
-  paintTimer();
   statusCard.hidden = false;
   statusCard.classList.remove("is-waiting");
+  statusCard.classList.add("is-premium");
   statusTitle.textContent = "Vehicle booked successfully";
   statusCopy.textContent = "Your truck is confirmed. We will share vehicle details on your number.";
   showerConfetti();
@@ -277,9 +245,6 @@ function celebrateBooked() {
 function startCountdown(endsAt) {
   timerEndsAt = endsAt;
   booked = false;
-  stopTick();
-  paintTimer();
-  tickId = setInterval(paintTimer, 250);
 }
 
 function watchLead(id) {
@@ -343,8 +308,7 @@ function showPosted(endsAt, leadId) {
   statusCard.classList.remove("is-waiting");
   statusCard.classList.add("is-premium");
   statusTitle.textContent = "Load Posted";
-  statusCopy.textContent = "Best Possible Quote will be Given within 30 Min";
-  startCountdown(endsAt);
+  statusCopy.textContent = "We have your load. A quote will be shared on your number.";
   if (leadId) watchLead(leadId);
 }
 
@@ -353,10 +317,69 @@ function postedParams() {
   return { leadId: q.get("posted"), loadId: q.get("load") };
 }
 
+function escapeMail(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function loadAlertHtml(details) {
+  const rows = [
+    ["Pickup location", details.loadingLocation],
+    ["Drop location", details.unloadingLocation],
+    ["Vehicle type", `${details.sizeFeet} ft · ${details.bodyType} · ${details.vehicleName}`],
+    ["Weight", `${details.tonnage} T`],
+    ["Contact number", details.contactPhone],
+    ["Load ID", details.loadId],
+  ];
+  const bodyRows = rows.map(([label, value]) => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #e7e7e7;color:#555;width:38%;font-size:14px;">${escapeMail(label)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e7e7e7;color:#111;font-weight:600;font-size:14px;">${escapeMail(value)}</td>
+    </tr>`).join("");
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:24px;background:#f6f7f8;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #ececec;border-radius:12px;overflow:hidden;">
+    <tr>
+      <td style="padding:20px 24px;background:#0f766e;color:#fff;">
+        <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.85;">Verified Trucks</div>
+        <div style="font-size:20px;font-weight:700;margin-top:6px;">New load posted</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 12px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${bodyRows}</table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function sendLoadAlert(details) {
+  await addDoc(collection(db, "mail"), {
+    to: ["nivinnya@gmail.com"],
+    message: {
+      subject: `New load: ${details.loadingLocation} → ${details.unloadingLocation}`,
+      text: [
+        `Pickup: ${details.loadingLocation}`,
+        `Drop: ${details.unloadingLocation}`,
+        `Vehicle: ${details.sizeFeet} ft · ${details.bodyType} · ${details.vehicleName}`,
+        `Weight: ${details.tonnage} T`,
+        `Contact: ${details.contactPhone}`,
+        `Load ID: ${details.loadId}`,
+      ].join("\n"),
+      html: loadAlertHtml(details),
+    },
+  });
+}
+
 mountVehicleParade();
 updateTruckPreview();
 refreshSteps(false);
-startCountdown(Date.now() + TEN_MIN);
 
 const existing = postedParams();
 if (existing.leadId) {
@@ -438,6 +461,20 @@ form.addEventListener("submit", async (e) => {
       createdAt: serverTimestamp(),
       createdAtMs: Date.now(),
     });
+    try {
+      await sendLoadAlert({
+        loadingLocation,
+        unloadingLocation,
+        sizeFeet,
+        bodyType,
+        vehicleName: vehicle.name,
+        tonnage,
+        contactPhone,
+        loadId: loadRef.id,
+      });
+    } catch (mailErr) {
+      console.error(mailErr);
+    }
     const url = new URL(location.href);
     url.searchParams.set("posted", leadRef.id);
     url.searchParams.set("load", loadRef.id);

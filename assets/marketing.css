@@ -94,12 +94,45 @@ header {
 .page {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 20px 72px;
+  padding: 20px 20px 56px;
 }
 
 .hero-title {
   margin: 0 0 32px;
   text-align: center;
+}
+
+.hero-intro {
+  margin: 4px 0 28px;
+  text-align: center;
+}
+
+.hero-kicker {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.hero-intro h1 {
+  margin: 0 auto 10px;
+  max-width: 18ch;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: clamp(1.7rem, 4.6vw, 2.55rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  color: #111;
+}
+
+.hero-lead {
+  margin: 0 auto;
+  max-width: 48ch;
+  color: #444;
+  font-size: 1.05rem;
+  line-height: 1.5;
 }
 
 .ten-mark {
@@ -224,7 +257,7 @@ header {
 .booking {
   display: grid;
   grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
-  gap: 40px 48px;
+  gap: 28px 40px;
   align-items: start;
 }
 
@@ -271,7 +304,8 @@ header {
 
 .preview.is-waiting .model-picks,
 .preview.is-waiting .measure,
-.preview.is-waiting .truck-caption {
+.preview.is-waiting .truck-caption,
+.model-picks:empty {
   display: none;
 }
 
@@ -754,8 +788,8 @@ header {
 }
 
 .why {
-  margin-top: 72px;
-  padding: 40px 0 8px;
+  margin-top: 56px;
+  padding: 28px 0 8px;
 }
 
 .section-kicker {
@@ -804,7 +838,7 @@ header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 220px;
+  min-height: 0;
 }
 
 .why-num {
@@ -826,9 +860,9 @@ header {
 .why-card {
   background: #fff;
   border-radius: 14px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 22px 18px;
+  border: 1px solid #e8eeed;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  padding: 20px 16px;
   text-align: center;
   animation: rise-in 0.55s ease both;
 }
@@ -877,6 +911,7 @@ header {
 
 .why-cta {
   justify-content: center;
+  margin-top: 8px;
 }
 
 .about-home {
@@ -987,7 +1022,7 @@ header {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .cta-btn {
@@ -1124,8 +1159,18 @@ header {
     text-align: center;
   }
 
+  .hero-intro {
+    margin-bottom: 20px;
+  }
+
+  .hero-intro h1 {
+    max-width: none;
+    font-size: 1.55rem;
+  }
+
   .why {
-    margin-top: 40px;
+    margin-top: 32px;
+    padding-top: 16px;
   }
 
   .why-choose-cards,
