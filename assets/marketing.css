@@ -457,6 +457,86 @@ header {
   top: 88px;
 }
 
+.route-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 88px;
+  min-width: 0;
+}
+
+.route-map {
+  width: 100%;
+  height: min(52vh, 460px);
+  min-height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #bae6fd;
+  background: #e0f2fe;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.route-map .leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}
+
+.route-facts {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.route-empty {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.route-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin: 0;
+}
+
+.route-stats div {
+  min-width: 0;
+}
+
+.route-stats dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.route-stats dd {
+  margin: 4px 0 0;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0b1220;
+}
+
+.route-pin {
+  background: none;
+  border: 0;
+}
+
+.route-pin-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px currentColor, 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
 .truck-image {
   width: 100%;
   max-width: 560px;
@@ -1074,6 +1154,16 @@ header {
   .preview {
     position: static;
     order: -1;
+  }
+
+  .route-preview {
+    position: static;
+    order: 0;
+  }
+
+  .route-map {
+    height: 280px;
+    min-height: 240px;
   }
 
   .truck-image {
@@ -2143,7 +2233,8 @@ header {
   border-color: #111;
 }
 
-.booking.is-posted .preview {
+.booking.is-posted .preview,
+.booking.is-posted .route-preview {
   display: none;
 }
 

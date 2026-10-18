@@ -69,7 +69,42 @@ function pointToken(place) {
   return "";
 }
 
-export async function drivingDistanceKm(from, to) {
+function geoToLatLng(coords) {
+  if (!Array.isArray(coords)) return [];
+  return coords
+    .map((pair) => [Number(pair[1]), Number(pair[0])])
+    .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+}
+
+export function formatTravelTime(sec) {
+  if (!Number.isFinite(sec) || sec < 0) return "";
+  const minutes = Math.max(1, Math.round(sec / 60));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
+}
+
+async function osrmRoute(from, to) {
+  if (!(Number.isFinite(from?.lng) && Number.isFinite(from?.lat) && Number.isFinite(to?.lng) && Number.isFinite(to?.lat))) {
+    return null;
+  }
+  const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=simplified&geometries=geojson`;
+  const data = await fetchJson(url);
+  const route = data?.routes?.[0];
+  const meters = Number(route?.distance);
+  const km = kmFromMeters(meters);
+  if (km == null) return null;
+  return {
+    km,
+    meters,
+    durationSec: Number(route?.duration),
+    coordinates: geoToLatLng(route?.geometry?.coordinates),
+    source: "fallback",
+  };
+}
+
+export async function drivingRoute(from, to) {
   const a = pointToken(from);
   const b = pointToken(to);
   if (a && b) {
@@ -81,24 +116,42 @@ export async function drivingDistanceKm(from, to) {
         ?? data?.distances?.[0]?.[1]
         ?? data?.distance
       );
+      const durationSec = Number(
+        data?.results?.durations?.[0]?.[1]
+        ?? data?.durations?.[0]?.[1]
+        ?? data?.duration
+      );
       const km = kmFromMeters(meters);
-      if (km != null) return { km, meters, source: "mappls" };
+      if (km != null) {
+        const line = await osrmRoute(from, to).catch(() => null);
+        return {
+          km,
+          meters,
+          durationSec: Number.isFinite(durationSec) ? durationSec : line?.durationSec,
+          coordinates: line?.coordinates || [],
+          source: "mappls",
+        };
+      }
     } catch {
       /* fall through */
     }
   }
-  if (Number.isFinite(from?.lng) && Number.isFinite(from?.lat) && Number.isFinite(to?.lng) && Number.isFinite(to?.lat)) {
-    try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=false`;
-      const data = await fetchJson(url);
-      const meters = Number(data?.routes?.[0]?.distance);
-      const km = kmFromMeters(meters);
-      if (km != null) return { km, meters, source: "fallback" };
-    } catch {
-      return null;
-    }
+  try {
+    return await osrmRoute(from, to);
+  } catch {
+    return null;
   }
-  return null;
+}
+
+export async function drivingDistanceKm(from, to) {
+  const route = await drivingRoute(from, to);
+  if (!route) return null;
+  return {
+    km: route.km,
+    meters: route.meters,
+    durationSec: route.durationSec,
+    source: route.source,
+  };
 }
 
 export function attachPlaceSearch(input, onPick) {
