@@ -496,6 +496,11 @@ header {
   font-size: 0.95rem;
 }
 
+.route-empty[hidden],
+.route-stats[hidden] {
+  display: none !important;
+}
+
 .route-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
