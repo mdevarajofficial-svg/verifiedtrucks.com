@@ -1,7 +1,8 @@
 # Verified Trucks
 
 GitHub: https://github.com/mdevarajofficial-svg/verifiedtrucks.com  
-Live: https://verifiedtrucks-20.web.app  
+Live (Firebase): https://verifiedtrucks-20.web.app  
+Custom domain: https://verifiedtrucks.com currently points at **Hostinger**, not Firebase. Updating Firebase does not change Google search or verifiedtrucks.com until Hostinger is synced from `main`, or the domain is added in Firebase Hosting and DNS is switched. 
 
 Each Google account sees posted loads, the lowest bid (accept/reject), a 30-minute live market, and can bid on any load except their own.
 
