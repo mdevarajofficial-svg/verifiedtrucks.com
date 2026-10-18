@@ -28,6 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/marketing.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 </head>
 <body class="home">
   <canvas id="confetti"></canvas>
@@ -148,7 +149,6 @@
               <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
             </div>
           </div>
-          <p id="route-distance" class="route-distance" hidden></p>
           <button type="submit" class="submit-btn" id="submit-btn" hidden>Book now</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
@@ -159,31 +159,22 @@
         </div>
       </div>
 
-      <div class="preview is-waiting" id="truck-preview">
-        <div class="truck-stage">
-          <div class="truck-parade" id="truck-parade" aria-hidden="true">
-            <div class="truck-parade-track" id="truck-parade-track"></div>
-          </div>
-          <img id="truck-image" class="truck-image" src="/assets/vehicles/v70-open.png" alt="Selected truck" width="840" height="472" decoding="async" hidden />
-          <p id="truck-caption" class="truck-caption" hidden></p>
-          <div id="model-picks" class="model-picks" aria-label="Matching vehicles"></div>
-          <div class="measure" id="measure" aria-label="Trailer length">
-            <div class="measure-scale">
-              <div class="measure-fill" id="measure-fill">
-                <span class="measure-value" id="measure-value">20 ft</span>
-              </div>
+      <aside class="route-preview" id="route-preview" aria-label="Route map">
+        <div id="route-map" class="route-map" role="img" aria-label="Map of loading and unloading route"></div>
+        <div class="route-facts">
+          <p id="route-empty" class="route-empty">Enter loading and unloading to see the road, distance and travel time.</p>
+          <dl id="route-stats" class="route-stats" hidden>
+            <div>
+              <dt>Distance</dt>
+              <dd id="route-km">—</dd>
             </div>
-            <div class="measure-ticks">
-              <span>0 ft</span>
-              <span>10</span>
-              <span>20</span>
-              <span>30</span>
-              <span>40 ft</span>
+            <div>
+              <dt>Travel time</dt>
+              <dd id="route-time">—</dd>
             </div>
-            <input class="measure-slider" id="measure-slider" type="range" min="7" max="40" value="10" aria-label="Measure trailer length in feet" />
-          </div>
+          </dl>
         </div>
-      </div>
+      </aside>
     </div>
 
     <section class="why" id="why">
@@ -198,8 +189,8 @@
         </article>
         <article class="why-card">
           <span class="why-num">02</span>
-          <h3>See the vehicle size</h3>
-          <p>Each feet size shows one matching model so you can picture the truck, not a catalogue of brands.</p>
+          <h3>See the route</h3>
+          <p>Loading and unloading pin the map. Distance and travel time sit beside the form while you finish the booking.</p>
         </article>
         <article class="why-card">
           <span class="why-num">03</span>
@@ -255,6 +246,7 @@
     "description": "Post a load and book a truck online in India for mini trucks, tempos, lorries, open body and container vehicles."
   }
   </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script type="module" src="/assets/lead-form.js"></script>
   <script type="module" src="/assets/nav-auth.js"></script>
 </body>
