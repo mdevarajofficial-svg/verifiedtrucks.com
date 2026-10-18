@@ -16,6 +16,26 @@ body {
   overflow-wrap: anywhere;
 }
 
+body.home {
+  background: linear-gradient(180deg, #0a2a5c 0%, #123a78 160px, #1d4f91 280px, #d7ebfb 460px, #f4f9fd 100%);
+}
+
+body.home header {
+  background: rgba(8, 28, 64, 0.88);
+  border-bottom-color: #1e4b8c;
+}
+
+body.home .header-brand,
+body.home .site-nav a {
+  color: #e0f2fe;
+}
+
+body.home .site-nav a:hover,
+body.home .site-nav a:focus {
+  color: #fff;
+  background: rgba(56, 189, 248, 0.22);
+}
+
 img {
   max-width: 100%;
   height: auto;
@@ -108,6 +128,16 @@ header {
   text-align: center;
 }
 
+.home .hero-intro {
+  position: relative;
+  margin: 8px 0 32px;
+  padding: 28px 20px 26px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #082048 0%, #0b3a7a 48%, #1554a8 100%);
+  box-shadow: 0 18px 40px rgba(8, 32, 72, 0.28);
+  overflow: hidden;
+}
+
 .hero-kicker {
   margin: 0 0 8px;
   font-size: 0.75rem;
@@ -115,6 +145,27 @@ header {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #0284c7;
+}
+
+.hero-claim {
+  max-width: 22ch;
+  margin: 0 auto 12px;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: clamp(1.05rem, 3.2vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-transform: none;
+  color: #7dd3fc;
+}
+
+.home .hero-intro h1 {
+  color: #fff;
+  max-width: 16ch;
+}
+
+.home .hero-lead {
+  color: #dbeafe;
 }
 
 .hero-intro h1 {
@@ -134,6 +185,45 @@ header {
   color: #444;
   font-size: 1.05rem;
   line-height: 1.5;
+}
+
+.party-streamers {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 1200;
+  display: flex;
+  justify-content: space-around;
+  overflow: hidden;
+}
+
+.party-streamers span {
+  width: 10px;
+  height: 88px;
+  border-radius: 0 0 10px 10px;
+  transform-origin: top center;
+  animation: streamer-sway 2.4s ease-in-out infinite;
+}
+
+.party-streamers span:nth-child(1) { background: #38bdf8; height: 96px; animation-delay: 0s; }
+.party-streamers span:nth-child(2) { background: #facc15; height: 72px; animation-delay: 0.15s; }
+.party-streamers span:nth-child(3) { background: #fb7185; height: 110px; animation-delay: 0.3s; }
+.party-streamers span:nth-child(4) { background: #a78bfa; height: 80px; animation-delay: 0.08s; }
+.party-streamers span:nth-child(5) { background: #34d399; height: 102px; animation-delay: 0.4s; }
+.party-streamers span:nth-child(6) { background: #fb923c; height: 70px; animation-delay: 0.22s; }
+.party-streamers span:nth-child(7) { background: #7dd3fc; height: 118px; animation-delay: 0.12s; }
+.party-streamers span:nth-child(8) { background: #f472b6; height: 86px; animation-delay: 0.35s; }
+.party-streamers span:nth-child(9) { background: #fde047; height: 94px; animation-delay: 0.18s; }
+.party-streamers span:nth-child(10) { background: #60a5fa; height: 76px; animation-delay: 0.28s; }
+.party-streamers span:nth-child(11) { background: #4ade80; height: 108px; animation-delay: 0.05s; }
+.party-streamers span:nth-child(12) { background: #fda4af; height: 82px; animation-delay: 0.42s; }
+
+@keyframes streamer-sway {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(11deg); }
 }
 
 .ten-mark {
@@ -192,8 +282,15 @@ header {
   .truck-stage.is-driving::before,
   .truck-parade-track,
   .why-card,
-  .booking .lead-form-container {
+  .booking .lead-form-container,
+  .party-streamers span {
     animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .party-streamers {
+    display: none;
   }
 }
 
@@ -1167,6 +1264,11 @@ header {
   .hero-intro h1 {
     max-width: none;
     font-size: 1.55rem;
+  }
+
+  .hero-claim {
+    max-width: none;
+    font-size: 1.05rem;
   }
 
   .why {
