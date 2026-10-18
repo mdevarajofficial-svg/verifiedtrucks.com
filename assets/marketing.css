@@ -457,12 +457,23 @@ header {
   top: 88px;
 }
 
+.booking-stage {
+  min-width: 0;
+  position: sticky;
+  top: 88px;
+}
+
+.preview[hidden],
+.route-preview[hidden],
+.booking-stage[hidden] {
+  display: none !important;
+}
+
 .route-preview {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  position: sticky;
-  top: 88px;
+  position: static;
   min-width: 0;
 }
 
@@ -1167,6 +1178,11 @@ header {
   }
 
   .preview {
+    position: static;
+    order: -1;
+  }
+
+  .booking-stage {
     position: static;
     order: -1;
   }
@@ -2249,7 +2265,8 @@ header {
 }
 
 .booking.is-posted .preview,
-.booking.is-posted .route-preview {
+.booking.is-posted .route-preview,
+.booking.is-posted .booking-stage {
   display: none;
 }
 

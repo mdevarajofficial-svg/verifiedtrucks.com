@@ -38,6 +38,11 @@ export function initRouteMap(container) {
   setTimeout(() => map.invalidateSize(), 80);
 }
 
+export function revealRouteMap() {
+  if (!map) return;
+  setTimeout(() => map.invalidateSize(), 80);
+}
+
 export function paintRouteMap(pickup, drop, coordinates) {
   if (!map) return;
   pickupMarker = clearLayer(pickupMarker);
