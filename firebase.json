@@ -6,6 +6,18 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "https://verifiedtrucks.com/",
+        "type": 301
+      },
+      {
+        "regex": "^/(.+)$",
+        "destination": "https://verifiedtrucks.com/:1",
+        "type": 301
+      }
+    ],
     "rewrites": [
       { "source": "/about", "destination": "/about.html" },
       { "source": "/book-truck-online", "destination": "/book-truck-online.html" },
