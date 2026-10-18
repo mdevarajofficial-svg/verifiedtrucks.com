@@ -258,11 +258,13 @@ function celebrateBooked() {
   celebrated = true;
   booked = true;
   stopTick();
-  statusCard.hidden = false;
-  statusCard.classList.remove("is-waiting");
-  statusCard.classList.add("is-premium");
-  statusTitle.textContent = "Vehicle booked successfully";
-  statusCopy.textContent = "Your truck is confirmed. We will share vehicle details on your number.";
+  if (statusCard) {
+    statusCard.hidden = false;
+    statusCard.classList.remove("is-waiting");
+    statusCard.classList.add("is-premium", "is-confirmed");
+  }
+  if (statusTitle) statusTitle.textContent = "Vehicle booked successfully";
+  if (statusCopy) statusCopy.textContent = "Your truck is confirmed. We will share vehicle details on your number.";
   showerConfetti();
 }
 
@@ -367,7 +369,25 @@ async function refreshRoute() {
   paintRouteFacts();
 }
 
-function showPosted(endsAt, leadId, km) {
+function setPostedFact(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text || "—";
+}
+
+function fillPostedFacts(details = {}) {
+  const km = details.km ?? details.distanceKm;
+  const durationSec = details.durationSec;
+  const size = details.sizeFeet ?? details.sizeFt;
+  const weight = details.tonnage;
+  setPostedFact("posted-from", details.from || details.loadingLocation);
+  setPostedFact("posted-to", details.to || details.unloadingLocation);
+  setPostedFact("posted-distance", km != null && km !== "" ? `${km} km` : "—");
+  setPostedFact("posted-time", details.travelTime || formatTravelTime(durationSec) || "—");
+  setPostedFact("posted-size", size != null && size !== "" ? `${size} ft` : "—");
+  setPostedFact("posted-weight", weight != null && weight !== "" ? `${weight} T` : "—");
+}
+
+function showPosted(endsAt, leadId, details) {
   postedLive = true;
   form.hidden = true;
   document.getElementById("form-heading").hidden = true;
@@ -375,13 +395,17 @@ function showPosted(endsAt, leadId, km) {
   if (truckPreview) truckPreview.hidden = true;
   if (bookingStage) bookingStage.hidden = true;
   document.querySelector(".booking")?.classList.add("is-posted");
-  statusCard.hidden = false;
-  statusCard.classList.remove("is-waiting");
-  statusCard.classList.add("is-premium");
-  statusTitle.textContent = "Load Posted";
-  const kmLine = km?.km != null ? ` Total distance ${km.km} km.` : "";
-  const timeLine = formatTravelTime(km?.durationSec);
-  statusCopy.textContent = `We have your load.${kmLine}${timeLine ? ` Travel time about ${timeLine}.` : ""} A quote will be shared on your number.`;
+  fillPostedFacts(details || {});
+  if (statusCard) {
+    statusCard.hidden = false;
+    statusCard.classList.remove("is-waiting", "is-confirmed");
+    statusCard.classList.add("is-premium");
+  }
+  if (statusTitle) statusTitle.textContent = "Preparing Quote";
+  if (statusCopy) statusCopy.textContent = "Vehicle will be assigned shortly post Confirmation";
+  requestAnimationFrame(() => {
+    (statusCard || document.getElementById("book"))?.scrollIntoView({ block: "start", behavior: "smooth" });
+  });
   if (leadId) watchLead(leadId);
 }
 
@@ -466,8 +490,13 @@ if (existing.leadId) {
     if (!snap.exists()) return;
     const data = snap.data();
     showPosted(Number(data.timerEndsAt) || Date.now() + MARKET_MS, snap.id, {
+      from: data.loadingLocation,
+      to: data.unloadingLocation,
       km: data.distanceKm ?? null,
       durationSec: data.durationSec ?? null,
+      travelTime: data.travelTime,
+      sizeFeet: data.sizeFeet ?? data.sizeFt,
+      tonnage: data.tonnage,
     });
     if (data.booked) celebrateBooked();
   }).catch((err) => console.error(err));
@@ -598,7 +627,15 @@ form.addEventListener("submit", async (e) => {
     url.searchParams.set("load", loadRef.id);
     url.hash = "book";
     history.replaceState(null, "", url);
-    showPosted(endsAt, leadRef.id, routeKm);
+    showPosted(endsAt, leadRef.id, {
+      from: loadingLocation,
+      to: unloadingLocation,
+      km: distanceKm,
+      durationSec,
+      travelTime,
+      sizeFeet,
+      tonnage,
+    });
   } catch (err) {
     console.error(err);
     showMessage(err.message || "Could not post this load. Check Firestore rules.", "error");

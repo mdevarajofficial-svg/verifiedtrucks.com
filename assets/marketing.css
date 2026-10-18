@@ -436,6 +436,178 @@ header {
   box-shadow: 0 8px 28px rgba(2, 132, 199, 0.12);
 }
 
+.posted-result,
+.status-card.posted-result.is-premium {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(260px, 1.05fr) minmax(260px, 1fr);
+  gap: 22px;
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  scroll-margin-top: 76px;
+}
+
+.posted-result[hidden] {
+  display: none !important;
+}
+
+.posted-card {
+  background: #fff;
+  border: 1px solid #bae6fd;
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 10px 32px rgba(2, 132, 199, 0.1);
+}
+
+.posted-card-title {
+  margin: 0 0 16px;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #111;
+}
+
+.posted-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.posted-facts > div {
+  padding: 12px 12px 11px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
+  border: 1px solid #e8f4fc;
+}
+
+.posted-facts dt {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0369a1;
+}
+
+.posted-facts dd {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.35;
+}
+
+.posted-quote {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background:
+    radial-gradient(120% 90% at 12% 20%, rgba(56, 189, 248, 0.28), transparent 55%),
+    radial-gradient(90% 80% at 88% 88%, rgba(251, 191, 36, 0.22), transparent 50%),
+    linear-gradient(160deg, #061226 0%, #0b2748 48%, #12203a 100%);
+  box-shadow: 0 16px 40px rgba(2, 36, 80, 0.28);
+  overflow: hidden;
+  position: relative;
+}
+
+.posted-quote-copy {
+  min-width: 0;
+}
+
+.posted-quote #status-title {
+  margin: 0 0 8px;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  background: linear-gradient(95deg, #7dd3fc 0%, #38bdf8 28%, #fde68a 62%, #fbbf24 100%);
+  background-size: 180% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: quote-shimmer 3.2s ease-in-out infinite;
+}
+
+.posted-quote #status-copy {
+  margin: 0;
+  font-family: Outfit, "DM Sans", sans-serif;
+  font-size: clamp(0.98rem, 1.6vw, 1.18rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: #e2e8f0;
+  text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+}
+
+.bolt-wrap {
+  flex-shrink: 0;
+  width: 88px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  filter:
+    drop-shadow(0 0 8px rgba(56, 189, 248, 0.95))
+    drop-shadow(0 0 22px rgba(251, 191, 36, 0.7));
+  animation: bolt-glow 1.8s ease-in-out infinite;
+}
+
+.bolt-icon {
+  width: 64px;
+  height: 96px;
+  display: block;
+  animation: bolt-flash 2.4s ease-in-out infinite;
+}
+
+.status-card.is-confirmed .posted-quote #status-title {
+  background: linear-gradient(95deg, #86efac 0%, #fde68a 55%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes bolt-glow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px rgba(56, 189, 248, 0.85))
+      drop-shadow(0 0 16px rgba(251, 191, 36, 0.45));
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 14px rgba(96, 165, 250, 1))
+      drop-shadow(0 0 28px rgba(251, 191, 36, 0.95));
+    transform: translateY(-3px) scale(1.05);
+  }
+}
+
+@keyframes bolt-flash {
+  0%, 70%, 100% { opacity: 1; }
+  74% { opacity: 0.55; }
+  80% { opacity: 1; }
+  86% { opacity: 0.7; }
+}
+
+@keyframes quote-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bolt-wrap,
+  .bolt-icon,
+  .posted-quote #status-title {
+    animation: none;
+  }
+}
+
 .premium-kicker {
   margin: 0 0 6px;
   font-size: 0.72rem;
@@ -2264,6 +2436,7 @@ header {
   border-color: #111;
 }
 
+.booking.is-posted .lead-form-container,
 .booking.is-posted .preview,
 .booking.is-posted .route-preview,
 .booking.is-posted .booking-stage {
@@ -2343,6 +2516,41 @@ header {
 
   .booking {
     gap: 14px;
+  }
+
+  .posted-result,
+  .status-card.posted-result.is-premium {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    order: 1;
+    padding: 0;
+  }
+
+  .posted-quote {
+    flex-direction: row;
+    padding: 18px 16px;
+  }
+
+  .bolt-wrap {
+    width: 64px;
+    height: 84px;
+  }
+
+  .bolt-icon {
+    width: 46px;
+    height: 70px;
+  }
+
+  .posted-quote #status-title {
+    font-size: 1.42rem;
+  }
+
+  .posted-quote #status-copy {
+    font-size: 0.95rem;
+  }
+
+  .posted-facts {
+    grid-template-columns: 1fr 1fr;
   }
 
   .lead-form-container {
@@ -2574,7 +2782,7 @@ header {
     padding-bottom: 20px;
   }
 
-  .status-card.is-premium {
+  .status-card.is-premium:not(.posted-result) {
     padding: 16px 14px;
   }
 }

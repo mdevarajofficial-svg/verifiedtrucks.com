@@ -51,8 +51,8 @@
       <p class="hero-lead">Post your load. Get a truck. Share pickup, drop, size and weight — we send the quote to your number.</p>
     </section>
 
-    <div class="booking">
-      <div class="lead-form-container" id="book">
+    <div class="booking" id="book">
+      <div class="lead-form-container">
         <h2 id="form-heading">Book a truck</h2>
         <form id="lead-form" novalidate>
           <div class="form-row route-row">
@@ -152,11 +152,57 @@
           <button type="submit" class="submit-btn" id="submit-btn" hidden>Book now</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
-        <div id="status-card" class="status-card" hidden>
+      </div>
+
+      <div id="status-card" class="status-card posted-result" hidden>
+        <article class="posted-card" aria-labelledby="posted-card-title">
           <p class="premium-kicker">Load posted</p>
-          <h2 id="status-title">Load Posted</h2>
-          <p id="status-copy">Best Possible Quote will be Given within 30 Min</p>
-        </div>
+          <h2 id="posted-card-title" class="posted-card-title">Trip details</h2>
+          <dl class="posted-facts">
+            <div>
+              <dt>From</dt>
+              <dd id="posted-from">—</dd>
+            </div>
+            <div>
+              <dt>To</dt>
+              <dd id="posted-to">—</dd>
+            </div>
+            <div>
+              <dt>Distance</dt>
+              <dd id="posted-distance">—</dd>
+            </div>
+            <div>
+              <dt>Travel time</dt>
+              <dd id="posted-time">—</dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd id="posted-size">—</dd>
+            </div>
+            <div>
+              <dt>Weight</dt>
+              <dd id="posted-weight">—</dd>
+            </div>
+          </dl>
+        </article>
+        <aside class="posted-quote" aria-live="polite">
+          <div class="bolt-wrap" aria-hidden="true">
+            <svg class="bolt-icon" viewBox="0 0 64 96" fill="none">
+              <defs>
+                <linearGradient id="bolt-fill" x1="18" y1="4" x2="48" y2="92" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#38bdf8"/>
+                  <stop offset="0.45" stop-color="#60a5fa"/>
+                  <stop offset="1" stop-color="#fbbf24"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#bolt-fill)" d="M38.2 3.2 8.6 52.4c-.9 1.5.2 3.4 2 3.4h16.4L14.4 92.2c-1.2 2.1 1.5 4.1 3.3 2.5L56.8 42.8c1.1-1.1.3-3-1.3-3H37.8L41.8 5.6c.5-2.1-2.2-3.4-3.6-2.4Z"/>
+            </svg>
+          </div>
+          <div class="posted-quote-copy">
+            <h2 id="status-title">Preparing Quote</h2>
+            <p id="status-copy">Vehicle will be assigned shortly post Confirmation</p>
+          </div>
+        </aside>
       </div>
 
       <div class="booking-stage" id="booking-stage">
