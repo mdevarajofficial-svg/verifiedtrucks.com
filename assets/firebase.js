@@ -1,33 +1,51 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import {
+  initializeAuth,
   getAuth,
   GoogleAuthProvider,
-  setPersistence,
+  indexedDBLocalPersistence,
   browserLocalPersistence,
+  browserPopupRedirectResolver,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-try {
-  await setPersistence(auth, browserLocalPersistence);
-} catch {
-  /* keep the Firebase default (this browser / device) */
+export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+
+function makeAuth() {
+  try {
+    return initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+      popupRedirectResolver: browserPopupRedirectResolver,
+    });
+  } catch {
+    return getAuth(app);
+  }
 }
+
+export const auth = makeAuth();
 export const db = getFirestore(app);
+export const storage = getStorage(app);
+const storageFallback = getStorage(app, "gs://verifiedtrucks-20.appspot.com");
+
 const provider = new GoogleAuthProvider();
 provider.addScope("email");
 provider.addScope("profile");
+provider.setCustomParameters({ prompt: "select_account" });
+
+function preferRedirectSignIn() {
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod|Android/i.test(ua);
+}
 
 export function waitForUser() {
   return new Promise((resolve) => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    const unsub = auth.onAuthStateChanged((user) => {
       unsub();
       resolve(user);
     });
@@ -49,13 +67,34 @@ export function explainAuthError(err) {
   if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
     return "Google sign-in was closed before it finished. Tap Continue with Google again.";
   }
+  if (code === "auth/web-storage-unsupported") {
+    return "This browser blocked login storage. Allow cookies and site data for verifiedtrucks.com, then try again.";
+  }
   if (code === "auth/network-request-failed") {
     return "Network error during Google sign-in. Check your connection and try again.";
+  }
+  if (code === "storage/unauthorized" || code === "storage/unauthorized-app") {
+    return "Signed in, but Firebase Storage blocked the file. Deploy storage.rules for project verifiedtrucks-20.";
   }
   if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
     return "You signed in, but Firestore blocked saving the profile. Deploy the latest firestore.rules for project verifiedtrucks-20.";
   }
   return err?.message || "Google sign-in failed.";
+}
+
+export function explainStorageError(err) {
+  const code = err?.code || "";
+  if (code === "storage/unauthorized" || code === "storage/unauthorized-app") {
+    return "Firebase Storage blocked this upload. Deploy storage.rules for verifiedtrucks-20 and allow this domain in Storage CORS.";
+  }
+  if (code === "storage/retry-limit-exceeded" || code === "storage/cannot-slice-blob") {
+    return "The photo did not finish uploading. Try a smaller JPG or PNG (under 5 MB).";
+  }
+  if (code === "storage/canceled") return "Photo upload was cancelled.";
+  if (code === "storage/unknown" || /cors|network/i.test(err?.message || "")) {
+    return "Photo upload could not reach Firebase Storage from this domain. CORS must allow verifiedtrucks.com.";
+  }
+  return err?.message || "Could not upload the photo.";
 }
 
 export async function completeGoogleRedirect() {
@@ -69,10 +108,18 @@ export async function completeGoogleRedirect() {
 
 export async function signInGoogle() {
   try {
+    if (preferRedirectSignIn()) {
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
     const result = await signInWithPopup(auth, provider);
     return result.user;
   } catch (err) {
-    if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+    if (
+      err.code === "auth/popup-blocked" ||
+      err.code === "auth/operation-not-supported-in-this-environment" ||
+      err.code === "auth/internal-error"
+    ) {
       await signInWithRedirect(auth, provider);
       return null;
     }
@@ -83,6 +130,26 @@ export async function signInGoogle() {
 
 export function signOutUser() {
   return signOut(auth);
+}
+
+async function putPhoto(bucket, uid, file) {
+  const safeType = (file.type || "image/jpeg").split("/")[1] || "jpg";
+  const objectRef = ref(bucket, `users/${uid}/avatar.${safeType}`);
+  await uploadBytes(objectRef, file, { contentType: file.type || "image/jpeg" });
+  return getDownloadURL(objectRef);
+}
+
+export async function uploadProfilePhoto(uid, file) {
+  try {
+    return await putPhoto(storage, uid, file);
+  } catch (err) {
+    try {
+      return await putPhoto(storageFallback, uid, file);
+    } catch {
+      err.friendlyMessage = explainStorageError(err);
+      throw err;
+    }
+  }
 }
 
 export const googleBtnHtml = `

@@ -22,7 +22,7 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy Hosting + Firestore rules
+      - name: Deploy Hosting + Firestore + Storage rules
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
@@ -31,3 +31,4 @@ jobs:
             exit 1
           fi
           firebase deploy --only hosting,firestore --project verifiedtrucks-20 --token "$FIREBASE_TOKEN" --non-interactive
+          firebase deploy --only storage --project verifiedtrucks-20 --token "$FIREBASE_TOKEN" --non-interactive || echo "::warning::Storage rules were not deployed. Enable Storage in the Firebase console, then re-run."

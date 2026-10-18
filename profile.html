@@ -36,9 +36,10 @@
   </header>
 
   <main class="page profile-page">
-    <div id="profile-gate" class="lead-form-container">
-      <h1 id="gate-title">Login with Google</h1>
-      <p id="gate-copy">Sign in with Google. This device stays signed in until you tap Sign out. Your account is for posting loads, not for bidding as a transporter.</p>
+    <div id="profile-gate" class="profile-card">
+      <p class="profile-kicker">Account</p>
+      <h1 id="gate-title">Sign in</h1>
+      <p id="gate-copy">Continue with Google to save your number and photo on this device.</p>
       <button type="button" class="google-btn" id="profile-google">
         <span class="google-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18">
@@ -48,42 +49,47 @@
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
         </span>
-        Continue with Google
+        <span class="google-btn-label">Continue with Google</span>
       </button>
       <p id="gate-error" class="form-message" hidden></p>
     </div>
 
     <div id="profile-app" hidden>
-      <div class="profile-head lead-form-container">
-        <div>
-          <p class="profile-role" id="profile-role">Member</p>
-          <h1 id="profile-name">Profile</h1>
-          <p id="profile-email" class="profile-email"></p>
+      <section class="profile-card" aria-labelledby="profile-name">
+        <div class="profile-identity">
+          <img id="profile-avatar" class="profile-avatar" alt="" width="88" height="88" hidden />
+          <div class="profile-identity-copy">
+            <p class="profile-role" id="profile-role">Load party</p>
+            <h1 id="profile-name">Account</h1>
+            <p id="profile-email" class="profile-email"></p>
+          </div>
         </div>
-        <button type="button" class="text-btn" id="profile-signout">Sign out</button>
-      </div>
-
-      <section class="lead-form-container" aria-labelledby="saved-heading">
-        <h2 id="saved-heading">Saved details</h2>
-        <div id="profile-details"></div>
-        <form id="phone-form" class="bid-form" style="margin-top:12px">
-          <label>
-            <span class="field-label">Mobile number (10 digits)</span>
-            <input id="profile-phone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="Saved on your profile" />
+        <div class="profile-photo-row">
+          <input id="profile-photo-file" type="file" accept="image/*" hidden />
+          <button type="button" class="text-btn" id="profile-photo-btn">Change photo</button>
+          <button type="button" class="text-btn" id="profile-signout">Sign out</button>
+        </div>
+        <p id="profile-photo-error" class="form-message error" hidden></p>
+        <form id="phone-form" class="profile-phone-form">
+          <label for="profile-phone">
+            <span class="field-label">Mobile number</span>
+            <input id="profile-phone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit number" />
           </label>
-          <button type="submit" class="submit-btn">Save phone</button>
+          <button type="submit" class="submit-btn">Save</button>
         </form>
+        <p id="phone-save-msg" class="form-message" hidden></p>
       </section>
 
       <section id="admin-panel" class="profile-section admin-panel" hidden>
         <h2>Admin dashboard</h2>
-        <p class="section-lead">All bookings and bids with phone numbers and timestamps. Mark a bid booked to stop the timer and confirm that vehicle.</p>
+        <p class="section-lead">Bookings and bids. Mark booked to confirm the vehicle.</p>
         <div id="admin-board" class="admin-board"></div>
       </section>
     </div>
   </main>
 
   <script type="module" src="/assets/profile.js"></script>
+  <script type="module" src="/assets/nav-auth.js"></script>
   <footer class="site-footer">
     <div class="footer-inner">
       <p><strong>Verified Trucks</strong> — post a load and book a truck online in India.</p>
