@@ -10,6 +10,7 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
+import { attachPlaceSearch, drivingDistanceKm, searchPlaces } from "/assets/mappls.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
 const app = initializeApp(firebaseConfig);
@@ -37,7 +38,11 @@ const modelSelect = document.getElementById("vehicle-model");
 const modelPicks = document.getElementById("model-picks");
 const truckPreview = document.getElementById("truck-preview");
 const tonnageInput = document.getElementById("tonnage");
+const routeDistance = document.getElementById("route-distance");
 let lastAutoTonnage = null;
+let pickupPlace = null;
+let dropPlace = null;
+let routeKm = null;
 
 const STEPS = [
   { id: "loading-location", ready: (v) => v.length >= 2 },
@@ -289,6 +294,17 @@ measureSlider.addEventListener("input", () => {
   el.addEventListener("blur", () => advanceNow(id));
 });
 
+attachPlaceSearch(document.getElementById("loading-location"), (place) => {
+  pickupPlace = place;
+  refreshDistance();
+  scheduleAdvance("loading-location");
+});
+attachPlaceSearch(document.getElementById("unloading-location"), (place) => {
+  dropPlace = place;
+  refreshDistance();
+  scheduleAdvance("unloading-location");
+});
+
 form.addEventListener("keydown", (e) => {
   if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
   const id = e.target.id;
@@ -300,15 +316,39 @@ form.addEventListener("keydown", (e) => {
   }
 });
 
-function showPosted(endsAt, leadId) {
+function paintRouteKm() {
+  if (!routeDistance) return;
+  if (routeKm?.km != null) {
+    routeDistance.hidden = false;
+    routeDistance.textContent = `Total distance: ${routeKm.km} km`;
+  } else {
+    routeDistance.hidden = true;
+    routeDistance.textContent = "";
+  }
+}
+
+async function refreshDistance() {
+  if (!pickupPlace || !dropPlace) {
+    routeKm = null;
+    paintRouteKm();
+    return;
+  }
+  routeKm = await drivingDistanceKm(pickupPlace, dropPlace);
+  paintRouteKm();
+}
+
+function showPosted(endsAt, leadId, km) {
   postedLive = true;
   form.hidden = true;
   document.getElementById("form-heading").hidden = true;
+  if (truckPreview) truckPreview.hidden = true;
+  document.querySelector(".booking")?.classList.add("is-posted");
   statusCard.hidden = false;
   statusCard.classList.remove("is-waiting");
   statusCard.classList.add("is-premium");
   statusTitle.textContent = "Load Posted";
-  statusCopy.textContent = "We have your load. A quote will be shared on your number.";
+  const kmLine = km?.km != null ? ` Total distance ${km.km} km.` : "";
+  statusCopy.textContent = `We have your load.${kmLine} A quote will be shared on your number.`;
   if (leadId) watchLead(leadId);
 }
 
@@ -332,6 +372,7 @@ function loadAlertHtml(details) {
     ["Vehicle type", `${details.sizeFeet} ft · ${details.bodyType} · ${details.vehicleName}`],
     ["Weight", `${details.tonnage} T`],
     ["Contact number", details.contactPhone],
+    ["Total distance", details.distanceKm != null ? `${details.distanceKm} km` : "—"],
     ["Load ID", details.loadId],
   ];
   const bodyRows = rows.map(([label, value]) => `
@@ -344,7 +385,7 @@ function loadAlertHtml(details) {
 <body style="margin:0;padding:24px;background:#f6f7f8;font-family:Arial,Helvetica,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #ececec;border-radius:12px;overflow:hidden;">
     <tr>
-      <td style="padding:20px 24px;background:#0f766e;color:#fff;">
+      <td style="padding:20px 24px;background:#0284c7;color:#fff;">
         <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.85;">Verified Trucks</div>
         <div style="font-size:20px;font-weight:700;margin-top:6px;">New load posted</div>
       </td>
@@ -370,6 +411,7 @@ async function sendLoadAlert(details) {
         `Vehicle: ${details.sizeFeet} ft · ${details.bodyType} · ${details.vehicleName}`,
         `Weight: ${details.tonnage} T`,
         `Contact: ${details.contactPhone}`,
+        `Distance: ${details.distanceKm != null ? `${details.distanceKm} km` : "—"}`,
         `Load ID: ${details.loadId}`,
       ].join("\n"),
       html: loadAlertHtml(details),
@@ -386,7 +428,9 @@ if (existing.leadId) {
   getDoc(doc(db, "leads", existing.leadId)).then((snap) => {
     if (!snap.exists()) return;
     const data = snap.data();
-    showPosted(Number(data.timerEndsAt) || Date.now() + MARKET_MS, snap.id);
+    showPosted(Number(data.timerEndsAt) || Date.now() + MARKET_MS, snap.id, {
+      km: data.distanceKm ?? null,
+    });
     if (data.booked) celebrateBooked();
   }).catch((err) => console.error(err));
 }
@@ -416,11 +460,33 @@ form.addEventListener("submit", async (e) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "Posting…";
   const endsAt = Date.now() + MARKET_MS;
+  if (!pickupPlace) {
+    pickupPlace = (await searchPlaces(loadingLocation))[0] || { name: loadingLocation, address: loadingLocation };
+  }
+  if (!dropPlace) {
+    dropPlace = (await searchPlaces(unloadingLocation))[0] || { name: unloadingLocation, address: unloadingLocation };
+  }
+  if (!routeKm) {
+    routeKm = await drivingDistanceKm(pickupPlace, dropPlace);
+    paintRouteKm();
+  }
 
   try {
+    const distanceKm = routeKm?.km ?? null;
+    const distanceMeters = routeKm?.meters ?? null;
     const loadRef = await addDoc(collection(db, "loads"), {
       loadingLocation,
       unloadingLocation,
+      pickupAddress: pickupPlace?.address || loadingLocation,
+      dropAddress: dropPlace?.address || unloadingLocation,
+      pickupLat: pickupPlace?.lat ?? null,
+      pickupLng: pickupPlace?.lng ?? null,
+      dropLat: dropPlace?.lat ?? null,
+      dropLng: dropPlace?.lng ?? null,
+      pickupEloc: pickupPlace?.eloc || null,
+      dropEloc: dropPlace?.eloc || null,
+      distanceKm,
+      distanceMeters,
       sizeFt: Number(sizeFeet),
       sizeFeet,
       bodyType,
@@ -449,6 +515,12 @@ form.addEventListener("submit", async (e) => {
       bodyType,
       tonnage,
       contactPhone,
+      pickupLat: pickupPlace?.lat ?? null,
+      pickupLng: pickupPlace?.lng ?? null,
+      dropLat: dropPlace?.lat ?? null,
+      dropLng: dropPlace?.lng ?? null,
+      distanceKm,
+      distanceMeters,
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
       vehicleMake: vehicle.make,
@@ -470,6 +542,7 @@ form.addEventListener("submit", async (e) => {
         vehicleName: vehicle.name,
         tonnage,
         contactPhone,
+        distanceKm,
         loadId: loadRef.id,
       });
     } catch (mailErr) {
@@ -480,7 +553,7 @@ form.addEventListener("submit", async (e) => {
     url.searchParams.set("load", loadRef.id);
     url.hash = "book";
     history.replaceState(null, "", url);
-    showPosted(endsAt, leadRef.id);
+    showPosted(endsAt, leadRef.id, routeKm);
   } catch (err) {
     console.error(err);
     showMessage(err.message || "Could not post this load. Check Firestore rules.", "error");

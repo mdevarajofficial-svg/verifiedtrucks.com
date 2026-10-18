@@ -16,7 +16,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#0284c7" />
   <meta name="description" content="Post your load online in India. Share pickup, drop, size and tonnage. We arrange a matching truck and share the quote on your number." />
   <meta property="og:title" content="Post a load — Verified Trucks" />
   <meta property="og:description" content="Hire open or container trucks online in India. Enter pickup, drop, size and weight. We take it from there." />
@@ -39,8 +39,7 @@
     <nav class="site-nav" aria-label="Page">
       <a href="#home">Home</a>
       <a href="#book">Book truck</a>
-      <a href="/about.html">About</a>
-      <a href="/vip.html">VIP</a>
+      <a href="/routes.html">Routes</a>
       <a href="/profile.html">Login</a>
     </nav>
   </header>
@@ -150,6 +149,7 @@
               <input type="tel" id="contact-phone" name="contactPhone" required autocomplete="tel" inputmode="numeric" enterkeyhint="done" maxlength="10" placeholder="10-digit mobile" pattern="[0-9]{10}" />
             </div>
           </div>
+          <p id="route-distance" class="route-distance" hidden></p>
           <button type="submit" class="submit-btn" id="submit-btn" hidden>Book now</button>
           <p id="form-message" class="form-message" role="status"></p>
         </form>
@@ -215,22 +215,33 @@
       </div>
       <div class="cta-row why-cta">
         <a class="cta-btn" href="#book">Post a load</a>
-        <a class="cta-btn cta-btn-secondary" href="/about.html">How it works</a>
+        <a class="cta-btn cta-btn-secondary" href="/routes.html">Cities we operate</a>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <p><strong>Verified Trucks</strong> — post a load and book a truck online in India.</p>
-    <nav aria-label="Footer">
-      <a href="/">Home</a>
-      <a href="/#book">Book truck</a>
-      <a href="/book-truck-online.html">Book truck online</a>
-      <a href="/truck-types.html">Truck types</a>
-      <a href="/about.html">About</a>
-      <a href="/vip.html">VIP</a>
-      <a href="/profile.html">Login</a>
-    </nav>
+    <footer class="site-footer">
+    <div class="footer-inner">
+      <p><strong>Verified Trucks</strong> — post a load and book a truck online in India.</p>
+      <h2 class="footer-services-title">Types of services we provide</h2>
+      <ul class="footer-services">
+        <li>Packers and movers</li>
+        <li>House shifting</li>
+        <li>Warehouse</li>
+        <li>Manufacturing hubs</li>
+        <li>Retail outlets</li>
+        <li>Commercial outlets</li>
+        <li>Inter state transfer</li>
+      </ul>
+      <nav aria-label="Footer">
+        <a href="/">Home</a>
+        <a href="/#book">Book truck</a>
+        <a href="/routes.html">Routes</a>
+        <a href="/book-truck-online.html">Book truck online</a>
+        <a href="/truck-types.html">Truck types</a>
+        <a href="/profile.html">Login</a>
+      </nav>
+    </div>
   </footer>
 
   <script type="application/ld+json">

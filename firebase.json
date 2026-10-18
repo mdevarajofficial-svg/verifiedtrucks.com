@@ -9,13 +9,15 @@
     "rewrites": [
       { "source": "/about", "destination": "/about.html" },
       { "source": "/book-truck-online", "destination": "/book-truck-online.html" },
-      { "source": "/transporters", "destination": "/about.html" },
-      { "source": "/transporters.html", "destination": "/about.html" },
+      { "source": "/transporters", "destination": "/routes.html" },
+      { "source": "/transporters.html", "destination": "/routes.html" },
       { "source": "/truck-types", "destination": "/truck-types.html" },
       { "source": "/verify-truck", "destination": "/index.html" },
       { "source": "/verify-truck.html", "destination": "/index.html" },
       { "source": "/profile", "destination": "/profile.html" },
-      { "source": "/vip", "destination": "/vip.html" },
+      { "source": "/routes", "destination": "/routes.html" },
+      { "source": "/vip", "destination": "/index.html" },
+      { "source": "/vip.html", "destination": "/index.html" },
       { "source": "**", "destination": "/index.html" }
     ],
     "headers": [
