@@ -1344,8 +1344,7 @@ header {
 
 .profile-page {
   max-width: 560px;
-  padding-top: 48px;
-  padding-bottom: 32px;
+  padding: 48px 20px 32px;
 }
 
 .profile-page h1,
