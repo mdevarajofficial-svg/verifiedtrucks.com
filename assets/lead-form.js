@@ -9,7 +9,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
+import { showerConfetti, startLiveCelebration, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
 import { attachPlaceSearch, drivingDistanceKm, searchPlaces } from "/assets/mappls.js";
 
 const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
@@ -422,6 +422,8 @@ async function sendLoadAlert(details) {
 mountVehicleParade();
 updateTruckPreview();
 refreshSteps(false);
+startLiveCelebration();
+showerConfetti();
 
 const existing = postedParams();
 if (existing.leadId) {
