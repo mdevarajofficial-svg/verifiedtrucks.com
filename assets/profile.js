@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   query,
   serverTimestamp,
@@ -140,6 +141,7 @@ function refreshLists() {
 }
 
 function fillSizeFilter() {
+  if (!sizeFilter) return;
   const sizes = [...new Set(VEHICLES.flatMap((v) => v.feet))].sort((a, b) => a - b);
   const current = sizeFilter.value || "all";
   sizeFilter.innerHTML = `<option value="all">All sizes</option>` +
@@ -236,7 +238,7 @@ async function publishPendingTransporter(user) {
 function paintLoggedOutGate() {
   showGate(
     "Login with Google",
-    "Sign in with Google. This device stays signed in until you tap Sign out. See live loads you posted, bids you placed, and the 30-minute market."
+    "Sign in with Google. This device stays signed in until you tap Sign out. Your account is for posting loads."
   );
 }
 
@@ -264,7 +266,7 @@ signOutBtn.addEventListener("click", () => signOutUser());
 document.getElementById("delete-all-loads")?.addEventListener("click", () => deleteAllLoads());
 document.getElementById("delete-all-bids")?.addEventListener("click", () => deleteAllBids());
 
-sizeFilter.addEventListener("change", () => {
+sizeFilter?.addEventListener("change", () => {
   renderBoard();
 });
 
@@ -296,6 +298,8 @@ onAuthStateChanged(auth, async (user) => {
       });
     }
     profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
+    await clearLegacyMarket(user);
+    profile = (await getDoc(doc(db, "users", user.uid))).data() || profile;
     renderShell();
     showApp();
   } catch (err) {
@@ -310,26 +314,52 @@ function renderShell() {
     profile.name || currentUser.displayName || "Member";
   document.getElementById("profile-role").textContent = admin ? "Admin" : "Member";
   document.getElementById("profile-email").textContent = currentUser.email || "";
-  document.getElementById("customer-panel").hidden = false;
-  document.getElementById("my-bids-panel").hidden = false;
-  document.getElementById("transporter-panel").hidden = false;
+  const customerPanel = document.getElementById("customer-panel");
+  const bidsPanel = document.getElementById("my-bids-panel");
+  const marketPanel = document.getElementById("transporter-panel");
+  if (customerPanel) customerPanel.hidden = true;
+  if (bidsPanel) bidsPanel.hidden = true;
+  if (marketPanel) marketPanel.hidden = true;
   document.getElementById("admin-panel").hidden = !admin;
   const phoneInput = document.getElementById("profile-phone");
   if (phoneInput) phoneInput.value = profile.phone || "";
   renderDetails();
-  listenLoads();
-  listenAllBids();
-  listenMyBids();
-  fillSizeFilter();
-  if (expireSweep) clearInterval(expireSweep);
-  expireSweep = setInterval(() => {
-    const expired = [...document.querySelectorAll("[data-ends]")].some(
-      (el) => Number(el.getAttribute("data-ends")) <= Date.now()
-    );
-    if (expired) refreshLists();
-  }, 1000);
   if (admin) listenAdmin();
   else stopAdmin();
+}
+
+async function clearLegacyMarket(user) {
+  if (!user) return;
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  const data = snap.exists() ? snap.data() : {};
+  if (data.legacyMarketCleared) return;
+  try {
+    const [loadSnap, bidSnap] = await Promise.all([
+      getDocs(collection(db, "loads")),
+      getDocs(collection(db, "bids")),
+    ]);
+    const myLoads = loadSnap.docs.filter((d) => {
+      const row = d.data();
+      return row.posterUid === user.uid || row.customerUid === user.uid;
+    });
+    const myLoadIds = new Set(myLoads.map((d) => d.id));
+    const refs = [];
+    myLoads.forEach((d) => {
+      refs.push(doc(db, "loads", d.id));
+      refs.push(doc(db, "loadPrivate", d.id));
+    });
+    bidSnap.docs.forEach((d) => {
+      const row = d.data();
+      if (row.bidderUid === user.uid || myLoadIds.has(row.loadId)) {
+        refs.push(doc(db, "bids", d.id));
+      }
+    });
+    await commitDeletes(refs);
+  } catch (err) {
+    console.error(err);
+  }
+  await setDoc(ref, { legacyMarketCleared: true, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 function renderDetails() {
@@ -345,7 +375,7 @@ function renderDetails() {
 function listenLoads() {
   const list = document.getElementById("customer-loads");
   const panel = document.getElementById("customer-panel");
-  panel.hidden = false;
+  if (panel) panel.hidden = true;
   if (loadsUnsub) loadsUnsub();
   loadsUnsub = onSnapshot(collection(db, "loads"), (snap) => {
     loadsById = new Map();

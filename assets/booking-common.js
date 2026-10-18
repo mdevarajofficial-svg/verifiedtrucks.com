@@ -44,7 +44,7 @@ function topChoices(list) {
   return list
     .slice()
     .sort((a, b) => makeRank(a.make) - makeRank(b.make) || a.name.localeCompare(b.name))
-    .slice(0, 4);
+    .slice(0, 1);
 }
 
 export function sizeClass(feet) {
@@ -94,22 +94,19 @@ export function vehicleSrc(vehicle, bodyType) {
 }
 
 export function paradeVehicles() {
+  const sizes = [...new Set(VEHICLES.flatMap((v) => v.feet))].sort((a, b) => a - b);
   const items = [];
-  VEHICLES.forEach((v) => {
-    v.bodies.forEach((body) => {
-      items.push({
-        src: vehicleSrc(v, body),
-        name: v.name,
-        body,
-      });
+  const seen = new Set();
+  sizes.forEach((ft) => {
+    ["open", "container"].forEach((body) => {
+      const v = vehiclesFor(ft, body)[0];
+      if (!v) return;
+      const src = vehicleSrc(v, body);
+      if (seen.has(src)) return;
+      seen.add(src);
+      items.push({ src, name: v.name, body });
     });
   });
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const swap = items[i];
-    items[i] = items[j];
-    items[j] = swap;
-  }
   return items;
 }
 

@@ -113,10 +113,9 @@ service cloud.firestore {
     }
 
     match /mail/{mailId} {
-      allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid
+      allow create: if request.resource.data.keys().hasAll(['to', 'message'])
         && request.resource.data.to.size() == 1
-        && request.resource.data.to[0] == request.auth.token.email;
+        && request.resource.data.to[0] == 'nivinnya@gmail.com';
       allow read, update, delete: if false;
     }
   }
