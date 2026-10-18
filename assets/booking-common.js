@@ -178,7 +178,7 @@ export function showerConfetti() {
   const canvas = document.getElementById("confetti");
   if (!canvas) return;
   if (liveParty) {
-    addPartyPieces(liveParty.pieces, 120, canvas);
+    addPartyPieces(liveParty.pieces, 180, canvas);
     return;
   }
   const ctx = canvas.getContext("2d");
@@ -246,12 +246,12 @@ export function startLiveCelebration() {
   window.addEventListener("resize", resize);
   canvas.classList.add("is-on");
 
-  addPartyPieces(pieces, 90, canvas);
+  addPartyPieces(pieces, 160, canvas);
   let lastBurst = performance.now();
 
   function frame(now) {
-    if (now - lastBurst > 2200) {
-      addPartyPieces(pieces, 28, canvas);
+    if (now - lastBurst > 1100) {
+      addPartyPieces(pieces, 48, canvas);
       lastBurst = now;
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -268,7 +268,7 @@ export function startLiveCelebration() {
       ctx.restore();
       if (p.y > canvas.height + 40) pieces.splice(i, 1);
     }
-    if (pieces.length > 220) pieces.splice(0, pieces.length - 220);
+    if (pieces.length > 360) pieces.splice(0, pieces.length - 360);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

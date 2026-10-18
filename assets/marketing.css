@@ -17,7 +17,7 @@ body {
 }
 
 body.home {
-  background: linear-gradient(180deg, #0a2a5c 0%, #123a78 160px, #1d4f91 280px, #d7ebfb 460px, #f4f9fd 100%);
+  background: linear-gradient(180deg, #041433 0%, #07275a 140px, #0a3a80 320px, #cfe6fb 520px, #f4f9fd 100%);
 }
 
 body.home header {
@@ -131,10 +131,10 @@ header {
 .home .hero-intro {
   position: relative;
   margin: 8px 0 32px;
-  padding: 28px 20px 26px;
+  padding: 32px 22px 28px;
   border-radius: 22px;
-  background: linear-gradient(160deg, #082048 0%, #0b3a7a 48%, #1554a8 100%);
-  box-shadow: 0 18px 40px rgba(8, 32, 72, 0.28);
+  background: linear-gradient(160deg, #03102c 0%, #06285f 42%, #0a4aa0 100%);
+  box-shadow: 0 22px 48px rgba(2, 16, 48, 0.42);
   overflow: hidden;
 }
 
@@ -148,20 +148,25 @@ header {
 }
 
 .hero-claim {
-  max-width: 22ch;
+  max-width: 18ch;
   margin: 0 auto 12px;
   font-family: Outfit, "DM Sans", sans-serif;
-  font-size: clamp(1.05rem, 3.2vw, 1.45rem);
+  font-size: clamp(1.55rem, 5vw, 2.7rem);
   font-weight: 800;
-  letter-spacing: 0.02em;
-  line-height: 1.25;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
   text-transform: none;
   color: #7dd3fc;
 }
 
-.home .hero-intro h1 {
-  color: #fff;
-  max-width: 16ch;
+.home .hero-intro h1.hero-claim {
+  color: #7dd3fc;
+  max-width: 18ch;
+  text-shadow: 0 8px 28px rgba(56, 189, 248, 0.35);
+}
+
+.home .hero-kicker {
+  color: #93c5fd;
 }
 
 .home .hero-lead {
@@ -192,7 +197,7 @@ header {
   top: 0;
   left: 0;
   right: 0;
-  height: 140px;
+  height: 210px;
   pointer-events: none;
   z-index: 1200;
   display: flex;
@@ -201,29 +206,42 @@ header {
 }
 
 .party-streamers span {
-  width: 10px;
-  height: 88px;
-  border-radius: 0 0 10px 10px;
+  width: 12px;
+  height: 120px;
+  border-radius: 0 0 12px 12px;
   transform-origin: top center;
-  animation: streamer-sway 2.4s ease-in-out infinite;
+  animation: streamer-sway 1.8s ease-in-out infinite;
 }
 
-.party-streamers span:nth-child(1) { background: #38bdf8; height: 96px; animation-delay: 0s; }
-.party-streamers span:nth-child(2) { background: #facc15; height: 72px; animation-delay: 0.15s; }
-.party-streamers span:nth-child(3) { background: #fb7185; height: 110px; animation-delay: 0.3s; }
-.party-streamers span:nth-child(4) { background: #a78bfa; height: 80px; animation-delay: 0.08s; }
-.party-streamers span:nth-child(5) { background: #34d399; height: 102px; animation-delay: 0.4s; }
-.party-streamers span:nth-child(6) { background: #fb923c; height: 70px; animation-delay: 0.22s; }
-.party-streamers span:nth-child(7) { background: #7dd3fc; height: 118px; animation-delay: 0.12s; }
-.party-streamers span:nth-child(8) { background: #f472b6; height: 86px; animation-delay: 0.35s; }
-.party-streamers span:nth-child(9) { background: #fde047; height: 94px; animation-delay: 0.18s; }
-.party-streamers span:nth-child(10) { background: #60a5fa; height: 76px; animation-delay: 0.28s; }
-.party-streamers span:nth-child(11) { background: #4ade80; height: 108px; animation-delay: 0.05s; }
-.party-streamers span:nth-child(12) { background: #fda4af; height: 82px; animation-delay: 0.42s; }
+.party-streamers span:nth-child(odd) { width: 8px; }
+.party-streamers span:nth-child(1) { background: #38bdf8; height: 150px; animation-delay: 0s; }
+.party-streamers span:nth-child(2) { background: #facc15; height: 110px; animation-delay: 0.12s; }
+.party-streamers span:nth-child(3) { background: #fb7185; height: 178px; animation-delay: 0.24s; }
+.party-streamers span:nth-child(4) { background: #a78bfa; height: 124px; animation-delay: 0.06s; }
+.party-streamers span:nth-child(5) { background: #34d399; height: 162px; animation-delay: 0.32s; }
+.party-streamers span:nth-child(6) { background: #fb923c; height: 102px; animation-delay: 0.18s; }
+.party-streamers span:nth-child(7) { background: #7dd3fc; height: 188px; animation-delay: 0.1s; }
+.party-streamers span:nth-child(8) { background: #f472b6; height: 136px; animation-delay: 0.28s; }
+.party-streamers span:nth-child(9) { background: #fde047; height: 148px; animation-delay: 0.14s; }
+.party-streamers span:nth-child(10) { background: #60a5fa; height: 118px; animation-delay: 0.22s; }
+.party-streamers span:nth-child(11) { background: #4ade80; height: 170px; animation-delay: 0.04s; }
+.party-streamers span:nth-child(12) { background: #fda4af; height: 128px; animation-delay: 0.36s; }
+.party-streamers span:nth-child(13) { background: #38bdf8; height: 98px; animation-delay: 0.2s; }
+.party-streamers span:nth-child(14) { background: #fbbf24; height: 156px; animation-delay: 0.08s; }
+.party-streamers span:nth-child(15) { background: #e879f9; height: 142px; animation-delay: 0.3s; }
+.party-streamers span:nth-child(16) { background: #22d3ee; height: 114px; animation-delay: 0.16s; }
+.party-streamers span:nth-child(17) { background: #f43f5e; height: 174px; animation-delay: 0.26s; }
+.party-streamers span:nth-child(18) { background: #84cc16; height: 108px; animation-delay: 0.02s; }
+.party-streamers span:nth-child(19) { background: #818cf8; height: 160px; animation-delay: 0.34s; }
+.party-streamers span:nth-child(20) { background: #fdba74; height: 122px; animation-delay: 0.11s; }
+.party-streamers span:nth-child(21) { background: #67e8f9; height: 146px; animation-delay: 0.19s; }
+.party-streamers span:nth-child(22) { background: #f9a8d4; height: 132px; animation-delay: 0.27s; }
+.party-streamers span:nth-child(23) { background: #bef264; height: 168px; animation-delay: 0.07s; }
+.party-streamers span:nth-child(24) { background: #93c5fd; height: 116px; animation-delay: 0.23s; }
 
 @keyframes streamer-sway {
-  0%, 100% { transform: rotate(-9deg); }
-  50% { transform: rotate(11deg); }
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(16deg); }
 }
 
 .ten-mark {
@@ -1268,7 +1286,7 @@ header {
 
   .hero-claim {
     max-width: none;
-    font-size: 1.05rem;
+    font-size: 1.45rem;
   }
 
   .why {
