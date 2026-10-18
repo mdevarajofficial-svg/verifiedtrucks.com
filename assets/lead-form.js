@@ -403,6 +403,9 @@ function showPosted(endsAt, leadId, details) {
   }
   if (statusTitle) statusTitle.textContent = "Preparing Quote";
   if (statusCopy) statusCopy.textContent = "Vehicle will be assigned shortly post Confirmation";
+  requestAnimationFrame(() => {
+    (statusCard || document.getElementById("book"))?.scrollIntoView({ block: "start", behavior: "smooth" });
+  });
   if (leadId) watchLead(leadId);
 }
 

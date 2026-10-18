@@ -447,6 +447,7 @@ header {
   border: 0;
   background: transparent;
   box-shadow: none;
+  scroll-margin-top: 76px;
 }
 
 .posted-result[hidden] {
