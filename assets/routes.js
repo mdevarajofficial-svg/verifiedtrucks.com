@@ -21,10 +21,7 @@ if (statesRoot) {
 if (servicesRoot) {
   servicesRoot.innerHTML = SERVICES.map((s) => `
     <article class="service-card" id="${s.id}">
-      <div class="state-head">
-        <h3>${escapeHtml(s.title)}</h3>
-        <a class="book-now-mini" href="/#book">Book now</a>
-      </div>
+      <h3>${escapeHtml(s.title)}</h3>
       <p>${escapeHtml(s.copy)}</p>
     </article>
   `).join("");
