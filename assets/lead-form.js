@@ -423,6 +423,7 @@ mountVehicleParade();
 updateTruckPreview();
 refreshSteps(false);
 startLiveCelebration();
+showerConfetti();
 
 const existing = postedParams();
 if (existing.leadId) {
