@@ -8,9 +8,9 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { auth, db } from "/assets/firebase.js";
-import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, sizeClass } from "/assets/booking-common.js";
+import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
 import { attachPlaceSearch, drivingRoute, formatTravelTime, searchPlaces } from "/assets/mappls.js";
-import { initRouteMap, paintRouteMap } from "/assets/route-map.js";
+import { initRouteMap, paintRouteMap, revealRouteMap } from "/assets/route-map.js";
 let signedInUser = null;
 onAuthStateChanged(auth, (user) => {
   signedInUser = user;
@@ -22,15 +22,23 @@ const formMessage = document.getElementById("form-message");
 const statusCard = document.getElementById("status-card");
 const statusTitle = document.getElementById("status-title");
 const statusCopy = document.getElementById("status-copy");
+const truckImage = document.getElementById("truck-image");
+const truckCaption = document.getElementById("truck-caption");
 const sizeInput = document.getElementById("size-feet");
 const bodyInput = document.getElementById("body-type");
+const measureFill = document.getElementById("measure-fill");
+const measureValue = document.getElementById("measure-value");
+const measureSlider = document.getElementById("measure-slider");
 const modelSelect = document.getElementById("vehicle-model");
+const modelPicks = document.getElementById("model-picks");
+const truckPreview = document.getElementById("truck-preview");
 const routePreview = document.getElementById("route-preview");
+const bookingStage = document.getElementById("booking-stage");
 const tonnageInput = document.getElementById("tonnage");
-const routeEmpty = document.getElementById("route-empty");
 const routeStats = document.getElementById("route-stats");
 const routeKmEl = document.getElementById("route-km");
 const routeTimeEl = document.getElementById("route-time");
+const routeBufferNote = document.getElementById("route-buffer-note");
 let lastAutoTonnage = null;
 let pickupPlace = null;
 let dropPlace = null;
@@ -121,6 +129,61 @@ function value(id) {
   return document.getElementById(id).value.trim();
 }
 
+let lastTruckSrc = truckImage?.getAttribute("src") || "";
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function playTruckDrive() {
+  if (!truckImage || prefersReducedMotion()) return;
+  const stage = truckImage.closest(".truck-stage");
+  truckImage.classList.remove("is-driving");
+  stage?.classList.remove("is-driving");
+  void truckImage.offsetWidth;
+  truckImage.classList.add("is-driving");
+  stage?.classList.add("is-driving");
+  truckImage.addEventListener("animationend", () => {
+    truckImage.classList.remove("is-driving");
+    stage?.classList.remove("is-driving");
+  }, { once: true });
+}
+
+function mountVehicleParade() {
+  const track = document.getElementById("truck-parade-track");
+  if (!track || track.childElementCount) return;
+  const items = paradeVehicles();
+  const slide = items.map((it) => (
+    `<figure class="truck-parade-item">
+      <img src="${it.src}" alt="" width="320" height="180" decoding="async" />
+    </figure>`
+  )).join("");
+  track.innerHTML = slide + slide;
+}
+
+function hasTypedSize() {
+  const n = Number(sizeInput?.value);
+  return Number.isFinite(n) && n >= 7 && n <= MEASURE_MAX_FT;
+}
+
+function syncRightPane() {
+  const showVehicle = hasTypedSize();
+  const showMap = !showVehicle && routeKm?.km != null;
+  if (truckPreview) {
+    truckPreview.hidden = showMap;
+    truckPreview.classList.toggle("is-waiting", !showVehicle);
+    truckPreview.classList.toggle("has-pick", showVehicle);
+  }
+  if (routePreview) {
+    const wasHidden = routePreview.hidden;
+    routePreview.hidden = !showMap;
+    if (showMap) {
+      paintRouteMap(pickupPlace, dropPlace, routeKm?.coordinates || []);
+      if (wasHidden) revealRouteMap();
+    }
+  }
+}
+
 function selectedVehicle(list) {
   return list.find((v) => v.id === modelSelect.value) || list[0];
 }
@@ -131,6 +194,7 @@ function updateTruckPreview() {
   const hasSize = Number.isFinite(typedSize) && typedSize >= 7;
   const feet = Math.max(7, Math.min(MEASURE_MAX_FT, hasSize ? typedSize : 10));
   if (hasSize) sizeInput.value = String(feet);
+  if (measureSlider) measureSlider.value = String(feet);
   const list = vehiclesFor(feet, bodyType);
   const prev = modelSelect.value;
   modelSelect.innerHTML = `<option value="" disabled>Select a vehicle</option>` +
@@ -139,7 +203,29 @@ function updateTruckPreview() {
   else if (list.length === 1) modelSelect.value = list[0].id;
   else modelSelect.value = "";
   const vehicle = selectedVehicle(list);
-  if (!vehicle) return;
+  if (!vehicle) {
+    syncRightPane();
+    return;
+  }
+  const hasBody = bodyInput.value === "open" || bodyInput.value === "container";
+  if (truckImage) truckImage.hidden = !hasSize;
+  if (hasSize) {
+    const nextSrc = vehicleSrc(vehicle, bodyType);
+    if (lastTruckSrc !== nextSrc) {
+      lastTruckSrc = nextSrc;
+      truckImage.src = nextSrc;
+      playTruckDrive();
+    }
+  }
+  if (truckCaption) {
+    if (hasSize) {
+      truckCaption.hidden = false;
+      truckCaption.textContent = vehicleCaption(vehicle, feet, hasBody ? bodyType : vehicle.bodies[0]);
+    } else {
+      truckCaption.hidden = true;
+      truckCaption.textContent = "";
+    }
+  }
   if (vehicle.defaultTonnage != null) {
     const cur = tonnageInput.value.trim();
     if (!cur || cur === String(lastAutoTonnage)) {
@@ -150,6 +236,14 @@ function updateTruckPreview() {
     tonnageInput.value = "";
     lastAutoTonnage = null;
   }
+  if (modelPicks) modelPicks.innerHTML = "";
+  if (measureFill) {
+    measureFill.style.width = `${(feet / MEASURE_MAX_FT) * 100}%`;
+  }
+  if (measureValue) {
+    measureValue.textContent = `${feet} ft`;
+  }
+  syncRightPane();
 }
 
 function stopTick() {
@@ -199,6 +293,12 @@ modelSelect.addEventListener("change", () => {
   updateTruckPreview();
   advanceNow("vehicle-model");
 });
+measureSlider?.addEventListener("input", () => {
+  sizeInput.value = measureSlider.value;
+  updateTruckPreview();
+  openStep("size-feet", false);
+  scheduleAdvance("size-feet");
+});
 
 ["loading-location", "unloading-location", "tonnage", "contact-phone"].forEach((id) => {
   const el = document.getElementById(id);
@@ -246,26 +346,18 @@ form.addEventListener("keydown", (e) => {
 
 function paintRouteFacts() {
   const hasTrip = routeKm?.km != null;
-  const hasPin = Number.isFinite(pickupPlace?.lat) || Number.isFinite(dropPlace?.lat);
-  if (routeEmpty) {
-    routeEmpty.hidden = hasTrip;
-    if (!hasTrip) {
-      routeEmpty.textContent = hasPin
-        ? "Add the other location to see distance and travel time."
-        : "Enter loading and unloading to see the road, distance and travel time.";
-    }
-  }
   if (routeStats) routeStats.hidden = !hasTrip;
+  if (routeBufferNote) routeBufferNote.hidden = !hasTrip;
   if (routeKmEl) routeKmEl.textContent = hasTrip ? `${routeKm.km} km` : "—";
   if (routeTimeEl) {
     const time = formatTravelTime(routeKm?.durationSec);
     routeTimeEl.textContent = time || "—";
   }
-  paintRouteMap(pickupPlace, dropPlace, routeKm?.coordinates || []);
+  if (hasTrip) paintRouteMap(pickupPlace, dropPlace, routeKm?.coordinates || []);
+  syncRightPane();
 }
 
 async function refreshRoute() {
-  paintRouteMap(pickupPlace, dropPlace, []);
   if (!pickupPlace || !dropPlace) {
     routeKm = null;
     paintRouteFacts();
@@ -280,6 +372,8 @@ function showPosted(endsAt, leadId, km) {
   form.hidden = true;
   document.getElementById("form-heading").hidden = true;
   if (routePreview) routePreview.hidden = true;
+  if (truckPreview) truckPreview.hidden = true;
+  if (bookingStage) bookingStage.hidden = true;
   document.querySelector(".booking")?.classList.add("is-posted");
   statusCard.hidden = false;
   statusCard.classList.remove("is-waiting");
@@ -360,10 +454,11 @@ async function sendLoadAlert(details) {
   });
 }
 
+mountVehicleParade();
 initRouteMap(document.getElementById("route-map"));
 updateTruckPreview();
 refreshSteps(false);
-paintRouteFacts();
+syncRightPane();
 
 const existing = postedParams();
 if (existing.leadId) {

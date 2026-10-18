@@ -4,6 +4,17 @@ let map = null;
 let pickupMarker = null;
 let dropMarker = null;
 let routeLine = null;
+let lastBounds = [];
+
+function applyBounds() {
+  if (!map) return;
+  map.invalidateSize();
+  if (lastBounds.length > 1) {
+    map.fitBounds(lastBounds, { padding: [28, 28], maxZoom: 12 });
+  } else if (lastBounds.length === 1) {
+    map.setView(lastBounds[0], 10);
+  }
+}
 
 function pinIcon(color) {
   return window.L.divIcon({
@@ -38,6 +49,12 @@ export function initRouteMap(container) {
   setTimeout(() => map.invalidateSize(), 80);
 }
 
+export function revealRouteMap() {
+  if (!map) return;
+  applyBounds();
+  setTimeout(applyBounds, 120);
+}
+
 export function paintRouteMap(pickup, drop, coordinates) {
   if (!map) return;
   pickupMarker = clearLayer(pickupMarker);
@@ -65,12 +82,7 @@ export function paintRouteMap(pickup, drop, coordinates) {
     }).addTo(map);
     coordinates.forEach((pt) => bounds.push(pt));
   }
-  if (bounds.length > 1) {
-    map.fitBounds(bounds, { padding: [28, 28], maxZoom: 12 });
-  } else if (bounds.length === 1) {
-    map.setView(bounds[0], 10);
-  } else {
-    map.setView(INDIA, 5);
-  }
-  setTimeout(() => map.invalidateSize(), 60);
+  lastBounds = bounds;
+  applyBounds();
+  setTimeout(applyBounds, 120);
 }

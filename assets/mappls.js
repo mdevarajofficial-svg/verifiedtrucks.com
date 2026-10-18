@@ -1,4 +1,11 @@
 export const MAPPLS_ACCESS_TOKEN = "oggqjtedwcvuqeuylaldmmpaauqupyuakduc";
+export const BUFFER_SEC_PER_LOCATION = 2 * 60 * 60;
+const ROUTE_LOCATION_COUNT = 2;
+
+function withLocationBuffer(driveSec) {
+  if (!Number.isFinite(driveSec) || driveSec < 0) return driveSec;
+  return driveSec + ROUTE_LOCATION_COUNT * BUFFER_SEC_PER_LOCATION;
+}
 
 function labelOf(hit) {
   return [hit.name, hit.address].filter(Boolean).join(", ");
@@ -104,6 +111,11 @@ async function osrmRoute(from, to) {
   };
 }
 
+function withBufferedTime(route) {
+  if (!route) return null;
+  return { ...route, durationSec: withLocationBuffer(route.durationSec) };
+}
+
 export async function drivingRoute(from, to) {
   const a = pointToken(from);
   const b = pointToken(to);
@@ -124,20 +136,21 @@ export async function drivingRoute(from, to) {
       const km = kmFromMeters(meters);
       if (km != null) {
         const line = await osrmRoute(from, to).catch(() => null);
-        return {
+        const driveSec = Number.isFinite(durationSec) ? durationSec : line?.durationSec;
+        return withBufferedTime({
           km,
           meters,
-          durationSec: Number.isFinite(durationSec) ? durationSec : line?.durationSec,
+          durationSec: driveSec,
           coordinates: line?.coordinates || [],
           source: "mappls",
-        };
+        });
       }
     } catch {
       /* fall through */
     }
   }
   try {
-    return await osrmRoute(from, to);
+    return withBufferedTime(await osrmRoute(from, to));
   } catch {
     return null;
   }
