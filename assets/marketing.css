@@ -436,13 +436,22 @@ header {
   box-shadow: 0 8px 28px rgba(2, 132, 199, 0.12);
 }
 
+.booking.is-posted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .posted-result,
 .status-card.posted-result.is-premium {
-  grid-column: 1 / -1;
+  grid-column: auto;
   display: grid;
-  grid-template-columns: minmax(260px, 1.05fr) minmax(260px, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr);
+  gap: 14px;
   align-items: stretch;
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
   padding: 0;
   border: 0;
   background: transparent;
@@ -457,15 +466,15 @@ header {
 .posted-card {
   background: #fff;
   border: 1px solid #bae6fd;
-  border-radius: 18px;
-  padding: 22px 22px 18px;
-  box-shadow: 0 10px 32px rgba(2, 132, 199, 0.1);
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.1);
 }
 
 .posted-card-title {
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   font-family: Outfit, "DM Sans", sans-serif;
-  font-size: 1.45rem;
+  font-size: 1.18rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #111;
@@ -475,19 +484,19 @@ header {
   margin: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
 }
 
 .posted-facts > div {
-  padding: 12px 12px 11px;
-  border-radius: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
   border: 1px solid #e8f4fc;
 }
 
 .posted-facts dt {
-  margin: 0 0 4px;
-  font-size: 0.7rem;
+  margin: 0 0 3px;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -496,24 +505,28 @@ header {
 
 .posted-facts dd {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #111;
-  line-height: 1.35;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .posted-quote {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 22px 24px;
-  border-radius: 18px;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
   border: 1px solid rgba(251, 191, 36, 0.35);
   background:
     radial-gradient(120% 90% at 12% 20%, rgba(56, 189, 248, 0.28), transparent 55%),
     radial-gradient(90% 80% at 88% 88%, rgba(251, 191, 36, 0.22), transparent 50%),
     linear-gradient(160deg, #061226 0%, #0b2748 48%, #12203a 100%);
-  box-shadow: 0 16px 40px rgba(2, 36, 80, 0.28);
+  box-shadow: 0 10px 28px rgba(2, 36, 80, 0.24);
   overflow: hidden;
   position: relative;
 }
@@ -523,9 +536,9 @@ header {
 }
 
 .posted-quote #status-title {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-family: Outfit, "DM Sans", sans-serif;
-  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-size: 1.32rem;
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.12;
@@ -540,17 +553,17 @@ header {
 .posted-quote #status-copy {
   margin: 0;
   font-family: Outfit, "DM Sans", sans-serif;
-  font-size: clamp(0.98rem, 1.6vw, 1.18rem);
+  font-size: 0.86rem;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.4;
   color: #e2e8f0;
   text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
 }
 
 .bolt-wrap {
   flex-shrink: 0;
-  width: 88px;
-  height: 112px;
+  width: 48px;
+  height: 64px;
   display: grid;
   place-items: center;
   filter:
@@ -560,8 +573,8 @@ header {
 }
 
 .bolt-icon {
-  width: 64px;
-  height: 96px;
+  width: 36px;
+  height: 54px;
   display: block;
   animation: bolt-flash 2.4s ease-in-out infinite;
 }
@@ -2521,32 +2534,33 @@ header {
   .posted-result,
   .status-card.posted-result.is-premium {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
     order: 1;
     padding: 0;
+    max-width: 520px;
   }
 
   .posted-quote {
     flex-direction: row;
-    padding: 18px 16px;
+    padding: 12px 14px;
   }
 
   .bolt-wrap {
-    width: 64px;
-    height: 84px;
+    width: 42px;
+    height: 56px;
   }
 
   .bolt-icon {
-    width: 46px;
-    height: 70px;
+    width: 30px;
+    height: 46px;
   }
 
   .posted-quote #status-title {
-    font-size: 1.42rem;
+    font-size: 1.18rem;
   }
 
   .posted-quote #status-copy {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
   }
 
   .posted-facts {
