@@ -47,7 +47,7 @@ export function sizeClass(feet) {
   const n = Number(feet);
   if (!n || Number.isNaN(n)) return "medium";
   if (n <= 16) return "small";
-  if (n <= 24) return "medium";
+  if (n <= 30) return "medium";
   return "large";
 }
 
