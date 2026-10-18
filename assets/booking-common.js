@@ -154,36 +154,12 @@ export function setStopwatch(root, remainingMs, running, waiting = false) {
   root.classList.toggle("is-waiting", waiting);
 }
 
-const PARTY_COLORS = ["#38bdf8", "#0284c7", "#facc15", "#fb7185", "#a78bfa", "#34d399", "#fb923c", "#fff"];
-let liveParty = null;
-
-function addPartyPieces(target, count, canvas) {
-  for (let i = 0; i < count; i += 1) {
-    const streamer = Math.random() > 0.5;
-    target.push({
-      x: Math.random() * canvas.width,
-      y: -20 - Math.random() * canvas.height * 0.35,
-      w: streamer ? 4 + Math.random() * 5 : 6 + Math.random() * 8,
-      h: streamer ? 18 + Math.random() * 22 : 8 + Math.random() * 12,
-      vx: -2 + Math.random() * 4,
-      vy: 2.2 + Math.random() * 3.4,
-      rot: Math.random() * 360,
-      vr: -8 + Math.random() * 16,
-      color: PARTY_COLORS[i % PARTY_COLORS.length],
-    });
-  }
-}
-
 export function showerConfetti() {
   const canvas = document.getElementById("confetti");
   if (!canvas) return;
-  if (liveParty) {
-    addPartyPieces(liveParty.pieces, 180, canvas);
-    return;
-  }
   const ctx = canvas.getContext("2d");
   const pieces = [];
-  const colors = PARTY_COLORS;
+  const colors = ["#0284c7", "#111111", "#f97316", "#22c55e", "#e11d48", "#2563eb", "#facc15"];
 
   function resize() {
     canvas.width = window.innerWidth;
@@ -226,50 +202,6 @@ export function showerConfetti() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       canvas.classList.remove("is-on");
     }
-  }
-  requestAnimationFrame(frame);
-}
-
-export function startLiveCelebration() {
-  const canvas = document.getElementById("confetti");
-  if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (liveParty) return;
-  const ctx = canvas.getContext("2d");
-  const pieces = [];
-  liveParty = { pieces };
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener("resize", resize);
-  canvas.classList.add("is-on");
-
-  addPartyPieces(pieces, 160, canvas);
-  let lastBurst = performance.now();
-
-  function frame(now) {
-    if (now - lastBurst > 1100) {
-      addPartyPieces(pieces, 48, canvas);
-      lastBurst = now;
-    }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = pieces.length - 1; i >= 0; i -= 1) {
-      const p = pieces[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate((p.rot * Math.PI) / 180);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      ctx.restore();
-      if (p.y > canvas.height + 40) pieces.splice(i, 1);
-    }
-    if (pieces.length > 360) pieces.splice(0, pieces.length - 360);
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }

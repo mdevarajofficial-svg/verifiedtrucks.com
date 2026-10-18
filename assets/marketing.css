@@ -16,26 +16,6 @@ body {
   overflow-wrap: anywhere;
 }
 
-body.home {
-  background: linear-gradient(180deg, #041433 0%, #07275a 140px, #0a3a80 320px, #cfe6fb 520px, #f4f9fd 100%);
-}
-
-body.home header {
-  background: rgba(8, 28, 64, 0.88);
-  border-bottom-color: #1e4b8c;
-}
-
-body.home .header-brand,
-body.home .site-nav a {
-  color: #e0f2fe;
-}
-
-body.home .site-nav a:hover,
-body.home .site-nav a:focus {
-  color: #fff;
-  background: rgba(56, 189, 248, 0.22);
-}
-
 img {
   max-width: 100%;
   height: auto;
@@ -62,7 +42,7 @@ header {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: #0369a1;
+  color: #111;
   font-weight: 700;
   font-size: 1.125rem;
   min-width: 0;
@@ -128,54 +108,18 @@ header {
   text-align: center;
 }
 
-.home .hero-intro {
-  position: relative;
-  margin: 8px 0 32px;
-  padding: 32px 22px 28px;
-  border-radius: 22px;
-  background: linear-gradient(160deg, #03102c 0%, #06285f 42%, #0a4aa0 100%);
-  box-shadow: 0 22px 48px rgba(2, 16, 48, 0.42);
-  overflow: hidden;
-}
-
 .hero-kicker {
   margin: 0 0 8px;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #0284c7;
-}
-
-.hero-claim {
-  max-width: 18ch;
-  margin: 0 auto 12px;
-  font-family: Outfit, "DM Sans", sans-serif;
-  font-size: clamp(1.55rem, 5vw, 2.7rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.12;
-  text-transform: none;
-  color: #7dd3fc;
-}
-
-.home .hero-intro h1.hero-claim {
-  color: #7dd3fc;
-  max-width: 18ch;
-  text-shadow: 0 8px 28px rgba(56, 189, 248, 0.35);
-}
-
-.home .hero-kicker {
-  color: #93c5fd;
-}
-
-.home .hero-lead {
-  color: #dbeafe;
+  color: #334155;
 }
 
 .hero-intro h1 {
   margin: 0 auto 10px;
-  max-width: 18ch;
+  max-width: 20ch;
   font-family: Outfit, "DM Sans", sans-serif;
   font-size: clamp(1.7rem, 4.6vw, 2.55rem);
   font-weight: 800;
@@ -190,58 +134,6 @@ header {
   color: #444;
   font-size: 1.05rem;
   line-height: 1.5;
-}
-
-.party-streamers {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 210px;
-  pointer-events: none;
-  z-index: 1200;
-  display: flex;
-  justify-content: space-around;
-  overflow: hidden;
-}
-
-.party-streamers span {
-  width: 12px;
-  height: 120px;
-  border-radius: 0 0 12px 12px;
-  transform-origin: top center;
-  animation: streamer-sway 1.8s ease-in-out infinite;
-}
-
-.party-streamers span:nth-child(odd) { width: 8px; }
-.party-streamers span:nth-child(1) { background: #38bdf8; height: 150px; animation-delay: 0s; }
-.party-streamers span:nth-child(2) { background: #facc15; height: 110px; animation-delay: 0.12s; }
-.party-streamers span:nth-child(3) { background: #fb7185; height: 178px; animation-delay: 0.24s; }
-.party-streamers span:nth-child(4) { background: #a78bfa; height: 124px; animation-delay: 0.06s; }
-.party-streamers span:nth-child(5) { background: #34d399; height: 162px; animation-delay: 0.32s; }
-.party-streamers span:nth-child(6) { background: #fb923c; height: 102px; animation-delay: 0.18s; }
-.party-streamers span:nth-child(7) { background: #7dd3fc; height: 188px; animation-delay: 0.1s; }
-.party-streamers span:nth-child(8) { background: #f472b6; height: 136px; animation-delay: 0.28s; }
-.party-streamers span:nth-child(9) { background: #fde047; height: 148px; animation-delay: 0.14s; }
-.party-streamers span:nth-child(10) { background: #60a5fa; height: 118px; animation-delay: 0.22s; }
-.party-streamers span:nth-child(11) { background: #4ade80; height: 170px; animation-delay: 0.04s; }
-.party-streamers span:nth-child(12) { background: #fda4af; height: 128px; animation-delay: 0.36s; }
-.party-streamers span:nth-child(13) { background: #38bdf8; height: 98px; animation-delay: 0.2s; }
-.party-streamers span:nth-child(14) { background: #fbbf24; height: 156px; animation-delay: 0.08s; }
-.party-streamers span:nth-child(15) { background: #e879f9; height: 142px; animation-delay: 0.3s; }
-.party-streamers span:nth-child(16) { background: #22d3ee; height: 114px; animation-delay: 0.16s; }
-.party-streamers span:nth-child(17) { background: #f43f5e; height: 174px; animation-delay: 0.26s; }
-.party-streamers span:nth-child(18) { background: #84cc16; height: 108px; animation-delay: 0.02s; }
-.party-streamers span:nth-child(19) { background: #818cf8; height: 160px; animation-delay: 0.34s; }
-.party-streamers span:nth-child(20) { background: #fdba74; height: 122px; animation-delay: 0.11s; }
-.party-streamers span:nth-child(21) { background: #67e8f9; height: 146px; animation-delay: 0.19s; }
-.party-streamers span:nth-child(22) { background: #f9a8d4; height: 132px; animation-delay: 0.27s; }
-.party-streamers span:nth-child(23) { background: #bef264; height: 168px; animation-delay: 0.07s; }
-.party-streamers span:nth-child(24) { background: #93c5fd; height: 116px; animation-delay: 0.23s; }
-
-@keyframes streamer-sway {
-  0%, 100% { transform: rotate(-14deg); }
-  50% { transform: rotate(16deg); }
 }
 
 .ten-mark {
@@ -300,15 +192,8 @@ header {
   .truck-stage.is-driving::before,
   .truck-parade-track,
   .why-card,
-  .booking .lead-form-container,
-  .party-streamers span {
+  .booking .lead-form-container {
     animation: none !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .party-streamers {
-    display: none;
   }
 }
 
@@ -1284,11 +1169,6 @@ header {
     font-size: 1.55rem;
   }
 
-  .hero-claim {
-    max-width: none;
-    font-size: 1.45rem;
-  }
-
   .why {
     margin-top: 32px;
     padding-top: 16px;
@@ -2028,15 +1908,14 @@ header {
 
 .routes-hero {
   margin: 0 0 36px;
-  padding: 28px 24px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 55%, #7dd3fc 100%);
-  color: #fff;
+  padding: 8px 0 8px;
+  background: transparent;
+  color: #111;
 }
 
 .routes-hero .hero-kicker,
 .routes-hero .hero-lead {
-  color: #e0f2fe;
+  color: #444;
   text-align: left;
   margin-left: 0;
 }
@@ -2046,11 +1925,7 @@ header {
   font-family: Outfit, "DM Sans", sans-serif;
   font-size: clamp(1.7rem, 4vw, 2.6rem);
   letter-spacing: -0.04em;
-}
-
-.routes-hero .book-now-mini {
-  background: #fff;
-  color: #0369a1;
+  color: #111;
 }
 
 .section-head {
@@ -2061,6 +1936,7 @@ header {
   margin: 0;
   font-family: Outfit, "DM Sans", sans-serif;
   font-size: clamp(1.3rem, 3vw, 1.8rem);
+  color: #111;
 }
 
 .section-intro {
@@ -2079,10 +1955,10 @@ header {
 .state-card,
 .service-card {
   background: #fff;
-  border: 1px solid #bae6fd;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
 }
 
 .state-card h3,
@@ -2103,8 +1979,9 @@ header {
 .city-pills li {
   padding: 4px 10px;
   border-radius: 999px;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #f4f4f5;
+  color: #111;
+  border: 1px solid #e5e7eb;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -2133,20 +2010,21 @@ header {
   padding: 10px 14px;
   border-radius: 12px;
   background: #fff;
-  border: 1px solid #7dd3fc;
-  color: #0b1220;
+  border: 1px solid #e5e7eb;
+  color: #111;
   text-decoration: none;
   font-size: 0.92rem;
   font-weight: 700;
 }
 
 .route-chip span {
-  color: #0284c7;
+  color: #111;
 }
 
 .route-chip:hover,
 .route-chip:focus {
-  background: #e0f2fe;
+  background: #f4f4f5;
+  border-color: #111;
 }
 
 .booking.is-posted .preview {
