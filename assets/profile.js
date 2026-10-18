@@ -1,31 +1,25 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
-  query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  writeBatch,
-  where,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { isAdminUser } from "./admin.js";
-import { auth, db, signInGoogle, signOutUser, completeGoogleRedirect, explainAuthError } from "./firebase.js";
 import {
-  VEHICLES,
-  formatMmSs,
-  remainingUntil,
-} from "./booking-common.js";
+  auth,
+  db,
+  signInGoogle,
+  signOutUser,
+  completeGoogleRedirect,
+  explainAuthError,
+  uploadProfilePhoto,
+} from "./firebase.js";
+import { formatMmSs, remainingUntil } from "./booking-common.js";
 
-export const PENDING_CUSTOMER = "vtPendingCustomer";
-export const PENDING_TRANSPORTER = "vtPendingTransporter";
-
-const params = new URLSearchParams(location.search);
 const gate = document.getElementById("profile-gate");
 const app = document.getElementById("profile-app");
 const gateTitle = document.getElementById("gate-title");
@@ -33,40 +27,17 @@ const gateCopy = document.getElementById("gate-copy");
 const googleBtn = document.getElementById("profile-google");
 const gateErr = document.getElementById("gate-error");
 const signOutBtn = document.getElementById("profile-signout");
-const sizeFilter = document.getElementById("size-filter");
+const photoInput = document.getElementById("profile-photo-file");
+const photoBtn = document.getElementById("profile-photo-btn");
+const photoErr = document.getElementById("profile-photo-error");
 
 let currentUser = null;
 let profile = null;
-let loadsUnsub = null;
-let myBidsUnsub = null;
-let allBidsUnsub = null;
-let loadsById = new Map();
-let myBids = [];
-let myLoads = new Map();
-let bidsByLoad = new Map();
-const loadTimers = new Map();
-let expireSweep = null;
 let adminUnsubs = [];
 let adminLoads = [];
 let adminBids = [];
 let adminPrivate = {};
 let adminLeads = [];
-
-function readPending(key) {
-  try {
-    return JSON.parse(sessionStorage.getItem(key) || "null");
-  } catch {
-    return null;
-  }
-}
-
-function pendingCustomer() {
-  return readPending(PENDING_CUSTOMER);
-}
-
-function pendingTransporter() {
-  return readPending(PENDING_TRANSPORTER);
-}
 
 function showGate(title, copy) {
   gate.hidden = false;
@@ -84,21 +55,6 @@ function bodyLabel(type) {
   return type === "container" ? "Container" : "Open";
 }
 
-function loadLine(data) {
-  const size = data.sizeFt || data.sizeFeet || "—";
-  return `${escapeHtml(String(size))} ft · ${bodyLabel(data.bodyType)} · ${escapeHtml(String(data.tonnage || "—"))} T`;
-}
-
-function loadRoute(data) {
-  return `${escapeHtml(data.loadingLocation || "—")} → ${escapeHtml(data.unloadingLocation || "—")}`;
-}
-
-function isLiveLoad(load) {
-  if (!load) return false;
-  if (load.status === "withdrawn" || load.status === "deleted") return false;
-  return remainingUntil(load.timerEndsAt) > 0;
-}
-
 function formatInr(n) {
   if (n == null || Number.isNaN(Number(n))) return "—";
   return "₹" + Number(n).toLocaleString("en-IN");
@@ -112,42 +68,93 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;");
 }
 
-function startLoadTimer(el, endsAt) {
-  if (loadTimers.has(el)) clearInterval(loadTimers.get(el));
-  const tick = () => {
-    const rem = remainingUntil(endsAt);
-    el.textContent = rem > 0 ? formatMmSs(rem) : "0:00";
-    el.classList.toggle("is-heartbeat", rem > 0);
-    if (rem <= 0) {
-      clearInterval(loadTimers.get(el));
-      loadTimers.delete(el);
+function paintLoggedOutGate() {
+  showGate("Sign in", "Continue with Google to save your number and photo on this device.");
+}
+
+function showGateError(err) {
+  gateErr.hidden = false;
+  gateErr.className = "form-message error";
+  gateErr.textContent = err?.friendlyMessage || explainAuthError(err) || "Google sign-in failed.";
+}
+
+googleBtn.addEventListener("click", async () => {
+  gateErr.hidden = true;
+  gateErr.className = "form-message";
+  googleBtn.disabled = true;
+  const label = googleBtn.querySelector(".google-btn-label");
+  if (label) label.textContent = "Opening Google…";
+  try {
+    await signInGoogle();
+  } catch (err) {
+    showGateError(err);
+  } finally {
+    googleBtn.disabled = false;
+    if (label) label.textContent = "Continue with Google";
+  }
+});
+
+signOutBtn.addEventListener("click", () => signOutUser());
+
+photoBtn?.addEventListener("click", () => photoInput?.click());
+photoInput?.addEventListener("change", async () => {
+  const file = photoInput.files?.[0];
+  photoInput.value = "";
+  if (!file || !currentUser) return;
+  if (!file.type.startsWith("image/")) {
+    showPhotoError("Choose a JPG or PNG photo.");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showPhotoError("Use a photo smaller than 5 MB.");
+    return;
+  }
+  photoBtn.disabled = true;
+  showPhotoError("");
+  try {
+    const url = await uploadProfilePhoto(currentUser.uid, file);
+    await mergeProfile(currentUser.uid, { photoURL: url });
+    profile = { ...profile, photoURL: url };
+    renderShell();
+  } catch (err) {
+    showPhotoError(err?.friendlyMessage || err?.message || "Could not upload the photo.");
+  } finally {
+    photoBtn.disabled = false;
+  }
+});
+
+function showPhotoError(text) {
+  if (!photoErr) return;
+  photoErr.hidden = !text;
+  photoErr.textContent = text;
+}
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (!user) {
+    stopAdmin();
+    paintLoggedOutGate();
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists()) {
+      await mergeProfile(user.uid, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        name: user.displayName,
+      });
     }
-  };
-  tick();
-  if (remainingUntil(endsAt) > 0) loadTimers.set(el, setInterval(tick, 250));
-}
-
-function bindTimers(root, docs) {
-  docs.forEach((d) => {
-    const timerEl = root.querySelector(`[data-timer="${d.id}"]`);
-    if (timerEl) startLoadTimer(timerEl, d.timerEndsAt);
-  });
-}
-
-function refreshLists() {
-  paintMyLoads(document.getElementById("customer-loads"));
-  paintMyBids();
-  renderBoard();
-}
-
-function fillSizeFilter() {
-  if (!sizeFilter) return;
-  const sizes = [...new Set(VEHICLES.flatMap((v) => v.feet))].sort((a, b) => a - b);
-  const current = sizeFilter.value || "all";
-  sizeFilter.innerHTML = `<option value="all">All sizes</option>` +
-    sizes.map((ft) => `<option value="${ft}">${ft} ft</option>`).join("");
-  sizeFilter.value = [...sizeFilter.options].some((o) => o.value === current) ? current : "all";
-}
+    profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
+    renderShell();
+    showApp();
+  } catch (err) {
+    showGate("Could not open profile", explainAuthError(err));
+    showGateError(err);
+  }
+});
 
 async function mergeProfile(uid, extra) {
   const ref = doc(db, "users", uid);
@@ -162,673 +169,54 @@ async function mergeProfile(uid, extra) {
     updatedAt: serverTimestamp(),
   };
   if (!prev.createdAt) next.createdAt = serverTimestamp();
-  if (extra.role === "transporter" || prev.kycComplete) {
-    next.role = "transporter";
-    next.dlNumber = extra.dlNumber || prev.dlNumber || "";
-    next.totalVehicles = extra.totalVehicles ?? prev.totalVehicles ?? "";
-    next.kycComplete = true;
-  } else if (extra.role === "customer" || prev.role === "customer") {
-    next.role = prev.role === "transporter" ? "transporter" : "customer";
-  } else if (extra.role) {
-    next.role = extra.role;
-  }
-  if (prev.kycComplete) {
-    next.role = "transporter";
-    next.kycComplete = true;
-  }
+  if (extra.role) next.role = extra.role;
   await setDoc(ref, next, { merge: true });
 }
 
-async function publishPendingCustomer(user) {
-  const pending = pendingCustomer();
-  if (!pending) return;
-  await mergeProfile(user.uid, {
-    role: "customer",
-    name: pending.contactName,
-    phone: pending.contactPhone,
-    email: user.email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
-  });
-  const loadRef = await addDoc(collection(db, "loads"), {
-    customerUid: user.uid,
-    leadId: pending.leadId || null,
-    loadingLocation: pending.loadingLocation,
-    unloadingLocation: pending.unloadingLocation,
-    sizeFt: Number(pending.sizeFt),
-    bodyType: pending.bodyType,
-    tonnage: pending.tonnage,
-    contactName: pending.contactName,
-    vehicleName: pending.vehicleName || "",
-    timerEndsAt: pending.timerEndsAt,
-    booked: false,
-    status: "open",
-    bidCount: 0,
-    lowestBidAmount: null,
-    lowestBidderUid: null,
-    lowestBidId: null,
-    acceptedBidderUid: null,
-    acceptedBidId: null,
-    contactReleased: false,
-    createdAt: serverTimestamp(),
-  });
-  await setDoc(doc(db, "loadPrivate", loadRef.id), {
-    customerUid: user.uid,
-    contactPhone: pending.contactPhone,
-  });
-  sessionStorage.removeItem(PENDING_CUSTOMER);
-}
-
-async function publishPendingTransporter(user) {
-  const pending = pendingTransporter();
-  if (!pending) return;
-  await mergeProfile(user.uid, {
-    role: "transporter",
-    name: pending.name,
-    phone: pending.phone,
-    dlNumber: pending.dlNumber,
-    totalVehicles: pending.totalVehicles,
-    email: user.email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
-  });
-  sessionStorage.removeItem(PENDING_TRANSPORTER);
-}
-
-function paintLoggedOutGate() {
-  showGate(
-    "Login with Google",
-    "Sign in with Google. This device stays signed in until you tap Sign out. Your account is for posting loads."
-  );
-}
-
-function showGateError(err) {
-  gateErr.hidden = false;
-  gateErr.className = "form-message error";
-  gateErr.textContent = err?.friendlyMessage || explainAuthError(err) || "Google sign-in failed.";
-}
-
-googleBtn.addEventListener("click", async () => {
-  gateErr.hidden = true;
-  gateErr.className = "form-message";
-  googleBtn.disabled = true;
-  try {
-    await signInGoogle();
-  } catch (err) {
-    showGateError(err);
-  } finally {
-    googleBtn.disabled = false;
-  }
-});
-
-signOutBtn.addEventListener("click", () => signOutUser());
-
-document.getElementById("delete-all-loads")?.addEventListener("click", () => deleteAllLoads());
-document.getElementById("delete-all-bids")?.addEventListener("click", () => deleteAllBids());
-
-sizeFilter?.addEventListener("change", () => {
-  renderBoard();
-});
-
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-  if (!user) {
-    if (loadsUnsub) loadsUnsub();
-    if (myBidsUnsub) myBidsUnsub();
-    if (allBidsUnsub) allBidsUnsub();
-    if (expireSweep) clearInterval(expireSweep);
-    expireSweep = null;
-    loadTimers.forEach((id) => clearInterval(id));
-    loadTimers.clear();
-    stopAdmin();
-    paintLoggedOutGate();
-    return;
-  }
-
-  try {
-    if (pendingTransporter()) await publishPendingTransporter(user);
-    if (pendingCustomer()) await publishPendingCustomer(user);
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) {
-      await mergeProfile(user.uid, {
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        name: user.displayName,
-      });
-    }
-    profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
-    await clearLegacyMarket(user);
-    profile = (await getDoc(doc(db, "users", user.uid))).data() || profile;
-    renderShell();
-    showApp();
-  } catch (err) {
-    showGate("Could not open profile", explainAuthError(err));
-    showGateError(err);
-  }
-});
-
 function renderShell() {
   const admin = isAdminUser(currentUser, profile);
-  document.getElementById("profile-name").textContent =
-    profile.name || currentUser.displayName || "Member";
-  document.getElementById("profile-role").textContent = admin ? "Admin" : "Member";
-  document.getElementById("profile-email").textContent = currentUser.email || "";
-  const customerPanel = document.getElementById("customer-panel");
-  const bidsPanel = document.getElementById("my-bids-panel");
-  const marketPanel = document.getElementById("transporter-panel");
-  if (customerPanel) customerPanel.hidden = true;
-  if (bidsPanel) bidsPanel.hidden = true;
-  if (marketPanel) marketPanel.hidden = true;
+  const name = profile.name || currentUser.displayName || "Account";
+  document.getElementById("profile-name").textContent = name;
+  document.getElementById("profile-role").textContent = admin ? "Admin" : "Load party";
+  document.getElementById("profile-email").textContent = currentUser.email || profile.email || "";
+  const avatar = document.getElementById("profile-avatar");
+  const photo = profile.photoURL || currentUser.photoURL || "";
+  if (photo) {
+    avatar.hidden = false;
+    avatar.src = photo;
+    avatar.alt = name;
+  } else {
+    avatar.hidden = true;
+    avatar.removeAttribute("src");
+  }
   document.getElementById("admin-panel").hidden = !admin;
   const phoneInput = document.getElementById("profile-phone");
   if (phoneInput) phoneInput.value = profile.phone || "";
-  renderDetails();
   if (admin) listenAdmin();
   else stopAdmin();
 }
 
-async function clearLegacyMarket(user) {
-  if (!user) return;
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
-  const data = snap.exists() ? snap.data() : {};
-  if (data.legacyMarketCleared) return;
-  try {
-    const [loadSnap, bidSnap] = await Promise.all([
-      getDocs(collection(db, "loads")),
-      getDocs(collection(db, "bids")),
-    ]);
-    const myLoads = loadSnap.docs.filter((d) => {
-      const row = d.data();
-      return row.posterUid === user.uid || row.customerUid === user.uid;
-    });
-    const myLoadIds = new Set(myLoads.map((d) => d.id));
-    const refs = [];
-    myLoads.forEach((d) => {
-      refs.push(doc(db, "loads", d.id));
-      refs.push(doc(db, "loadPrivate", d.id));
-    });
-    bidSnap.docs.forEach((d) => {
-      const row = d.data();
-      if (row.bidderUid === user.uid || myLoadIds.has(row.loadId)) {
-        refs.push(doc(db, "bids", d.id));
-      }
-    });
-    await commitDeletes(refs);
-  } catch (err) {
-    console.error(err);
-  }
-  await setDoc(ref, { legacyMarketCleared: true, updatedAt: serverTimestamp() }, { merge: true });
-}
-
-function renderDetails() {
-  const box = document.getElementById("profile-details");
-  box.innerHTML = `
-      <div class="detail-grid">
-        <div><span>Name</span><strong>${escapeHtml(profile.name || currentUser.displayName || "")}</strong></div>
-        <div><span>Contact</span><strong>${escapeHtml(profile.phone || "")}</strong></div>
-        <div><span>Email</span><strong>${escapeHtml(profile.email || currentUser.email || "")}</strong></div>
-      </div>`;
-}
-
-function listenLoads() {
-  const list = document.getElementById("customer-loads");
-  const panel = document.getElementById("customer-panel");
-  if (panel) panel.hidden = true;
-  if (loadsUnsub) loadsUnsub();
-  loadsUnsub = onSnapshot(collection(db, "loads"), (snap) => {
-    loadsById = new Map();
-    snap.docs.forEach((d) => loadsById.set(d.id, { id: d.id, ...d.data() }));
-    myLoads = new Map();
-    loadsById.forEach((load, id) => {
-      if (load.posterUid === currentUser.uid || load.customerUid === currentUser.uid) {
-        myLoads.set(id, load);
-      }
-    });
-    paintMyLoads(list);
-    paintMyBids();
-    renderBoard();
-    syncClearButtons();
-  }, () => {
-    paintMyLoads(list);
-    paintMyBids();
-    renderBoard();
-    syncClearButtons();
-  });
-}
-
-function listenAllBids() {
-  if (allBidsUnsub) allBidsUnsub();
-  allBidsUnsub = onSnapshot(collection(db, "bids"), (snap) => {
-    bidsByLoad = new Map();
-    snap.docs.forEach((d) => {
-      const b = { id: d.id, ...d.data() };
-      if (b.status === "rejected") return;
-      const arr = bidsByLoad.get(b.loadId) || [];
-      arr.push(b);
-      bidsByLoad.set(b.loadId, arr);
-    });
-    bidsByLoad.forEach((arr) => arr.sort((a, b) => Number(a.amount) - Number(b.amount)));
-    refreshLists();
-  });
-}
-
-function paintMyLoads(list) {
-  if (!list) return;
-  const docs = [...myLoads.values()]
-    .filter(isLiveLoad)
-    .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
-  if (!docs.length) {
-    list.innerHTML = `<p class="empty-note">No live loads on this Google account. Ended posts still count toward Delete all posted loads until you clear them from Firebase.</p>`;
-    syncClearButtons();
-    return;
-  }
-  list.innerHTML = docs.map((d) => customerLoadCard(d.id, d)).join("");
-  bindTimers(list, docs);
-  list.querySelectorAll("[data-accept]").forEach((btn) => {
-    btn.addEventListener("click", () => acceptBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
-  });
-  list.querySelectorAll("[data-reject]").forEach((btn) => {
-    btn.addEventListener("click", () => rejectBid(btn.getAttribute("data-accept"), btn.getAttribute("data-bid")));
-  });
-  list.querySelectorAll("[data-delete-load]").forEach((btn) => {
-    btn.addEventListener("click", () => deleteLoad(btn.getAttribute("data-delete-load")));
-  });
-  syncClearButtons();
-}
-
-function listenMyBids() {
-  const list = document.getElementById("my-bids");
-  const panel = document.getElementById("my-bids-panel");
-  if (!list || !panel) return;
-  panel.hidden = false;
-  const q = query(collection(db, "bids"), where("bidderUid", "==", currentUser.uid));
-  if (myBidsUnsub) myBidsUnsub();
-  myBidsUnsub = onSnapshot(q, (snap) => {
-    myBids = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((b) => b.status !== "rejected")
-      .sort((a, b) => (b.updatedAt?.seconds || b.createdAt?.seconds || 0) - (a.updatedAt?.seconds || a.createdAt?.seconds || 0));
-    paintMyBids();
-    syncClearButtons();
-  }, (err) => {
-    list.innerHTML = `<p class="empty-note">Could not load your bids. ${escapeHtml(err.message || "")}</p>`;
-  });
-}
-
-function paintMyBids() {
-  const list = document.getElementById("my-bids");
-  if (!list) return;
-  const rows = myBids
-    .map((bid) => ({ bid, load: loadsById.get(bid.loadId) }))
-    .filter(({ load }) => isLiveLoad(load));
-  if (!rows.length) {
-    list.innerHTML = `<p class="empty-note">No live bids. Ended bids still count toward Delete all my bids until you clear them from Firebase.</p>`;
-    syncClearButtons();
-    return;
-  }
-  list.innerHTML = rows.map(({ bid, load }) => myBidCard(bid, load)).join("");
-  bindTimers(list, rows.map((r) => r.load));
-  list.querySelectorAll("[data-delete-bid]").forEach((btn) => {
-    btn.addEventListener("click", () => deleteBid(btn.getAttribute("data-delete-bid"), btn.getAttribute("data-load")));
-  });
-  syncClearButtons();
-}
-
-function myBidStatus(bid, load) {
-  if (!load) return "Load unavailable";
-  if (load.acceptedBidderUid === currentUser.uid && (load.booked || load.contactReleased || load.status === "confirmed")) {
-    return "Your bid was booked";
-  }
-  if (load.acceptedBidderUid === currentUser.uid) return "Load party accepted your bid";
-  if (load.booked || load.status === "confirmed") return "Another vehicle was booked";
-  if (load.lowestBidderUid === currentUser.uid) return "Leading";
-  if (load.lowestBidAmount != null && Number(bid.amount) > Number(load.lowestBidAmount)) {
-    return `Behind lowest ${formatInr(load.lowestBidAmount)}`;
-  }
-  return "Waiting";
-}
-
-function myBidCard(bid, load) {
-  return `
-    <article class="load-card load-card-simple">
-      <div class="load-card-head">
-        <div>
-          <strong>${loadRoute(load)}</strong>
-          <p>${loadLine(load)}</p>
-        </div>
-        <div class="load-timer" data-timer="${load.id}" data-ends="${Number(load.timerEndsAt) || 0}">30:00</div>
-      </div>
-      <dl class="bid-stats">
-        <div><dt>Your bid</dt><dd>${formatInr(bid.amount)}</dd></div>
-        <div><dt>Vehicle no.</dt><dd>${escapeHtml(bid.vehicleNumber || "—")}</dd></div>
-        <div><dt>Status</dt><dd>${escapeHtml(myBidStatus(bid, load))}</dd></div>
-      </dl>
-      <button class="text-btn delete-btn" type="button" data-delete-bid="${bid.id}" data-load="${load.id}">Delete bid</button>
-    </article>`;
-}
-
-function customerLoadCard(id, data) {
-  const liveBids = (bidsByLoad.get(id) || []).filter((b) => b.status !== "rejected");
-  const best = liveBids[0] || null;
-  const lowest = best ? best.amount : data.lowestBidAmount;
-  let actions = "";
-  if (data.contactReleased && data.acceptedBidId) {
-    const won = liveBids.find((b) => b.id === data.acceptedBidId) || best;
-    const phone = won?.bidderPhone || won?.phone || "";
-    actions = `<div class="contact-reveal">
-      <p class="success-copy">Bid accepted — bidder contact</p>
-      <p><strong>${escapeHtml(won?.bidderName || "Bidder")}</strong><br>${escapeHtml(phone)}<br>Vehicle ${escapeHtml(won?.vehicleNumber || "—")}</p>
-    </div>`;
-  } else if (best && data.status === "open") {
-    actions = `<p class="field-hint">Best bid (lowest): ${formatInr(best.amount)} · ${escapeHtml(best.vehicleNumber || "")}</p>
-      <div class="cta-row">
-        <button class="submit-btn" type="button" data-accept="${id}" data-bid="${best.id}">Accept lowest bid</button>
-        <button class="text-btn" type="button" data-accept="${id}" data-bid="${best.id}" data-reject>Reject lowest bid</button>
-      </div>`;
-  } else {
-    actions = `<p class="field-hint">Waiting for bids.</p>`;
-  }
-  return `
-    <article class="load-card load-card-simple">
-      <div class="load-card-head">
-        <div>
-          <strong>${loadRoute(data)}</strong>
-          <p>${loadLine(data)}</p>
-        </div>
-        <div class="load-timer" data-timer="${id}" data-ends="${Number(data.timerEndsAt) || 0}">30:00</div>
-      </div>
-      <dl class="bid-stats">
-        <div><dt>Bids</dt><dd>${liveBids.length || data.bidCount || 0}</dd></div>
-        <div><dt>Best</dt><dd>${lowest == null ? "None yet" : formatInr(lowest)}</dd></div>
-        <div><dt>Status</dt><dd>${escapeHtml(statusLabel(data))}</dd></div>
-      </dl>
-      ${actions}
-      <button class="text-btn delete-btn" type="button" data-delete-load="${id}">Delete load</button>
-    </article>`;
-}
-
-function statusLabel(data) {
-  if (data.contactReleased || data.status === "confirmed" || data.status === "accepted") return "Bid accepted";
-  if (data.booked) return "Booked";
-  return "Open";
-}
-
-async function acceptBid(loadId, bidId) {
-  const load = myLoads.get(loadId) || (await getDoc(doc(db, "loads", loadId))).data();
-  const chosenId = bidId || load?.lowestBidId;
-  if (!chosenId) return;
-  const bidSnap = await getDoc(doc(db, "bids", chosenId));
-  const bid = bidSnap.exists() ? bidSnap.data() : {};
-  await updateDoc(doc(db, "loads", loadId), {
-    status: "accepted",
-    acceptedBidId: chosenId,
-    acceptedBidderUid: bid.bidderUid || load.lowestBidderUid || null,
-    booked: true,
-    contactReleased: true,
-    bookedAt: serverTimestamp(),
-  });
-  if (load?.leadId) {
-    try {
-      await updateDoc(doc(db, "leads", load.leadId), {
-        booked: true,
-        status: "booked",
-        bookedAt: serverTimestamp(),
-      });
-    } catch {
-      /* VIP may already have marked it */
-    }
-  }
-}
-
-async function rejectBid(loadId, bidId) {
-  if (!bidId) return;
-  await updateDoc(doc(db, "bids", bidId), { status: "rejected" });
-  const rest = (bidsByLoad.get(loadId) || []).filter((b) => b.id !== bidId && b.status !== "rejected");
-  const next = rest[0];
-  await updateDoc(doc(db, "loads", loadId), {
-    lowestBidAmount: next ? Number(next.amount) : null,
-    lowestBidderUid: next?.bidderUid || null,
-    lowestBidId: next ? next.id : null,
-    bidCount: rest.length,
-  });
-}
-
-async function deleteLoad(loadId) {
-  if (!loadId || !currentUser) return;
-  if (!window.confirm("Delete this load? It will leave the market for everyone.")) return;
-  try {
-    await deleteDoc(doc(db, "loads", loadId));
-  } catch (err) {
-    window.alert(err.message || "Could not delete this load.");
-    return;
-  }
-  try {
-    await deleteDoc(doc(db, "loadPrivate", loadId));
-  } catch {
-    /* optional private record */
-  }
-}
-
-async function deleteBid(bidId, loadId) {
-  if (!bidId || !currentUser) return;
-  if (!window.confirm("Delete this bid?")) return;
-  try {
-    await deleteDoc(doc(db, "bids", bidId));
-  } catch (err) {
-    window.alert(err.message || "Could not delete this bid.");
-    return;
-  }
-  await refreshLoadBidStats(loadId, [bidId]);
-}
-
-function syncClearButtons() {
-  const loadBtn = document.getElementById("delete-all-loads");
-  const bidBtn = document.getElementById("delete-all-bids");
-  if (loadBtn) {
-    loadBtn.hidden = myLoads.size === 0;
-    loadBtn.textContent = myLoads.size
-      ? `Delete all posted loads (${myLoads.size})`
-      : "Delete all posted loads";
-  }
-  if (bidBtn) {
-    bidBtn.hidden = myBids.length === 0;
-    bidBtn.textContent = myBids.length
-      ? `Delete all my bids (${myBids.length})`
-      : "Delete all my bids";
-  }
-}
-
-async function commitDeletes(refs) {
-  for (let i = 0; i < refs.length; i += 400) {
-    const batch = writeBatch(db);
-    refs.slice(i, i + 400).forEach((ref) => batch.delete(ref));
-    await batch.commit();
-  }
-}
-
-async function refreshLoadBidStats(loadId, removedIds) {
-  const gone = new Set(removedIds);
-  const rest = (bidsByLoad.get(loadId) || []).filter((b) => !gone.has(b.id) && b.status !== "rejected");
-  const next = rest[0];
-  const load = loadsById.get(loadId);
-  if (!load) return;
-  try {
-    await updateDoc(doc(db, "loads", loadId), {
-      lowestBidAmount: next ? Number(next.amount) : null,
-      lowestBidderUid: next?.bidderUid || null,
-      lowestBidId: next ? next.id : null,
-      bidCount: rest.length,
-    });
-  } catch {
-    /* load may already be gone */
-  }
-}
-
-async function deleteAllLoads() {
-  const ids = [...myLoads.keys()];
-  if (!ids.length || !currentUser) return;
-  if (!window.confirm(`Delete ${ids.length} posted load(s) from Firebase? They leave the market for everyone immediately.`)) return;
-  const btn = document.getElementById("delete-all-loads");
-  if (btn) btn.disabled = true;
-  try {
-    const refs = [];
-    ids.forEach((id) => {
-      (bidsByLoad.get(id) || []).forEach((bid) => refs.push(doc(db, "bids", bid.id)));
-      refs.push(doc(db, "loadPrivate", id));
-      refs.push(doc(db, "loads", id));
-    });
-    await commitDeletes(refs);
-  } catch (err) {
-    window.alert(err.message || "Could not delete all posted loads.");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-async function deleteAllBids() {
-  const list = [...myBids];
-  if (!list.length || !currentUser) return;
-  if (!window.confirm(`Delete ${list.length} bid(s) from Firebase? They leave the market immediately.`)) return;
-  const btn = document.getElementById("delete-all-bids");
-  if (btn) btn.disabled = true;
-  try {
-    await commitDeletes(list.map((bid) => doc(db, "bids", bid.id)));
-    const loadIds = [...new Set(list.map((bid) => bid.loadId))];
-    for (const loadId of loadIds) {
-      const removed = list.filter((bid) => bid.loadId === loadId).map((bid) => bid.id);
-      await refreshLoadBidStats(loadId, removed);
-    }
-  } catch (err) {
-    window.alert(err.message || "Could not delete all bids.");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-function isOwnLoad(load) {
-  return Boolean(currentUser && (
-    load.posterUid === currentUser.uid || load.customerUid === currentUser.uid
-  ));
-}
-
-function renderBoard() {
-  const list = document.getElementById("load-board");
-  if (!list || !sizeFilter) return;
-  const size = sizeFilter.value;
-  const docs = [...loadsById.values()]
-    .filter((d) => isLiveLoad(d) && d.status === "open" && !d.booked && !isOwnLoad(d))
-    .filter((d) => size === "all" || Number(d.sizeFt || d.sizeFeet) === Number(size))
-    .sort((a, b) => (b.createdAt?.seconds || b.createdAtMs || 0) - (a.createdAt?.seconds || a.createdAtMs || 0));
-  if (!docs.length) {
-    list.innerHTML = `<p class="empty-note">No live loads in this 30-minute window.</p>`;
-    return;
-  }
-  list.innerHTML = docs.map((d) => renderMarketCard(d)).join("");
-  bindTimers(list, docs);
-  list.querySelectorAll(".bid-form").forEach((form) => {
-    form.addEventListener("submit", onPlaceBid);
-  });
-}
-
-function renderMarketCard(load) {
-  const bidId = `${load.id}_${currentUser.uid}`;
-  const myBid = (bidsByLoad.get(load.id) || []).find((b) => b.id === bidId || b.bidderUid === currentUser.uid) || null;
-  const lowest = load.lowestBidAmount;
-  const iAmLowest = load.lowestBidderUid === currentUser.uid && myBid;
-  let rankHtml = "";
-  if (myBid && iAmLowest) {
-    rankHtml = `<p class="field-hint">Your bid ${formatInr(myBid.amount)} is leading.</p>`;
-  } else if (myBid && lowest != null && Number(myBid.amount) > Number(lowest)) {
-    rankHtml = `<p class="field-hint">Leading ${formatInr(lowest)} · yours ${formatInr(myBid.amount)}</p>`;
-  } else if (lowest != null) {
-    rankHtml = `<p class="field-hint">Lowest bid ${formatInr(lowest)}</p>`;
-  } else {
-    rankHtml = `<p class="field-hint">No bids yet.</p>`;
-  }
-
-  return `
-    <article class="load-card load-card-simple">
-      <div class="load-card-head">
-        <div>
-          <strong>${loadRoute(load)}</strong>
-          <p>${loadLine(load)}</p>
-        </div>
-        <div class="load-timer" data-timer="${load.id}" data-ends="${Number(load.timerEndsAt) || 0}">30:00</div>
-      </div>
-      ${rankHtml}
-      ${bidFormHtml(load, myBid)}
-    </article>`;
-}
-
-function bidFormHtml(load, myBid) {
-  return `
-    <form class="bid-form" data-load="${load.id}">
-      <div class="form-row">
-        <label>
-          <span class="field-label">Your name</span>
-          <input name="bidderName" required value="${escapeHtml(myBid?.bidderName || profile.name || "")}" />
-        </label>
-        <label>
-          <span class="field-label">Contact number</span>
-          <input name="bidderPhone" type="tel" required maxlength="10" inputmode="numeric" pattern="[0-9]{10}" value="${escapeHtml(myBid?.bidderPhone || profile.phone || "")}" />
-        </label>
-      </div>
-      <div class="form-row">
-        <label>
-          <span class="field-label">Vehicle number</span>
-          <input name="vehicleNumber" required value="${escapeHtml(myBid?.vehicleNumber || "")}" />
-        </label>
-        <label>
-          <span class="field-label">Bid amount (₹)</span>
-          <input name="amount" type="number" min="1" required value="${myBid ? escapeHtml(String(myBid.amount)) : ""}" />
-        </label>
-      </div>
-      <button class="submit-btn" type="submit">${myBid ? "Edit / rebid to take #1" : "Place bid"}</button>
-    </form>`;
-}
-
-async function onPlaceBid(e) {
+document.getElementById("phone-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const form = e.currentTarget;
-  const loadId = form.getAttribute("data-load");
-  const fd = new FormData(form);
-  const amount = Number(fd.get("amount"));
-  const loadRef = doc(db, "loads", loadId);
-  const loadSnap = await getDoc(loadRef);
-  const load = loadSnap.data();
-  if (!load || load.status !== "open") return;
-  if (isOwnLoad(load)) return;
-  const bidId = `${loadId}_${currentUser.uid}`;
-  const bidRef = doc(db, "bids", bidId);
-  const prev = await getDoc(bidRef);
-  const phone = String(fd.get("bidderPhone")).trim();
-  const payload = {
-    loadId,
-    bidderUid: currentUser.uid,
-    bidderName: String(fd.get("bidderName")).trim(),
-    bidderPhone: phone,
-    phone,
-    vehicleNumber: String(fd.get("vehicleNumber")).trim().toUpperCase(),
-    amount,
-    updatedAt: serverTimestamp(),
-  };
-  if (!prev.exists()) payload.createdAt = serverTimestamp();
-  await setDoc(bidRef, payload, { merge: true });
-
-  const update = {};
-  if (!prev.exists()) update.bidCount = (load.bidCount || 0) + 1;
-  const lowest = load.lowestBidAmount;
-  const isLower = lowest == null || amount < Number(lowest);
-  const wasMine = load.lowestBidderUid === currentUser.uid;
-  if (isLower || wasMine) {
-    update.lowestBidAmount = amount;
-    update.lowestBidderUid = currentUser.uid;
-    update.lowestBidId = bidId;
+  const phone = document.getElementById("profile-phone").value.trim();
+  const msg = document.getElementById("phone-save-msg");
+  if (!currentUser) return;
+  if (phone && !/^\d{10}$/.test(phone)) {
+    if (msg) {
+      msg.hidden = false;
+      msg.className = "form-message error";
+      msg.textContent = "Enter a 10-digit mobile number.";
+    }
+    return;
   }
-  if (Object.keys(update).length) await updateDoc(loadRef, update);
-}
+  await mergeProfile(currentUser.uid, { phone });
+  profile = { ...profile, phone };
+  if (msg) {
+    msg.hidden = false;
+    msg.className = "form-message";
+    msg.textContent = "Number saved.";
+  }
+});
 
 function formatStamp(value) {
   if (!value) return "—";
@@ -974,19 +362,11 @@ async function adminMarkLead(leadId) {
   }
 }
 
-document.getElementById("phone-form")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const phone = document.getElementById("profile-phone").value.trim();
-  if (!currentUser) return;
-  if (phone && !/^\d{10}$/.test(phone)) return;
-  await mergeProfile(currentUser.uid, { phone });
-  profile = { ...profile, phone };
-  renderDetails();
-});
-
 completeGoogleRedirect().catch((err) => {
-  paintLoggedOutGate();
-  showGateError(err);
+  if (!auth.currentUser) {
+    paintLoggedOutGate();
+    showGateError(err);
+  }
 });
 
 paintLoggedOutGate();

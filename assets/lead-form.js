@@ -1,7 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
-  getFirestore,
   collection,
   addDoc,
   doc,
@@ -9,13 +7,9 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import { auth, db } from "/assets/firebase.js";
 import { showerConfetti, MARKET_MS, MEASURE_MAX_FT, vehiclesFor, vehicleSrc, vehicleCaption, sizeClass, paradeVehicles } from "/assets/booking-common.js";
 import { attachPlaceSearch, drivingDistanceKm, searchPlaces } from "/assets/mappls.js";
-
-const firebaseConfig = await fetch("/firebase-config.json").then((r) => r.json());
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
 let signedInUser = null;
 onAuthStateChanged(auth, (user) => {
   signedInUser = user;

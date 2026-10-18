@@ -1,0 +1,21 @@
+[
+  {
+    "origin": [
+      "https://verifiedtrucks.com",
+      "https://www.verifiedtrucks.com",
+      "https://verifiedtrucks-20.web.app",
+      "https://verifiedtrucks-20.firebaseapp.com",
+      "http://127.0.0.1:43123",
+      "http://localhost:43123"
+    ],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Authorization",
+      "x-goog-resumable",
+      "x-goog-meta-*"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
