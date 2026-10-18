@@ -2289,8 +2289,9 @@ header {
 
   .header-brand {
     flex: 0 1 auto;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     gap: 8px;
+    white-space: nowrap;
   }
 
   .header-brand img {
@@ -2551,9 +2552,13 @@ header {
     gap: 10px;
   }
 
-  .book-now-mini {
-    min-height: 40px;
-    padding: 8px 14px;
+  .book-now-mini,
+  .state-head .book-now-mini,
+  .routes-hero-head .book-now-mini {
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    align-self: center;
   }
 
   .seo-block p,
