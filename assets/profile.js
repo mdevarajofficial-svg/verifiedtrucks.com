@@ -6,9 +6,8 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
-  updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { isAdminUser } from "./admin.js";
+import { digits, detailsAreLocked, isAdminUser } from "./admin.js";
 import {
   auth,
   db,
@@ -18,7 +17,6 @@ import {
   explainAuthError,
   uploadProfilePhoto,
 } from "./firebase.js";
-import { formatMmSs, remainingUntil } from "./booking-common.js";
 
 const gate = document.getElementById("profile-gate");
 const app = document.getElementById("profile-app");
@@ -33,11 +31,8 @@ const photoErr = document.getElementById("profile-photo-error");
 
 let currentUser = null;
 let profile = null;
-let adminUnsubs = [];
-let adminLoads = [];
-let adminBids = [];
-let adminPrivate = {};
-let adminLeads = [];
+let adminUnsub = null;
+let myLeadsUnsub = null;
 
 function showGate(title, copy) {
   gate.hidden = false;
@@ -51,17 +46,8 @@ function showApp() {
   app.hidden = false;
 }
 
-function bodyLabel(type) {
-  return type === "container" ? "Container" : "Open";
-}
-
-function formatInr(n) {
-  if (n == null || Number.isNaN(Number(n))) return "—";
-  return "₹" + Number(n).toLocaleString("en-IN");
-}
-
 function escapeHtml(s) {
-  return String(s)
+  return String(s ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -69,7 +55,7 @@ function escapeHtml(s) {
 }
 
 function paintLoggedOutGate() {
-  showGate("Sign in", "Continue with Google to save your number and photo on this device.");
+  showGate("Sign in", "Continue with Google to open your dashboard. Load parties see their posts. Admin sees the lead leaderboard.");
 }
 
 function showGateError(err) {
@@ -133,6 +119,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
     stopAdmin();
+    stopMyLeads();
     paintLoggedOutGate();
     return;
   }
@@ -144,7 +131,6 @@ onAuthStateChanged(auth, async (user) => {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        name: user.displayName,
       });
     }
     profile = (await getDoc(doc(db, "users", user.uid))).data() || {};
@@ -160,23 +146,34 @@ async function mergeProfile(uid, extra) {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
   const prev = snap.exists() ? snap.data() : {};
+  const locked = detailsAreLocked(prev) || prev.detailsLocked === true;
   const next = {
     email: extra.email || prev.email || "",
     displayName: extra.displayName || prev.displayName || "",
     photoURL: extra.photoURL || prev.photoURL || "",
-    name: extra.name || prev.name || extra.displayName || prev.displayName || "",
-    phone: extra.phone || prev.phone || "",
     updatedAt: serverTimestamp(),
   };
   if (!prev.createdAt) next.createdAt = serverTimestamp();
   if (extra.role) next.role = extra.role;
+  if (!locked) {
+    if (extra.name != null) next.name = String(extra.name).trim();
+    else if (prev.name) next.name = prev.name;
+    if (extra.phone != null) next.phone = digits(extra.phone);
+    else if (prev.phone) next.phone = prev.phone;
+    if (extra.detailsLocked) next.detailsLocked = true;
+  } else {
+    next.name = prev.name || "";
+    next.phone = prev.phone || "";
+    next.detailsLocked = true;
+  }
   await setDoc(ref, next, { merge: true });
 }
 
 function renderShell() {
   const admin = isAdminUser(currentUser, profile);
+  const locked = detailsAreLocked(profile) || profile.detailsLocked === true;
   const name = profile.name || currentUser.displayName || "Account";
-  document.getElementById("profile-name").textContent = name;
+  document.getElementById("profile-name").textContent = admin ? "Admin dashboard" : `Hi, ${name.split(" ")[0]}`;
   document.getElementById("profile-role").textContent = admin ? "Admin" : "Load party";
   document.getElementById("profile-email").textContent = currentUser.email || profile.email || "";
   const avatar = document.getElementById("profile-avatar");
@@ -189,34 +186,90 @@ function renderShell() {
     avatar.hidden = true;
     avatar.removeAttribute("src");
   }
-  document.getElementById("admin-panel").hidden = !admin;
-  const phoneInput = document.getElementById("profile-phone");
-  if (phoneInput) phoneInput.value = profile.phone || "";
-  if (admin) listenAdmin();
-  else stopAdmin();
+
+  const userDash = document.getElementById("user-dashboard");
+  const adminPanel = document.getElementById("admin-panel");
+  if (userDash) userDash.hidden = admin;
+  if (adminPanel) adminPanel.hidden = !admin;
+
+  paintDetailsForm(locked);
+  if (admin) {
+    stopMyLeads();
+    listenAdmin();
+  } else {
+    stopAdmin();
+    listenMyLeads();
+  }
 }
 
-document.getElementById("phone-form")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const phone = document.getElementById("profile-phone").value.trim();
-  const msg = document.getElementById("phone-save-msg");
-  if (!currentUser) return;
-  if (phone && !/^\d{10}$/.test(phone)) {
-    if (msg) {
-      msg.hidden = false;
-      msg.className = "form-message error";
-      msg.textContent = "Enter a 10-digit mobile number.";
+function paintDetailsForm(locked) {
+  const form = document.getElementById("details-form");
+  const box = document.getElementById("profile-details");
+  const hint = document.getElementById("details-hint");
+  const nameInput = document.getElementById("profile-fullname");
+  const phoneInput = document.getElementById("profile-phone");
+  if (locked) {
+    if (form) form.hidden = true;
+    if (hint) hint.textContent = "Name and mobile are locked on this account.";
+    if (box) {
+      box.hidden = false;
+      box.innerHTML = `
+        <div class="locked-grid">
+          <div><span>Name</span><strong>${escapeHtml(profile.name || "—")}</strong></div>
+          <div><span>Mobile</span><strong>${escapeHtml(profile.phone || "—")}</strong></div>
+        </div>`;
     }
     return;
   }
-  await mergeProfile(currentUser.uid, { phone });
-  profile = { ...profile, phone };
-  if (msg) {
+  if (form) form.hidden = false;
+  if (box) box.hidden = true;
+  if (hint) {
+    hint.textContent = "Fill your name and 10-digit mobile once. After you save, these cannot be changed.";
+  }
+  if (nameInput) nameInput.value = profile.name || currentUser.displayName || "";
+  if (phoneInput) phoneInput.value = profile.phone || "";
+}
+
+document.getElementById("details-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("details-message");
+  const name = document.getElementById("profile-fullname")?.value.trim() || "";
+  const phone = digits(document.getElementById("profile-phone")?.value);
+  const showMsg = (text, type) => {
+    if (!msg) return;
     msg.hidden = false;
-    msg.className = "form-message";
-    msg.textContent = "Number saved.";
+    msg.className = `form-message ${type || ""}`;
+    msg.textContent = text;
+  };
+  if (!currentUser) return;
+  if (detailsAreLocked(profile) || profile.detailsLocked) {
+    showMsg("Name and mobile are already locked.", "error");
+    return;
+  }
+  if (name.length < 2) {
+    showMsg("Enter your name.", "error");
+    return;
+  }
+  if (!/^\d{10}$/.test(phone)) {
+    showMsg("Enter a 10-digit mobile number.", "error");
+    return;
+  }
+  try {
+    await mergeProfile(currentUser.uid, { name, phone, detailsLocked: true });
+    profile = { ...profile, name, phone, detailsLocked: true };
+    showMsg("Details saved. They cannot be edited later.", "success");
+    renderShell();
+  } catch (err) {
+    showMsg(err?.message || "Could not save details.", "error");
   }
 });
+
+function postedMs(row) {
+  if (Number.isFinite(row?.createdAtMs)) return row.createdAtMs;
+  if (row?.createdAt?.toMillis) return row.createdAt.toMillis();
+  if (Number.isFinite(row?.createdAt?.seconds)) return row.createdAt.seconds * 1000;
+  return 0;
+}
 
 function formatStamp(value) {
   if (!value) return "—";
@@ -231,135 +284,114 @@ function formatStamp(value) {
   });
 }
 
+function kmText(row) {
+  const km = row.distanceKm ?? row.km;
+  return km != null && km !== "" ? `${km} km` : "—";
+}
+
+function sizeText(row) {
+  const size = row.sizeFeet ?? row.sizeFt;
+  return size != null && size !== "" ? `${size} ft` : "—";
+}
+
 function stopAdmin() {
-  adminUnsubs.forEach((unsub) => unsub());
-  adminUnsubs = [];
+  if (adminUnsub) adminUnsub();
+  adminUnsub = null;
+}
+
+function stopMyLeads() {
+  if (myLeadsUnsub) myLeadsUnsub();
+  myLeadsUnsub = null;
 }
 
 function listenAdmin() {
   stopAdmin();
   const board = document.getElementById("admin-board");
-  const paint = () => renderAdminBoard();
-  adminUnsubs.push(onSnapshot(collection(db, "loads"), (snap) => {
-    adminLoads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    paint();
-  }, (err) => { board.innerHTML = `<p class="form-message error">${escapeHtml(err.message)}</p>`; }));
-  adminUnsubs.push(onSnapshot(collection(db, "bids"), (snap) => {
-    adminBids = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    paint();
-  }));
-  adminUnsubs.push(onSnapshot(collection(db, "loadPrivate"), (snap) => {
-    adminPrivate = {};
-    snap.docs.forEach((d) => { adminPrivate[d.id] = d.data(); });
-    paint();
-  }));
-  adminUnsubs.push(onSnapshot(collection(db, "leads"), (snap) => {
-    adminLeads = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    paint();
-  }));
+  adminUnsub = onSnapshot(collection(db, "leads"), (snap) => {
+    const rows = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => postedMs(b) - postedMs(a));
+    renderAdminBoard(rows);
+  }, (err) => {
+    if (board) board.innerHTML = `<p class="form-message error">${escapeHtml(err.message)}</p>`;
+  });
 }
 
-function renderAdminBoard() {
+function renderAdminBoard(rows) {
   const board = document.getElementById("admin-board");
   if (!board) return;
-  const byLoad = new Map();
-  adminBids.forEach((bid) => {
-    const list = byLoad.get(bid.loadId) || [];
-    list.push(bid);
-    byLoad.set(bid.loadId, list);
-  });
-  const loadCards = adminLoads
-    .slice()
-    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
-    .map((load) => {
-      const bids = (byLoad.get(load.id) || []).sort((a, b) => (b.createdAt?.seconds || a.updatedAt?.seconds || 0) - (a.createdAt?.seconds || a.updatedAt?.seconds || 0));
-      const phone = adminPrivate[load.id]?.contactPhone || "—";
-      const booked = load.booked || load.status === "confirmed";
-      const bidHtml = bids.length
-        ? bids.map((bid) => `
-            <li class="admin-bid">
-              <div>
-                <strong>${escapeHtml(bid.bidderName || "Bidder")}</strong>
-                <p>${escapeHtml(bid.bidderPhone || "—")} · ${escapeHtml(bid.vehicleNumber || "—")} · ${formatInr(bid.amount)}</p>
-                <p class="admin-stamp">Bid ${formatStamp(bid.createdAt)} · Updated ${formatStamp(bid.updatedAt)}</p>
-              </div>
-              ${booked
-                ? (load.acceptedBidId === bid.id ? `<span class="admin-ok">Booked</span>` : "")
-                : `<button type="button" class="submit-btn" data-admin-book="${load.id}" data-bid="${bid.id}" data-bidder="${escapeHtml(bid.bidderUid || "")}">Mark booked</button>`}
-            </li>`).join("")
-        : `<li class="admin-bid"><p>No bids yet.</p>${booked ? "" : `<button type="button" class="submit-btn" data-admin-book="${load.id}">Mark booked</button>`}</li>`;
-      return `
-        <article class="admin-card">
-          <div class="admin-card-top">
-            <div>
-              <strong>${escapeHtml(load.vehicleName || "Load")}</strong>
-              <p>${escapeHtml(load.loadingLocation || "—")} → ${escapeHtml(load.unloadingLocation || "—")}</p>
-              <p>${escapeHtml(String(load.sizeFt || "—"))} ft · ${bodyLabel(load.bodyType)} · ${escapeHtml(String(load.tonnage || "—"))} T</p>
-              <p>Load party phone: <strong>${escapeHtml(phone)}</strong></p>
-              <p class="admin-stamp">Posted ${formatStamp(load.createdAt)}${load.bookedAt ? ` · Booked ${formatStamp(load.bookedAt)}` : ""}</p>
-            </div>
-            <div class="load-timer${booked ? " is-booked" : ""}">${booked ? "Booked" : formatMmSs(remainingUntil(load.timerEndsAt))}</div>
-          </div>
-          <ul class="admin-bids">${bidHtml}</ul>
-        </article>`;
-    }).join("");
+  if (!rows.length) {
+    board.innerHTML = `<p class="empty-note">No leads yet.</p>`;
+    return;
+  }
+  const body = rows.map((lead, i) => `
+    <tr>
+      <td class="lb-rank">${i + 1}</td>
+      <td>${escapeHtml(lead.loadingLocation || "—")}</td>
+      <td>${escapeHtml(lead.unloadingLocation || "—")}</td>
+      <td>${escapeHtml(sizeText(lead))}</td>
+      <td>${escapeHtml(lead.tonnage != null ? `${lead.tonnage} T` : "—")}</td>
+      <td>${escapeHtml(kmText(lead))}</td>
+      <td>${escapeHtml(lead.contactPhone || "—")}</td>
+      <td>${escapeHtml(formatStamp(lead.createdAt || lead.createdAtMs))}</td>
+    </tr>`).join("");
+  board.innerHTML = `
+    <div class="leaderboard-wrap">
+      <table class="lead-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Size</th>
+            <th>Tonnage</th>
+            <th>Distance</th>
+            <th>Phone</th>
+            <th>Loading date & time</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+}
 
-  const linkedLeadIds = new Set(adminLoads.map((l) => l.leadId).filter(Boolean));
-  const looseLeads = adminLeads.filter((lead) => !linkedLeadIds.has(lead.id));
-  const leadCards = looseLeads
-    .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0))
-    .map((lead) => `
-      <article class="admin-card">
-        <div class="admin-card-top">
-          <div>
-            <strong>${escapeHtml(lead.vehicleName || "Home booking")}</strong>
-            <p>${escapeHtml(lead.loadingLocation || "—")} → ${escapeHtml(lead.unloadingLocation || "—")}</p>
-            <p>${escapeHtml(String(lead.sizeFeet || "—"))} ft · ${escapeHtml(lead.bodyType || "—")} · ${escapeHtml(String(lead.tonnage || "—"))} T</p>
-            <p>Phone: <strong>${escapeHtml(lead.contactPhone || "—")}</strong></p>
-            <p class="admin-stamp">Posted ${formatStamp(lead.createdAt || lead.createdAtMs)}${lead.bookedAt ? ` · Booked ${formatStamp(lead.bookedAt)}` : ""}</p>
-          </div>
-          <div class="load-timer${lead.booked ? " is-booked" : ""}">${lead.booked ? "Booked" : formatMmSs(remainingUntil(lead.timerEndsAt))}</div>
-        </div>
-        ${lead.booked ? `<p class="admin-ok">Vehicle booked</p>` : `<button type="button" class="submit-btn" data-admin-lead="${lead.id}">Mark booked</button>`}
-      </article>`).join("");
-
-  board.innerHTML = (loadCards || "") + (leadCards || "") || `<p class="empty-note">No bookings yet.</p>`;
-  board.querySelectorAll("[data-admin-book]").forEach((btn) => {
-    btn.addEventListener("click", () => adminMarkLoad(btn.getAttribute("data-admin-book"), btn.getAttribute("data-bid"), btn.getAttribute("data-bidder")));
-  });
-  board.querySelectorAll("[data-admin-lead]").forEach((btn) => {
-    btn.addEventListener("click", () => adminMarkLead(btn.getAttribute("data-admin-lead")));
+function listenMyLeads() {
+  stopMyLeads();
+  const list = document.getElementById("my-leads");
+  myLeadsUnsub = onSnapshot(collection(db, "leads"), (snap) => {
+    const uid = currentUser?.uid;
+    const phone = digits(profile?.phone);
+    const mine = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((lead) => {
+        if (uid && (lead.posterUid === uid || lead.customerUid === uid)) return true;
+        if (phone && digits(lead.contactPhone) === phone) return true;
+        return false;
+      })
+      .sort((a, b) => postedMs(b) - postedMs(a));
+    paintMyLeads(mine);
+  }, () => {
+    if (list) list.innerHTML = `<p class="empty-note">Could not load your posts.</p>`;
   });
 }
 
-async function adminMarkLoad(loadId, bidId, bidderUid) {
-  const loadSnap = await getDoc(doc(db, "loads", loadId));
-  const load = loadSnap.data() || {};
-  const payload = {
-    booked: true,
-    status: "confirmed",
-    contactReleased: true,
-    bookedAt: serverTimestamp(),
-  };
-  if (bidId) {
-    payload.acceptedBidId = bidId;
-    payload.acceptedBidderUid = bidderUid || load.lowestBidderUid || null;
+function paintMyLeads(rows) {
+  const list = document.getElementById("my-leads");
+  if (!list) return;
+  if (!rows.length) {
+    list.innerHTML = `<p class="empty-note">No loads posted on this account yet. Use Book truck on the home page.</p>`;
+    return;
   }
-  await updateDoc(doc(db, "loads", loadId), payload);
-  if (load.leadId) await adminMarkLead(load.leadId);
-}
-
-async function adminMarkLead(leadId) {
-  if (!leadId) return;
-  try {
-    await updateDoc(doc(db, "leads", leadId), {
-      booked: true,
-      status: "booked",
-      bookedAt: serverTimestamp(),
-    });
-  } catch {
-    /* already booked */
-  }
+  list.innerHTML = rows.map((lead) => `
+    <article class="user-load-card">
+      <p class="user-load-when">${escapeHtml(formatStamp(lead.createdAt || lead.createdAtMs))}</p>
+      <h3>${escapeHtml(lead.loadingLocation || "—")} <span>→</span> ${escapeHtml(lead.unloadingLocation || "—")}</h3>
+      <dl>
+        <div><dt>Size</dt><dd>${escapeHtml(sizeText(lead))}</dd></div>
+        <div><dt>Weight</dt><dd>${escapeHtml(lead.tonnage != null ? `${lead.tonnage} T` : "—")}</dd></div>
+        <div><dt>Distance</dt><dd>${escapeHtml(kmText(lead))}</dd></div>
+      </dl>
+    </article>`).join("");
 }
 
 completeGoogleRedirect().catch((err) => {
