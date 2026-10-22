@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/marketing.css" />
+  <link rel="stylesheet" href="/assets/marketing.css?v=dash1" />
 </head>
 <body>
   <header>
@@ -55,40 +55,59 @@
     </div>
 
     <div id="profile-app" hidden>
-      <section class="profile-card" aria-labelledby="profile-name">
-        <div class="profile-identity">
-          <img id="profile-avatar" class="profile-avatar" alt="" width="88" height="88" hidden />
-          <div class="profile-identity-copy">
-            <p class="profile-role" id="profile-role">Load party</p>
-            <h1 id="profile-name">Account</h1>
+      <section class="dash-hero" aria-labelledby="profile-name">
+        <div class="dash-hero-main">
+          <img id="profile-avatar" class="dash-avatar" alt="" width="72" height="72" hidden />
+          <div>
+            <p class="profile-role" id="profile-role">Member</p>
+            <h1 id="profile-name">Profile</h1>
             <p id="profile-email" class="profile-email"></p>
           </div>
         </div>
-        <div class="profile-photo-row">
+        <div class="dash-hero-actions">
           <input id="profile-photo-file" type="file" accept="image/*" hidden />
           <button type="button" class="text-btn" id="profile-photo-btn">Change photo</button>
-          <button type="button" class="text-btn" id="profile-signout">Sign out</button>
+          <button type="button" class="dash-logout" id="profile-signout">Log out</button>
         </div>
         <p id="profile-photo-error" class="form-message error" hidden></p>
-        <form id="phone-form" class="profile-phone-form">
-          <label for="profile-phone">
-            <span class="field-label">Mobile number</span>
-            <input id="profile-phone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit number" />
-          </label>
-          <button type="submit" class="submit-btn">Save</button>
-        </form>
-        <p id="phone-save-msg" class="form-message" hidden></p>
       </section>
 
-      <section id="admin-panel" class="profile-section admin-panel" hidden>
-        <h2>Admin dashboard</h2>
-        <p class="section-lead">Bookings and bids. Mark booked to confirm the vehicle.</p>
+      <section id="user-dashboard" class="user-dashboard">
+        <section class="dash-panel" aria-labelledby="saved-heading">
+          <h2 id="saved-heading">Your details</h2>
+          <p class="dash-hint" id="details-hint">Fill your name and 10-digit mobile once. After you save, these cannot be changed.</p>
+          <div id="profile-details" class="locked-details" hidden></div>
+          <form id="details-form" class="details-form">
+            <label>
+              <span class="field-label">Name</span>
+              <input id="profile-fullname" name="fullName" type="text" autocomplete="name" maxlength="80" placeholder="Your name" />
+            </label>
+            <label>
+              <span class="field-label">Mobile number</span>
+              <input id="profile-phone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" autocomplete="tel" placeholder="10-digit mobile" />
+            </label>
+            <button type="submit" class="submit-btn" id="details-save">Save details</button>
+            <p id="details-message" class="form-message" hidden></p>
+          </form>
+        </section>
+
+        <section class="dash-panel" aria-labelledby="my-leads-heading">
+          <h2 id="my-leads-heading">Loads you posted</h2>
+          <div id="my-leads" class="my-lead-list"></div>
+        </section>
+      </section>
+
+      <section id="admin-panel" class="admin-panel" hidden>
+        <div class="admin-panel-head">
+          <h2>Lead leaderboard</h2>
+          <p class="dash-hint">Fresh posts on top — from, to, size, tonnage, distance, phone, and loading time.</p>
+        </div>
         <div id="admin-board" class="admin-board"></div>
       </section>
     </div>
   </main>
 
-  <script type="module" src="/assets/profile.js"></script>
+  <script type="module" src="/assets/profile.js?v=dash1"></script>
   <script type="module" src="/assets/nav-auth.js"></script>
   <footer class="site-footer">
     <div class="footer-inner">

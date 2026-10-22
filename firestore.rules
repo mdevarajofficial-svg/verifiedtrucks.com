@@ -6,7 +6,6 @@ service cloud.firestore {
     }
     function adminEmail() {
       return signedIn() && request.auth.token.email in [
-        'mdevaraj159@gmail.com',
         'mdevarajofficial@gmail.com'
       ];
     }
@@ -14,9 +13,12 @@ service cloud.firestore {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.phone in [
-          '6363655596',
-          '9113265599'
+          '6363655596'
         ];
+    }
+    function detailsLocked() {
+      return resource.data.keys().hasAny(['detailsLocked'])
+        && resource.data.detailsLocked == true;
     }
     function isAdmin() {
       return adminEmail() || adminPhone();
@@ -47,7 +49,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
-      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && request.auth.uid == userId
+        && (!detailsLocked() || (
+          request.resource.data.name == resource.data.name
+          && request.resource.data.phone == resource.data.phone
+        ));
       allow delete: if false;
     }
 
